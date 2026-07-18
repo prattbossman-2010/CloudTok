@@ -1,3 +1,8 @@
 name = "cloudtok-api"
 main = "src/worker.js"
 compatibility_date = "2026-07-18"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "cloudtok-db"
+database_id = "98c04ae5-8ca3-42b2-86ee-bd52bf690f01"
