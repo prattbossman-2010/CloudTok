@@ -1,9 +1,11 @@
 import { hashPassword } from "../utils/crypto.js";
+import { createToken } from "../utils/jwt.js";
 
 
 export async function login(request, env) {
 
   const body = await request.json();
+
 
   const {
     email,
@@ -28,7 +30,13 @@ export async function login(request, env) {
   const { results } = await env.DB
     .prepare(
       `
-      SELECT id, username, email, avatar, bio, password_hash
+      SELECT
+        id,
+        username,
+        email,
+        avatar,
+        bio,
+        password_hash
       FROM users
       WHERE email = ?
       `
@@ -54,7 +62,8 @@ export async function login(request, env) {
   const user = results[0];
 
 
-  const passwordHash = await hashPassword(password);
+  const passwordHash =
+    await hashPassword(password);
 
 
   if (passwordHash !== user.password_hash) {
@@ -71,15 +80,32 @@ export async function login(request, env) {
   }
 
 
+  const token = await createToken(
+    {
+      id: user.id,
+      username: user.username,
+      email: user.email
+    },
+    env.JWT_SECRET
+  );
+
+
   return Response.json({
+
     success: true,
+
+    token,
+
     user: {
+
       id: user.id,
       username: user.username,
       email: user.email,
       avatar: user.avatar,
       bio: user.bio
+
     }
+
   });
 
 }
