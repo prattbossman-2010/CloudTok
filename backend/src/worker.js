@@ -1,5 +1,6 @@
 import { signup } from "./routes/users.js";
 import { login } from "./routes/auth.js";
+import { getUserProfile } from "./routes/profile.js";
 
 export default {
   async fetch(request, env) {
@@ -58,10 +59,23 @@ export default {
         )
         .all();
 
-
       return Response.json({
         users: results
       });
+
+    }
+
+
+    if (
+      request.method === "GET" &&
+      path.startsWith("/api/users/") &&
+      path !== "/api/users/signup" &&
+      path !== "/api/users/login"
+    ) {
+
+      const userId = path.split("/")[3];
+
+      return getUserProfile(request, env, userId);
 
     }
 
@@ -71,8 +85,9 @@ export default {
       return signup(request, env);
 
     }
-    
-        if (path === "/api/users/login" && request.method === "POST") {
+
+
+    if (path === "/api/users/login" && request.method === "POST") {
 
       return login(request, env);
 
