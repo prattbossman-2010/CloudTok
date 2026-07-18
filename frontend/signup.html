@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>CloudTok - Sign Up</title>
+
+		<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/signup.css">
+
+</head>
+
+<body>
+
+<div class="authPage">
+
+<div class="authBox">
+
+<h1>☁ CloudTok</h1>
+
+<h2>Create Account</h2>
+
+<input
+id="displayName"
+type="text"
+placeholder="Display Name">
+
+<input
+id="username"
+type="text"
+placeholder="Username">
+
+<input
+id="email"
+type="email"
+placeholder="Email">
+
+<input
+id="password"
+type="password"
+placeholder="Password">
+
+<button id="signupBtn">
+
+Create Account
+
+</button>
+
+<p>
+
+Already have an account?
+
+<a href="login.html">
+
+Login
+
+</a>
+
+</p>
+
+</div>
+
+</div>
+
+<script src="assets/js/database/users.js"></script>
+<script src="assets/js/database/databaseMigration.js"></script>
+		
+		<script>
+
+if(
+localStorage.getItem(
+"CloudTokCurrentUser"
+)
+){
+
+window.location.replace(
+"profile.html?user=" +
+encodeURIComponent(
+localStorage.getItem(
+"CloudTokCurrentUser"
+)
+)
+
+);
+
+}
+
+</script>
+		
+<script src="assets/js/sign/signup.js"></script>
+
+</body>
+
+</html>

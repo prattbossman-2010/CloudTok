@@ -1,0 +1,218 @@
+body{
+    background-color: #000;
+}
+
+/* ==========================
+   FOLLOW LIST PAGE
+========================== */
+
+
+.followPage{
+
+    width:100%;
+    min-height:100vh;
+
+    background:#000;
+
+    color:white;
+
+}
+
+
+
+.followHeader{
+
+    height:70px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:20px;
+
+    padding:15px;
+
+    border-bottom:1px solid #222;
+
+}
+
+
+
+.followHeader button{
+
+    width:45px;
+
+    height:45px;
+
+    border:none;
+
+    border-radius:50%;
+
+    background:#222;
+
+    color:white;
+
+    font-size:25px;
+
+}
+
+
+
+.followHeader h2{
+
+    font-size:22px;
+
+}
+
+
+
+
+
+/* ==========================
+   USER LIST
+========================== */
+
+
+#userList{
+
+    padding:15px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:12px;
+
+}
+
+
+
+
+
+.followUserCard{
+
+    width:100%;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+    padding:12px;
+
+    background:#111;
+
+    border-radius:15px;
+
+}
+
+
+
+
+
+.followAvatar{
+
+    width:55px;
+
+    height:55px;
+
+    border-radius:50%;
+
+    object-fit:cover;
+
+    border:2px solid white;
+
+}
+
+
+
+
+
+.followInfo{
+
+    flex:1;
+
+}
+
+
+
+.followInfo h3{
+
+    margin:0;
+
+    font-size:17px;
+
+}
+
+
+
+.followInfo p{
+
+    margin-top:5px;
+
+    color:#aaa;
+
+    font-size:14px;
+
+}
+
+
+
+
+
+.followAction{
+
+    padding:8px 18px;
+
+    border:none;
+
+    border-radius:20px;
+
+    background:#00b7ff;
+
+    color:white;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+}
+
+
+.followAction:active{
+
+    transform:scale(.9);
+
+}
+
+
+
+
+
+.emptyFollow{
+
+    text-align:center;
+
+    margin-top:80px;
+
+    color:#aaa;
+
+    font-size:16px;
+
+}
+
+.followUserCard{
+
+    cursor:pointer;
+
+    transition:.2s ease;
+
+}
+
+
+.followUserCard:active{
+
+    transform:scale(.97);
+
+}

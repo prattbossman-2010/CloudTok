@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>Conversation</title>
+
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/chat.css">
+
+</head>
+
+<body>
+
+<div class="conversationPage">
+
+    <div class="conversationHeader">
+
+    <button id="conversationBackBtn">
+        ←
+    </button>
+
+
+    <img
+    id="conversationAvatar"
+    class="conversationAvatar"
+    src="assets/images/default-avatar.png">
+
+
+    <h2 id="conversationName">
+        Loading...
+    </h2>
+
+
+</div>
+
+    <div
+        id="messageList"
+        class="messageList">
+
+    </div>
+
+    <div class="messageBar">
+
+        <input
+            id="messageInput"
+            type="text"
+            placeholder="Type a message...">
+
+        <button
+            id="sendMessageBtn">
+
+            Send
+
+        </button>
+
+    </div>
+
+</div>
+
+<script src="assets/js/database/database.js"></script>
+<script src="assets/js/chat/conversation.js"></script>
+
+</body>
+
+</html>

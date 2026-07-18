@@ -1,0 +1,24 @@
+# Android temporary files
+*.tmp
+*.temp
+.DS_Store
+
+# Editor files
+.vscode/
+.idea/
+
+# Node dependencies
+node_modules/
+
+# Environment secrets
+.env
+.env.*
+
+# Cloudflare local files
+.wrangler/
+
+# Logs
+*.log
+
+# Temporary uploads
+uploads/

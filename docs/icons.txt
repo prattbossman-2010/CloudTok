@@ -1,0 +1,18 @@
+assets/
+└── icons/
+    ├── outline/
+    │   ├── profile.svg
+    │   ├── settings.svg
+    │   ├── bookmark.svg
+    │   ├── heart.svg
+    │   ├── share.svg
+    │   ├── search.svg
+    │   ├── chat.svg
+    │   ├── back.svg
+    │   └── camera.svg
+    │
+    └── solid/
+        ├── profile.svg
+        ├── bookmark.svg
+        ├── heart.svg
+        └── ...

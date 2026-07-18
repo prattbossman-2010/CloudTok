@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width,initial-scale=1.0">
+
+<title>
+CloudTok Profile
+</title>
+
+<link rel="stylesheet"
+href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/theme.css">
+<link rel="stylesheet"
+href="assets/css/profile.css">
+
+</head>
+
+<body>
+
+<div id="profilePage">
+
+<!-- =========================
+     HEADER
+========================= -->
+
+<div class="profileHeader">
+
+<div class="headerBackground"></div>
+
+<button
+id="backBtn"
+class="headerBtn">
+
+←
+
+</button>
+
+<button
+id="settingsBtn"
+class="headerBtn">
+
+⚙
+
+</button>
+
+</div>
+
+<!-- =========================
+     AVATAR
+========================= -->
+
+<div class="avatarSection">
+
+<div class="avatarWrapper">
+
+<img
+id="profileAvatar"
+class="profileAvatar"
+src="assets/images/default-avatar.png"
+alt="Profile">
+
+<button
+id="changeAvatarBtn"
+class="changeAvatarBtn">
+
+📷
+
+</button>
+
+<input
+type="file"
+id="avatarInput"
+accept="image/*"
+hidden>
+
+</div>
+
+<h2 id="displayName">
+
+Loading...
+
+</h2>
+
+<div class="usernameRow">
+
+<span id="username">
+
+@loading
+
+</span>
+
+<span
+id="verifiedBadge"
+class="verifiedBadge">
+
+☁
+
+</span>
+
+</div>
+
+</div>
+
+<!-- =========================
+     BIO
+========================= -->
+
+<div class="bioCard">
+
+<p id="profileBio">
+
+No bio yet.
+
+</p>
+
+<a
+id="profileWebsite"
+href="#"
+target="_blank">
+
+</a>
+
+</div>
+
+<!-- =========================
+     PROFILE STATS
+========================= -->
+
+<div class="profileStats">
+
+<div class="statItem"
+id="followingStat">
+
+<h3 id="followingCount">
+0
+</h3>
+
+<span>
+Following
+</span>
+
+</div>
+
+<div class="statItem"
+id="followersStat">
+
+<h3 id="followersCount">
+0
+</h3>
+
+<span>
+Followers
+</span>
+
+</div>
+
+<div class="statItem">
+
+<h3 id="likesCount">
+
+0
+
+</h3>
+
+<span>
+
+Likes
+
+</span>
+
+</div>
+
+<div class="statItem">
+
+<h3 id="videosCount">
+
+0
+
+</h3>
+
+<span>
+
+Videos
+
+</span>
+
+</div>
+
+</div>
+
+<!-- =========================
+     ACTION BUTTONS
+========================= -->
+
+<div class="profileButtons">
+
+<button
+id="shareProfileBtn"
+class="primaryButton">
+
+Share Profile
+
+</button>
+
+
+<button
+id="followBtn"
+class="secondaryButton"
+style="display:none">
+
+Follow
+
+</button>
+
+</div>
+
+<!-- =========================
+     PROFILE TABS
+========================= -->
+
+<div class="profileTabs">
+
+<button
+id="videosTab"
+class="profileTab active">
+
+🎬
+
+<span>
+
+Videos
+
+</span>
+
+</button>
+
+<button
+id="likedTab"
+class="profileTab">
+
+❤️
+
+<span>
+
+Liked
+
+</span>
+
+</button>
+
+<button
+id="savedTab"
+class="profileTab">
+
+⭐
+
+<span>
+
+Saved
+
+</span>
+
+</button>
+
+</div>
+
+<!-- =========================
+     VIDEO GRID
+========================= -->
+
+<div
+id="profileContent"
+class="profileGrid">
+
+</div>
+
+<!-- =========================
+     SETTINGS SIDEBAR
+========================= -->
+
+<div
+id="settingsSidebar">
+
+<div class="settingsHeader">
+
+<h2>
+
+Settings
+
+</h2>
+
+<button
+id="closeSettingsBtn">
+
+×
+
+</button>
+
+</div>
+
+<div
+id="accountSettingsBtn"
+class="settingsItem">
+
+👤 Account Settings
+
+</div>
+
+<div
+id="privacyBtn"
+class="settingsItem">
+
+🔒 Privacy
+
+</div>
+
+<div
+id="notificationsBtn"
+class="settingsItem">
+
+🔔 Notifications
+
+</div>
+
+<div
+id="appearanceBtn"
+class="settingsItem">
+
+🎨 Appearance
+
+</div>
+
+<div
+id="logoutBtn"
+class="settingsItem">
+
+🚪 Logout
+
+</div>
+
+</div>
+
+<!-- =========================
+     ACCOUNT SETTINGS SHEET
+========================= -->
+
+<div
+id="accountSheet"
+class="bottomSheet">
+
+<div class="sheetHandle"></div>
+
+<h2>
+
+Account Settings
+
+</h2>
+
+<div class="editAvatarArea">
+
+<input
+type="file"
+id="accountAvatarPicker"
+accept="image/*"
+hidden>
+
+<img
+id="accountAvatarPreview"
+class="editAvatarPreview"
+src="assets/images/default-avatar.png">
+
+<button
+id="accountChangePhotoBtn">
+
+Change Photo
+
+</button>
+
+</div>
+
+<input
+id="accountDisplayName"
+type="text"
+placeholder="Display Name">
+
+<input
+id="accountUsername"
+type="text"
+placeholder="Username">
+
+<textarea
+id="accountBio"
+placeholder="Write your bio..."></textarea>
+
+<input
+id="accountWebsite"
+type="url"
+placeholder="Website">
+
+<input
+id="accountEmail"
+type="email"
+placeholder="Email">
+
+<input
+id="accountPassword"
+type="password"
+placeholder="New Password">
+
+<div class="sheetButtons">
+
+<button
+id="closeAccountBtn"
+class="secondaryButton">
+
+Cancel
+
+</button>
+
+<button
+id="saveAccountBtn"
+class="primaryButton">
+
+Save Changes
+
+</button>
+
+</div>
+
+</div>
+
+     <!-- Privacy Settings -->
+     <div id="privacySheet" class="bottomSheet">
+
+    <div class="sheetHandle"></div>
+
+    <h2>Privacy</h2>
+
+    <label>
+        <input type="checkbox" id="privateAccountToggle">
+        Private Account
+    </label>
+
+    <label>
+        <input type="checkbox" id="allowCommentsToggle">
+        Allow Comments
+    </label>
+
+    <label>
+        <input type="checkbox" id="allowDownloadsToggle">
+        Allow Downloads
+    </label>
+
+    <label>
+        <input type="checkbox" id="onlineStatusToggle">
+        Show Online Status
+    </label>
+
+    <div class="sheetButtons">
+
+        <button
+        class="secondaryButton"
+        id="closePrivacyBtn">
+        Cancel
+        </button>
+
+        <button
+        class="primaryButton"
+        id="savePrivacyBtn">
+        Save
+        </button>
+
+    </div>
+
+</div>
+     
+     
+<!-- =========================
+     NOTIFICATION SETTINGS
+========================= -->
+
+<div
+id="notificationsSheet"
+class="bottomSheet">
+
+<div class="sheetHandle"></div>
+
+<h2>
+Notifications
+</h2>
+
+
+<label>
+
+<input
+type="checkbox"
+id="videoNotificationToggle">
+
+Creator Uploads
+
+</label>
+
+
+<label>
+
+<input
+type="checkbox"
+id="commentNotificationToggle">
+
+Comments
+
+</label>
+
+
+<label>
+
+<input
+type="checkbox"
+id="likeNotificationToggle">
+
+Likes
+
+</label>
+
+
+<label>
+
+<input
+type="checkbox"
+id="followerNotificationToggle">
+
+New Followers
+
+</label>
+
+
+<div class="sheetButtons">
+
+<button
+class="secondaryButton"
+id="closeNotificationsBtn">
+
+Cancel
+
+</button>
+
+
+<button
+class="primaryButton"
+id="saveNotificationsBtn">
+
+Save
+
+</button>
+
+</div>
+
+
+</div>
+     
+    <!-- =========================
+     APPEARANCE SETTINGS
+========================= -->
+
+<div
+id="appearanceSheet"
+class="bottomSheet">
+
+<div class="sheetHandle"></div>
+
+<h2>
+Appearance
+</h2>
+
+
+<label>
+
+<input
+type="radio"
+name="theme"
+id="darkModeToggle"
+value="dark">
+
+Dark Mode
+
+</label>
+
+
+<label>
+
+<input
+type="radio"
+name="theme"
+id="lightModeToggle"
+value="light">
+
+Light Mode
+
+</label>
+
+
+<div class="sheetButtons">
+
+<button
+class="secondaryButton"
+id="closeAppearanceBtn">
+
+Cancel
+
+</button>
+
+
+<button
+class="primaryButton"
+id="saveAppearanceBtn">
+
+Save
+
+</button>
+
+</div>
+
+
+</div>
+    
+<!-- =========================
+     FLOATING UPLOAD BUTTON
+========================= -->
+
+<button
+id="profileUploadBtn"
+class="floatingUploadBtn">
+
+＋
+
+</button>
+
+</div>
+
+<script src="assets/js/core/theme.js"></script>
+<script src="assets/js/database/database.js"></script>
+
+<script src="assets/js/core/notifications.js"></script>
+
+<script src="assets/js/database/users.js"></script>
+<script src="assets/js/database/userManager.js"></script>
+<script src="assets/js/database/databaseMigration.js"></script>
+<script src="assets/js/database/authGuard.js"></script>
+
+<script src="assets/js/profile/profile.js"></script>
+
+<script>
+
+document
+.getElementById("profileUploadBtn")
+.onclick=()=>{
+
+window.location.href="upload.html";
+
+};
+
+</script>
+
+</body>
+
+</html>

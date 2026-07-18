@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width,initial-scale=1.0">
+
+<title>Upload • CloudTok</title>
+
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/upload.css">
+
+</head>
+
+<body class="uploadPageBody">
+
+<div class="uploadPage">
+
+<div class="uploadCard">
+
+<h2>Upload Video</h2>
+
+<video
+id="preview"
+controls
+playsinline>
+</video>
+
+<input
+type="file"
+id="videoInput"
+accept="video/*">
+
+<input
+type="text"
+id="caption"
+placeholder="Caption (optional)">
+
+<input
+type="text"
+id="tags"
+placeholder="Tags (optional)">
+
+<select id="category">
+
+<option>Auto Detect</option>
+<option>Comedy</option>
+<option>Gaming</option>
+<option>Sports</option>
+<option>Music</option>
+<option>Education</option>
+<option>Technology</option>
+<option>Travel</option>
+<option>Food</option>
+<option>Pets</option>
+
+</select>
+
+<progress
+id="progress"
+value="0"
+max="100"
+style="width:100%;height:18px;">
+</progress>
+
+<p id="progressText">
+
+Waiting...
+
+</p>
+
+<button id="uploadBtn">
+
+Upload
+
+</button>
+
+</div>
+
+</div>
+
+<script src="assets/js/database/database.js"></script>
+<script src="assets/js/database/users.js"></script>
+<script src="assets/js/database/userManager.js"></script>
+
+<script src="assets/js/ai/cloudtok-ai.js"></script>
+<script src="assets/js/ai/thumbnail-ai.js"></script>
+
+<script src="assets/js/database/authGuard.js"></script>
+<script src="assets/js/upload/upload.js"></script>
+<script>
+
+console.log(
+"CloudTokUploader:",
+typeof CloudTokUploader
+);
+
+</script>
+
+<script>
+
+window.onload = function(){
+
+
+const uploadButton =
+document.getElementById("uploadBtn");
+
+
+const videoInput =
+document.getElementById("videoInput");
+
+
+const preview =
+document.getElementById("preview");
+
+
+const captionInput =
+document.getElementById("caption");
+
+
+const tagsInput =
+document.getElementById("tags");
+
+
+const categoryInput =
+document.getElementById("category");
+
+
+const progress =
+document.getElementById("progress");
+
+
+const progressText =
+document.getElementById("progressText");
+
+
+
+let selectedFile = null;
+
+
+videoInput.addEventListener(
+"change",
+(e)=>{
+
+
+selectedFile =
+e.target.files[0];
+
+
+if(!selectedFile)
+return;
+
+
+
+preview.src =
+URL.createObjectURL(selectedFile);
+
+
+preview.style.display="block";
+
+
+
+if(captionInput.value.trim()===""){
+
+captionInput.value =
+selectedFile.name.replace(/\.[^/.]+$/,"");
+
+}
+
+
+
+});
+
+
+
+
+
+
+uploadButton.addEventListener(
+"click",
+()=>{
+
+
+if(
+!CloudTokAuthGuard.requireLogin()
+){
+
+return;
+
+}
+
+
+
+if(!selectedFile){
+
+alert(
+"NO VIDEO"
+);
+
+return;
+
+}
+
+console.log(
+"CloudTokUsers:",
+CloudTokUsers
+);
+
+console.log(
+"find function:",
+typeof CloudTokUsers.find
+);
+
+console.log(
+"Current user:",
+localStorage.getItem("CloudTokCurrentUser")
+);
+
+const uploader =
+new CloudTokUploader();
+
+
+
+uploader.uploadVideo(
+
+selectedFile,
+
+{
+
+
+caption:
+captionInput.value,
+
+
+tags:
+tagsInput.value,
+
+
+category:
+categoryInput.value,
+
+
+
+onProgress:(value)=>{
+
+
+progress.value=value;
+
+
+progressText.innerText =
+"Uploading "+value+"%";
+
+
+},
+
+
+
+onComplete:(video)=>{
+
+
+alert(
+"UPLOAD COMPLETE"
+);
+
+
+window.location.href =
+"index.html";
+
+
+}
+
+
+}
+
+);
+
+
+
+});
+
+
+};
+
+
+</script>
+
+</body>
+
+</html>

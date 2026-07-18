@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width,initial-scale=1.0">
+
+<title>CloudTok Chat</title>
+
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/chat.css">
+
+</head>
+
+<body>
+
+<div id="chatPage">
+
+    <!-- Header -->
+    <div class="chatHeader">
+
+        <button id="chatBackBtn">
+            ←
+        </button>
+
+        <h2>
+            Messages
+        </h2>
+
+        <button id="newChatBtn">
+            ✉
+        </button>
+
+    </div>
+
+    <!-- Search -->
+
+    <div class="chatSearch">
+
+        <input
+        id="chatSearchInput"
+        type="text"
+        placeholder="Search conversations...">
+
+    </div>
+
+    <!-- Conversation List -->
+
+    <div
+    id="conversationList"
+    class="conversationList">
+
+    </div>
+
+</div>
+
+<script src="assets/js/database/database.js"></script>
+<script src="assets/js/chat/chat.js"></script>
+
+</body>
+
+</html>
