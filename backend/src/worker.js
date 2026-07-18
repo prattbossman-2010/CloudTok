@@ -34,6 +34,18 @@ export default {
       });
     }
 
+	if (path === "/api/users") {
+
+	  const { results } = await env.DB
+   	 .prepare("SELECT id, username, email, avatar, bio, created_at FROM users")
+   	 .all();
+
+ 	 return Response.json({
+   	 users: results
+ 	 });
+
+	}
+
     return new Response("404 - Endpoint Not Found", {
       status: 404,
       headers: {
