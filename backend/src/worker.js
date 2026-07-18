@@ -2,6 +2,7 @@ import { signup } from "./routes/users.js";
 import { login } from "./routes/auth.js";
 import { authenticate } from "./middleware/auth.js";
 import { getUserProfile } from "./routes/profile.js";
+import { getVideos } from "./routes/videos.js";
 
 export default {
   async fetch(request, env) {
@@ -115,7 +116,13 @@ export default {
         
           });
         
-        }
+            }
+        
+        if (path === "/api/videos" && request.method === "GET") {
+    
+      return getVideos(request, env);
+    
+    }
     
     return new Response("404 - Endpoint Not Found", {
       status: 404,
