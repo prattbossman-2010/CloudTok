@@ -1,5 +1,6 @@
 import { signup } from "./routes/users.js";
 import { login } from "./routes/auth.js";
+import { authenticate } from "./middleware/auth.js";
 import { getUserProfile } from "./routes/profile.js";
 
 export default {
@@ -93,7 +94,29 @@ export default {
 
     }
 
+    if (path === "/api/me") {
 
+          const auth =
+            await authenticate(request, env);
+        
+        
+          if (auth.error) {
+        
+            return auth.error;
+        
+          }
+        
+        
+          return Response.json({
+        
+            authenticated: true,
+        
+            user: auth.user
+        
+          });
+        
+        }
+    
     return new Response("404 - Endpoint Not Found", {
       status: 404,
       headers: {
