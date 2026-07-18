@@ -1,4 +1,5 @@
 import { signup } from "./routes/users.js";
+import { login } from "./routes/auth.js";
 
 export default {
   async fetch(request, env) {
@@ -68,6 +69,12 @@ export default {
     if (path === "/api/users/signup" && request.method === "POST") {
 
       return signup(request, env);
+
+    }
+    
+        if (path === "/api/users/login" && request.method === "POST") {
+
+      return login(request, env);
 
     }
 
