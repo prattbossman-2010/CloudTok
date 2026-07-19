@@ -1,35 +1,59 @@
-export async function getUserProfile(request, env, userId) {
+export async function getUserProfile(request, env, username) {
 
   const { results } = await env.DB
     .prepare(
       `
       SELECT
-        id,
-        username,
-        avatar,
-        bio,
-        created_at,
-        updated_at
+    id,
+    username,
+    email,
+    display_name,
+    avatar,
+    bio,
+    created_at,
+    updated_at
       FROM users
-      WHERE id = ?
+      WHERE username = ?
       `
     )
-    .bind(userId)
+    .bind(username)
     .all();
 
-  if (results.length === 0) {
+
+  if(results.length === 0){
 
     return Response.json(
       {
-        error: "User not found"
+        error:"User not found"
       },
       {
-        status: 404
+        status:404
       }
     );
 
   }
 
-  return Response.json(results[0]);
+
+  const user = results[0];
+
+return Response.json({
+
+  id: user.id,
+
+  username: user.username,
+
+  email: user.email,
+
+  displayName: user.display_name,
+
+  avatar: user.avatar,
+
+  bio: user.bio,
+
+  created_at: user.created_at,
+
+  updated_at: user.updated_at
+
+});
 
 }

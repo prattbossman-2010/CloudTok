@@ -75,9 +75,9 @@ export default {
       path !== "/api/users/login"
     ) {
 
-      const userId = path.split("/")[3];
+      const username = path.split("/")[3];
 
-      return getUserProfile(request, env, userId);
+return getUserProfile(request, env, username);
 
     }
 

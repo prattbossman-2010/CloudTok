@@ -8,6 +8,7 @@ export async function signup(request, env) {
     const body = await request.json();
 
     const {
+      displayName,
       username,
       email,
       password
@@ -36,18 +37,20 @@ export async function signup(request, env) {
         `
         INSERT INTO users
         (
+          display_name,
           username,
           email,
           password_hash
         )
-        VALUES (?, ?, ?)
+        VALUES (?, ?, ?, ?)
         `
       )
       .bind(
-        username,
-        email,
-        passwordHash
-      )
+          displayName,
+          username,
+          email,
+          passwordHash
+        )
       .run();
 
 

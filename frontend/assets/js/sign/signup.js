@@ -1,73 +1,101 @@
 document
 .getElementById("signupBtn")
-.onclick=()=>{
+.onclick = async ()=>{
 
-const result=
 
-CloudTokUsers.signUp({
+const username =
+document
+.getElementById("username")
+.value.trim();
+
+
+const email =
+document
+.getElementById("email")
+.value.trim();
+
+
+const password =
+document
+.getElementById("password")
+.value;
+
+
+
+const result =
+await CloudTokAPI.signup({
 
 displayName:
-
 document
 .getElementById("displayName")
 .value.trim(),
 
-username:
+username,
 
-document
-.getElementById("username")
-.value.trim(),
+email,
 
-email:
-
-document
-.getElementById("email")
-.value.trim(),
-
-password:
-
-document
-.getElementById("password")
-.value,
+password,
 
 bio:""
 
 });
 
+
+
 if(!result.success){
 
-alert(result.message);
+
+alert(
+result.error || "Signup failed"
+);
+
 
 return;
 
+
 }
 
-const redirect =
-localStorage.getItem(
-"CloudTokReturnPage"
+
+
+// Automatically login after signup
+
+const loginResult =
+await CloudTokAPI.login(
+email,
+password
 );
 
-if(redirect){
 
-localStorage.removeItem(
-"CloudTokReturnPage"
+
+if(!loginResult.success){
+
+
+alert(
+"Account created. Please login."
 );
+
 
 window.location.replace(
-redirect
+"login.html"
 );
 
-}else{
+
+return;
+
+
+}
+
+
 
 window.location.replace(
 
-"profile.html?user="+
+"profile.html?user=" +
+
 encodeURIComponent(
-result.user.username
+loginResult.user.username
 )
 
 );
 
-}
 
 };

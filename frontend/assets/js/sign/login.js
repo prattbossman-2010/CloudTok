@@ -1,55 +1,81 @@
 document
 .getElementById("loginBtn")
-.onclick=()=>{
+.onclick = async ()=>{
 
-const result=
 
-CloudTokUsers.login(
-
+const email =
 document
-.getElementById("username")
-.value.trim(),
+.getElementById("email")
+.value
+.trim();
 
+
+const password =
 document
 .getElementById("password")
-.value
+.value;
 
+
+
+const result =
+await CloudTokAPI.login(
+email,
+password
 );
+
+
 
 if(!result.success){
 
-alert(result.message);
+
+alert(
+result.error || "Login failed"
+);
+
 
 return;
 
+
 }
+
+
 
 const redirect =
 localStorage.getItem(
 "CloudTokReturnPage"
 );
 
+
+
 if(redirect){
+
 
 localStorage.removeItem(
 "CloudTokReturnPage"
 );
 
+
 window.location.replace(
 redirect
 );
 
-}else{
+
+}
+else{
+
 
 window.location.replace(
 
-"profile.html?user="+
+"profile.html?user=" +
+
 encodeURIComponent(
 result.user.username
 )
 
 );
 
+
 }
+
 
 };

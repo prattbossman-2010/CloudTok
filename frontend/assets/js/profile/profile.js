@@ -21,11 +21,13 @@ localStorage.getItem(
 
 "";
 
+
 this.currentUsername =
 String(this.currentUsername)
 .replace(/^@+/,"")
 .trim()
 .toLowerCase();
+
 
 this.user = null;
 
@@ -36,7 +38,9 @@ document.getElementById(
 "profileContent"
 );
 
-this.loadUser();
+
+this.loadUser()
+.then(()=>{
 
 this.loadVideos();
 
@@ -47,114 +51,79 @@ this.setupProfileMode();
 this.setupButtons();
 
 this.setupTabs();
+
 this.loadTheme();
-    
-}
+
+});
+
+}   // <-- THIS WAS MISSING
 
 
 
+async loadUser(){
+
+    if(typeof CloudTokAPI !== "undefined"){
+
+        const cloudUser =
+        await CloudTokAPI.getProfile(
+            this.currentUsername
+        );
 
 
-loadUser(){
+        if(!cloudUser.error){
 
-if(typeof CloudTokUsers !== "undefined"){
+            this.user = cloudUser;
 
-this.user =
-CloudTokUsers.find(
-this.currentUsername
-);
+            return;
 
-}
+        }
+
+    }
 
 
-if(this.user){
 
-    if(!this.user.privacy){
+    if(typeof CloudTokUsers !== "undefined"){
 
-        this.user.privacy={
+        this.user =
+        CloudTokUsers.find(
+            this.currentUsername
+        );
 
-            privateAccount:false,
+    }
 
-            allowComments:true,
 
-            allowDownloads:true,
 
-            showOnlineStatus:true
+    if(!this.user){
+
+        this.user={
+
+            id:null,
+
+            displayName:
+            this.currentUsername || "User",
+
+            username:
+            this.currentUsername || "user",
+
+            avatar:
+            "assets/images/default-avatar.png",
+
+            bio:"",
+
+            followers:[],
+
+            following:[],
+
+            likes:0,
+
+            verified:false
 
         };
 
     }
 
-    if(!this.user.notifications){
-
-    this.user.notifications={
-
-        videoUploads:true,
-
-        comments:true,
-
-        likes:true,
-
-        followers:true
-
-    };
 
 }
-    
-    return;
-
-}
-
-
-this.user={
-
-id:Date.now(),
-
-displayName:
-this.currentUsername ||
-
-"User",
-
-username:
-this.currentUsername ||
-
-"user",
-
-email:"",
-
-password:"",
-
-avatar:
-"assets/images/default-avatar.png",
-
-bio:"",
-
-website:"",
-
-followers:[],
-
-following:[],
-
-likes:0,
-
-verified:false
-
-};
-
-
-if(typeof CloudTokUsers !== "undefined"){
-
-CloudTokUsers.users.push(
-this.user
-);
-
-CloudTokUsers.save();
-
-}
-
-}
-
-
 
 
 

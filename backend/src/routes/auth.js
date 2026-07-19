@@ -8,9 +8,11 @@ export async function login(request, env) {
 
 
   const {
-    email,
-    password
-  } = body;
+username,
+displayName,
+email,
+password
+} = body;
 
 
   if (!email || !password) {
@@ -31,14 +33,15 @@ export async function login(request, env) {
     .prepare(
       `
       SELECT
-        id,
-        username,
-        email,
-        avatar,
-        bio,
-        password_hash
-      FROM users
-      WHERE email = ?
+  id,
+  username,
+  email,
+  display_name,
+  avatar,
+  bio,
+  password_hash
+FROM users
+WHERE email = ?
       `
     )
     .bind(email)
@@ -99,9 +102,15 @@ export async function login(request, env) {
     user: {
 
       id: user.id,
+
       username: user.username,
+
+      displayName:user.display_name,
+
       email: user.email,
+
       avatar: user.avatar,
+
       bio: user.bio
 
     }
