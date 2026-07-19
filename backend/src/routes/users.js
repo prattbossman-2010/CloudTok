@@ -14,6 +14,11 @@ export async function signup(request, env) {
       password
     } = body;
 
+    console.log({
+  displayName,
+  username,
+  email
+});
 
     if (!username || !email || !password) {
 
