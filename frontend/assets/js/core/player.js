@@ -1378,18 +1378,24 @@ showSavedMessage(text){
         return;
     }
 
-        this.watchStart = Date.now();
+    if(this.video.readyState < 2){
+        this.video.load();
+    }
+
+    this.watchStart = Date.now();
+        
     this.video.play()
+    .then(()=>{
+
+        console.log("Video started");
+
+    })
     .catch(error=>{
 
-        console.log(
-            "Autoplay prevented:",
-            error
-        );
+        console.log("Autoplay prevented:", error);
 
     });
 
-    // Count a view only after 3 seconds
     if(!this.viewCounted){
 
         clearTimeout(this.viewTimer);
@@ -1404,11 +1410,6 @@ showSavedMessage(text){
                 (this.data.views || 0) + 1;
 
                 saveCloudTokVideos();
-
-                console.log(
-                    "View counted:",
-                    this.data.views
-                );
 
             }
 

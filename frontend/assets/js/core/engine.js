@@ -76,11 +76,11 @@ createSoundController(){
 
 }
 
-init(){
+async init(){
 
     this.createSoundController();
 
-    this.loadVideos();
+    await this.loadVideos();
 
     this.registerTouchEvents();
 
@@ -92,7 +92,7 @@ init(){
 
 
 
-loadVideos(){
+async loadVideos(){
 
     if(typeof CloudTokUploader!=="undefined"){
 
@@ -100,7 +100,71 @@ loadVideos(){
 
     }
 
-    this.videoList = [...(CloudTokDatabase.videos || [])];
+    try{
+
+    const result =
+    await CloudTokAPI.getVideos();
+
+        
+    this.videoList =
+    result.videos.map(video=>({
+
+        id: video.id,
+
+        username:
+        "@" + video.username,
+
+        displayName:
+        video.username,
+
+        avatar:
+        video.avatar ||
+        "assets/images/default-avatar.png",
+
+        caption:
+        video.caption,
+
+        video:
+        video.video_url,
+
+        thumbnail:
+        video.thumbnail_url || "",
+
+        tags:[],
+
+        category:"General",
+
+        likes:
+        video.likes || 0,
+
+        likedBy:[],
+
+        comments:[],
+
+        shares:0,
+
+        saves:0,
+
+        views:
+        video.views || 0,
+
+        uploaded:
+        video.created_at
+
+    }));
+
+}
+catch(error){
+
+    console.error(
+        "Backend unavailable. Using local videos.",
+        error
+    );
+
+    this.videoList =
+    [...(CloudTokDatabase.videos || [])];
+
+}
 
 this.videoList.sort((a,b)=>{
 
@@ -110,8 +174,8 @@ this.videoList.sort((a,b)=>{
         ((a.comments||[]).length)*8 +
         (a.shares||0)*15 +
         (a.saves||0)*12 +
+        (a.watchTime||0)*2 +
         Math.random()*20;
-        (a.watchTime||0)*2
 
     const scoreB =
         (b.views||0)*5 +
@@ -119,8 +183,8 @@ this.videoList.sort((a,b)=>{
         ((b.comments||[]).length)*8 +
         (b.shares||0)*15 +
         (b.saves||0)*12 +
+        (b.watchTime||0)*2 +
         Math.random()*20;
-        (b.watchTime||0)*2
 
     return scoreB - scoreA;
 
@@ -250,9 +314,6 @@ playCurrentVideo(){
     });
 
 }
-
-
-l
 
 
 nextVideo(){
@@ -522,7 +583,7 @@ refreshCurrentVideoSound(){
 }
 
 
-reloadFeed(){
+async reloadFeed(){
 
     const currentSoundState = this.soundEnabled;
 
@@ -532,7 +593,7 @@ reloadFeed(){
 
     }
 
-    this.loadVideos();
+    await this.loadVideos();
 
     this.soundEnabled = currentSoundState;
 

@@ -3,6 +3,7 @@ import { signup } from "./routes/users.js";
 import { login } from "./routes/auth.js";
 import { authenticate } from "./middleware/auth.js";
 import { getUserProfile } from "./routes/profile.js";
+import { toggleLike } from "./routes/interactions.js";
 import { getVideos, createVideo } from "./routes/videos.js";
 
 export default {
@@ -138,6 +139,23 @@ return getUserProfile(request, env, username);
   );
 
   return Response.json(result);
+
+}
+    
+    if(
+    request.method === "POST" &&
+    path.match(/^\/api\/videos\/\d+\/like$/)
+){
+
+    const videoId =
+    path.split("/")[3];
+
+
+    return toggleLike(
+        request,
+        env,
+        videoId
+    );
 
 }
     

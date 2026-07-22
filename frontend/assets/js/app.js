@@ -1,7 +1,7 @@
 window.Engine = new CloudTokEngine();
 
 
-window.onload=function(){
+window.onload = async function(){
 
 
     // Restore uploaded videos first
@@ -43,7 +43,7 @@ window.onload=function(){
 
 
 
-    Engine.init();
+    await Engine.init();
 
 
 

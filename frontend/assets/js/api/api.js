@@ -1,4 +1,5 @@
-const CloudTokAPI = {
+
+window.CloudTokAPI = {
 
     baseURL:
     "https://cloudtok-api.bossmanp16.workers.dev/api",
@@ -125,6 +126,18 @@ const CloudTokAPI = {
 
     },
 
+    async getVideos(){
+
+    const response =
+    await fetch(
+        this.baseURL + "/videos"
+    );
+
+
+    return await response.json();
+
+},
+    
     async uploadVideo(file, caption = ""){
 
     const token =
