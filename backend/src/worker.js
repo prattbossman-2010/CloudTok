@@ -1,3 +1,4 @@
+import StorageRouter from "./cloud/storage/router.js";
 import { signup } from "./routes/users.js";
 import { login } from "./routes/auth.js";
 import { authenticate } from "./middleware/auth.js";
@@ -127,6 +128,16 @@ return getUserProfile(request, env, username);
       if (path === "/api/videos" && request.method === "POST") {
 
   return createVideo(request, env);
+
+}
+    
+    if (path === "/api/storage/health") {
+
+  const result = await StorageRouter.healthCheck(
+    env
+  );
+
+  return Response.json(result);
 
 }
     

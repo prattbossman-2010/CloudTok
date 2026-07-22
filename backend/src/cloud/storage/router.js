@@ -194,7 +194,63 @@ class StorageRouter {
 
     }
 
+async healthCheck(env){
 
+    const results = [];
+
+    const providers =
+    StorageManager.getAvailableProviders();
+
+
+    for(const providerInfo of providers){
+
+        const provider =
+        StorageManager.getProviderModule(
+            providerInfo.id
+        );
+
+
+        if(!provider){
+
+            continue;
+
+        }
+
+
+        if(
+            typeof provider.healthCheck === "function"
+        ){
+
+            const check =
+            await provider.healthCheck(
+                env
+            );
+
+
+            results.push({
+
+                id:
+                providerInfo.id,
+
+                ...check
+
+            });
+
+        }
+
+
+    }
+
+
+    return {
+
+        status:"complete",
+
+        providers:results
+
+    };
+
+}
 
 
 }
