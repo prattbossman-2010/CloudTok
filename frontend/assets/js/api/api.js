@@ -123,7 +123,7 @@ const CloudTokAPI = {
 
         return await response.json();
 
-    }
+    },
 
     async uploadVideo(file, caption = ""){
 

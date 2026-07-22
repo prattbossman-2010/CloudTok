@@ -48,13 +48,13 @@ progress(5);
 
 reader.onload=(e)=>{
     
-const videoURL=e.target.result;
+const localVideoURL=e.target.result;
 
 progress(25);
 
-this.createThumbnail(videoURL)
+this.createThumbnail(localVideoURL)
 
-.then((thumbnail)=>{
+.then(async (thumbnail)=>{
 
 progress(60);
 
@@ -75,7 +75,24 @@ caption,
 tags,
 options.category
 );
+    
+    const uploadResult =
+await CloudTokAPI.uploadVideo(
+    file,
+    caption
+);
 
+
+if(!uploadResult.success){
+
+    throw new Error(
+        "Cloud upload failed"
+    );
+
+}
+    
+const cloudVideoURL =
+uploadResult.videoUrl;
 const video={
 
 id:Date.now(),
@@ -98,7 +115,7 @@ category:category,
 thumbnail:
 thumbnail,
 
-video:videoURL,
+video:cloudVideoURL,
 
 likes:0,
 

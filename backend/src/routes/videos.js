@@ -145,8 +145,10 @@ await StorageRouter.upload(
 
     success: true,
 
-    videoId: result.meta.last_row_id
+    videoId: result.meta.last_row_id,
 
-  });
+    videoUrl: video_url
+
+});
 
 }
