@@ -1454,7 +1454,7 @@ showSavedMessage(text){
 }
 
 
-    toggleLike(){
+    async toggleLike(){
 
     if(
         !CloudTokAuthGuard.requireLogin()
@@ -1462,44 +1462,69 @@ showSavedMessage(text){
         return;
     }
 
-    if(
-        typeof toggleVideoLike === "undefined"
-    ){
 
-        console.log(
-            "toggleVideoLike missing"
+    try{
+
+
+        const result =
+        await CloudTokAPI.request(
+
+            `/videos/${this.data.id}/like`,
+
+            {
+                method:"POST"
+            }
+
         );
 
-        return;
+
+
+        if(
+            result.success
+        ){
+
+
+            this.isLiked =
+            result.liked;
+
+
+
+            if(result.liked){
+
+                this.likes++;
+
+            }
+            else{
+
+                this.likes =
+                Math.max(
+                    0,
+                    this.likes - 1
+                );
+
+            }
+
+
+            this.updateLike();
+
+
+        }
+
+
+    }
+    catch(error){
+
+
+        console.error(
+            "Like failed:",
+            error
+        );
+
 
     }
 
-    toggleVideoLike(
-        this.data.id
-    );
-
-    const video =
-    CloudTokDatabase.videos.find(
-        v =>
-        String(v.id) === String(this.data.id)
-    );
-
-    if(video){
-
-        this.likes =
-        video.likes;
-
-    }
-
-    this.isLiked =
-    hasLikedVideo(
-        this.data.id
-    );
-
-    this.updateLike();
 
 }
-
 
 toggleSave(){
 

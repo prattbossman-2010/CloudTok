@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>CloudTok Like Test</title>
+</head>
+
+<body>
+
+<h2>CloudTok Like API Test</h2>
+
+<button id="likeBtn">
+Test Like
+</button>
+
+<pre id="result"></pre>
+
+
+<script src="assets/js/api/api.js"></script>
+
+<script>
+
+const result =
+document.getElementById("result");
+
+
+document
+.getElementById("likeBtn")
+.onclick = async ()=>{
+
+
+try{
+
+
+const response =
+await fetch(
+
+CloudTokAPI.baseURL +
+"/videos/1/like",
+
+{
+
+method:"POST",
+
+headers:{
+
+"Authorization":
+"Bearer " +
+localStorage.getItem(
+"CloudTokToken"
+)
+
+}
+
+}
+
+);
+
+
+
+const data =
+await response.json();
+
+
+
+result.textContent =
+JSON.stringify(
+data,
+null,
+2
+);
+
+
+
+}
+
+catch(error){
+
+
+result.textContent =
+"ERROR: " + error.message;
+
+
+}
+
+
+};
+
+
+</script>
+
+
+</body>
+</html>

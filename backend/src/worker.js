@@ -1,6 +1,7 @@
 import StorageRouter from "./cloud/storage/router.js";
 import { signup } from "./routes/users.js";
 import { login } from "./routes/auth.js";
+import { getComments, addComment } from "./routes/comments.js";
 import { authenticate } from "./middleware/auth.js";
 import { getUserProfile } from "./routes/profile.js";
 import { toggleLike } from "./routes/interactions.js";
@@ -271,7 +272,39 @@ export default {
 
 
 
+    if(
+    request.method === "GET" &&
+    path.match(/^\/api\/videos\/\d+\/comments$/)
+){
 
+    const videoId =
+    path.split("/")[3];
+
+    return getComments(
+        request,
+        env,
+        videoId
+    );
+
+}
+
+
+
+if(
+    request.method === "POST" &&
+    path.match(/^\/api\/videos\/\d+\/comments$/)
+){
+
+    const videoId =
+    path.split("/")[3];
+
+    return addComment(
+        request,
+        env,
+        videoId
+    );
+
+}
 
 
 
