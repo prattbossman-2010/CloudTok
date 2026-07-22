@@ -125,5 +125,56 @@ const CloudTokAPI = {
 
     }
 
+    async uploadVideo(file, caption = ""){
+
+    const token =
+    localStorage.getItem(
+        "CloudTokToken"
+    );
+
+
+    const form =
+    new FormData();
+
+
+    form.append(
+        "file",
+        file
+    );
+
+
+    form.append(
+        "caption",
+        caption
+    );
+
+
+    const response =
+    await fetch(
+
+        this.baseURL +
+        "/videos",
+
+        {
+
+            method:"POST",
+
+            headers:{
+
+                Authorization:
+                "Bearer " + token
+
+            },
+
+            body:form
+
+        }
+
+    );
+
+
+    return await response.json();
+
+}
 
 };

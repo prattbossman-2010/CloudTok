@@ -1,4 +1,5 @@
 import { authenticate } from "../middleware/auth.js";
+import StorageRouter from "../cloud/storage/router.js";
 
 
 export async function getVideos(request, env) {
@@ -30,7 +31,6 @@ export async function getVideos(request, env) {
     )
     .all();
 
-
   return Response.json({
     videos: results
   });
@@ -41,34 +41,38 @@ export async function getVideos(request, env) {
 
 export async function createVideo(request, env) {
 
-
   const auth =
     await authenticate(request, env);
 
-
   if (auth.error) {
-
     return auth.error;
-
   }
 
+  const form =
 
-  const body =
-    await request.json();
-
-
-  const {
-    video_url,
-    thumbnail_url,
-    caption
-  } = body;
+await request.formData();
 
 
-  if (!video_url) {
+const file =
+
+form.get("file");
+
+
+const caption =
+
+form.get("caption") || "";
+
+
+const thumbnail =
+
+form.get("thumbnail");
+
+
+  if (!file) {
 
     return Response.json(
       {
-        error: "Video URL required"
+        error: "Video file required"
       },
       {
         status: 400
@@ -76,6 +80,41 @@ export async function createVideo(request, env) {
     );
 
   }
+
+
+  const uploadResult =
+
+await StorageRouter.upload(
+    file,
+    {
+        type: "video",
+        userId: auth.user.id,
+        env
+    }
+);
+
+
+  if (!uploadResult.success) {
+
+    return Response.json(
+      {
+        error: "Video upload failed",
+        details: uploadResult
+      },
+      {
+        status: 500
+      }
+    );
+
+  }
+
+
+  const video_url =
+    uploadResult.url;
+
+
+  const thumbnail_url =
+    thumbnail || null;
 
 
   const result =
@@ -96,11 +135,10 @@ export async function createVideo(request, env) {
       .bind(
         auth.user.id,
         video_url,
-        thumbnail_url || null,
+        thumbnail_url,
         caption || ""
       )
       .run();
-
 
 
   return Response.json({
@@ -110,6 +148,5 @@ export async function createVideo(request, env) {
     videoId: result.meta.last_row_id
 
   });
-
 
 }
