@@ -49,7 +49,7 @@ class CloudinaryProvider {
 
         const folder =
 
-        metadata.type === "video"
+        metadata.role === "video"
 
         ?
 

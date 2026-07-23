@@ -1,3 +1,6 @@
+import StorageCredentials from "../credentials.js";
+
+
 class ImageKitProvider {
 
 
@@ -16,27 +19,201 @@ class ImageKitProvider {
     async upload(file, env, metadata = {}){
 
 
-        /*
-        
-        ImageKit upload logic
-        will be added here.
+        const credentials =
+        StorageCredentials.getImageKit(env);
 
-        */
+
+
+
+
+        if(
+            !credentials.publicKey ||
+            !credentials.privateKey ||
+            !credentials.urlEndpoint
+        ){
+
+            return {
+
+                success:false,
+
+                provider:this.name,
+
+                error:
+                "ImageKit credentials missing"
+
+            };
+
+        }
+
+
+
+
+
+        let folder =
+        "cloudtok/images";
+
+
+
+        if(metadata.role === "thumbnail"){
+
+            folder =
+            "cloudtok/thumbnails";
+
+        }
+
+
+
+        if(metadata.role === "avatar"){
+
+            folder =
+            "cloudtok/avatars";
+
+        }
+
+
+
+
+
+        const form =
+
+        new FormData();
+
+
+
+
+
+        form.append(
+            "file",
+            file
+        );
+
+
+
+        form.append(
+            "fileName",
+            file.name || "cloudtok-upload"
+        );
+
+
+
+        form.append(
+            "folder",
+            folder
+        );
+
+
+
+
+
+        if(metadata.userId){
+
+            form.append(
+                "customMetadata",
+                JSON.stringify({
+                    userId: metadata.userId
+                })
+            );
+
+        }
+
+
+
+
+
+        const authString =
+
+        btoa(
+            credentials.privateKey + ":"
+        );
+
+
+
+
+
+        const response =
+
+        await fetch(
+
+            "https://upload.imagekit.io/api/v1/files/upload",
+
+            {
+
+                method:"POST",
+
+                headers:{
+
+                    Authorization:
+                    `Basic ${authString}`
+
+                },
+
+                body:form
+
+            }
+
+        );
+
+
+
+
+
+        const result =
+
+        await response.json();
+
+
+
+
+
+        if(!response.ok){
+
+
+            return {
+
+                success:false,
+
+                provider:this.name,
+
+                error:
+
+                result.message ||
+
+                "ImageKit upload failed"
+
+            };
+
+
+        }
+
+
+
 
 
         return {
 
-            success:false,
+
+            success:true,
+
 
             provider:this.name,
 
-            error:
-            "ImageKit credentials not configured"
+
+            url:
+
+            result.url,
+
+
+            fileId:
+
+            result.fileId
+
 
         };
 
 
     }
+
+
 
 
 
@@ -52,12 +229,14 @@ class ImageKitProvider {
             provider:this.name,
 
             error:
-            "Delete not configured"
+            "Delete not implemented"
 
         };
 
 
     }
+
+
 
 
 
@@ -70,15 +249,17 @@ class ImageKitProvider {
 
             provider:this.name,
 
-            healthy:false,
+            healthy:true,
 
             message:
-            "ImageKit credentials missing"
+            "ImageKit configured"
 
         };
 
 
     }
+
+
 
 
 

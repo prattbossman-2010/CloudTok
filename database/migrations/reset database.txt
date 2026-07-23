@@ -1,0 +1,5 @@
+DELETE FROM video_comments;
+DELETE FROM video_likes;
+DELETE FROM videos;
+DELETE FROM users;
+DELETE FROM sqlite_sequence;

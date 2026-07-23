@@ -11,7 +11,7 @@ const StorageConfig = {
 
             apiConfigured: true,
 
-            type: "video",
+            roles: ["video"],
 
             priority: 1,
 
@@ -53,7 +53,7 @@ const StorageConfig = {
 
             apiConfigured: false,
 
-            type: "video",
+            roles: ["video"],
 
             priority: 2,
 
@@ -95,7 +95,7 @@ const StorageConfig = {
 
             apiConfigured: false,
 
-            type: "video",
+            roles: ["video"],
 
             priority: 3,
 
@@ -137,7 +137,10 @@ const StorageConfig = {
 
             apiConfigured: false,
 
-            type: "image",
+            roles: [
+                "thumbnail",
+                "avatar"
+            ],
 
             priority: 4,
 
@@ -179,7 +182,7 @@ const StorageConfig = {
 
             apiConfigured: false,
 
-            type: "video",
+            roles: ["video"],
 
             priority: 5,
 

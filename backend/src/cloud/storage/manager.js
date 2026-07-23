@@ -27,7 +27,8 @@ class StorageManager {
 
             provider.apiConfigured &&
 
-            provider.type === type
+            provider.roles &&
+            provider.roles.includes(type)
 
         )
 

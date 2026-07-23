@@ -87,7 +87,7 @@ form.get("thumbnail");
 await StorageRouter.upload(
     file,
     {
-        type: "video",
+        role: "video",
         userId: auth.user.id,
         env
     }
