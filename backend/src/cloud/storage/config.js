@@ -135,7 +135,7 @@ const StorageConfig = {
 
             enabled: true,
 
-            apiConfigured: false,
+            apiConfigured: true,
 
             roles: [
                 "thumbnail",
