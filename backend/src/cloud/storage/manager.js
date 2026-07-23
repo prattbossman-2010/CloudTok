@@ -16,7 +16,7 @@ class StorageManager {
 
 
 
-    getAvailableProviders(type = "video"){
+    getAvailableProviders(role = "video"){
 
 
         return this.providers
@@ -28,7 +28,7 @@ class StorageManager {
             provider.apiConfigured &&
 
             provider.roles &&
-            provider.roles.includes(type)
+            provider.roles.includes(role)
 
         )
 
@@ -44,12 +44,12 @@ class StorageManager {
 
 
 
-    getBestProvider(type = "video"){
+    getBestProvider(role = "video"){
 
 
         const providers =
 
-        this.getAvailableProviders(type);
+        this.getAvailableProviders(role);
 
 
 

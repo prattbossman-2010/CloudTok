@@ -10,15 +10,14 @@ class StorageRouter {
     async upload(file, options = {}){
 
 
-        const type =
-
-        options.type || "video";
+        const role =
+options.role || "video";
 
 
 
         const providers =
 
-        StorageManager.getAvailableProviders(type);
+        StorageManager.getAvailableProviders(role);
 
 
 
