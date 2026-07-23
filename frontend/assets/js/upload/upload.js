@@ -76,10 +76,11 @@ tags,
 options.category
 );
     
-    const uploadResult =
+ const uploadResult =
 await CloudTokAPI.uploadVideo(
     file,
-    caption
+    caption,
+    thumbnail
 );
 
 

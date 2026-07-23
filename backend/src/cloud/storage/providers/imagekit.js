@@ -24,8 +24,6 @@ class ImageKitProvider {
 
 
 
-
-
         if(
             !credentials.publicKey ||
             !credentials.privateKey ||
@@ -49,36 +47,8 @@ class ImageKitProvider {
 
 
 
-        let folder =
-        "cloudtok/images";
-
-
-
-        if(metadata.role === "thumbnail"){
-
-            folder =
-            "cloudtok/thumbnails";
-
-        }
-
-
-
-        if(metadata.role === "avatar"){
-
-            folder =
-            "cloudtok/avatars";
-
-        }
-
-
-
-
-
         const form =
-
         new FormData();
-
-
 
 
 
@@ -88,30 +58,25 @@ class ImageKitProvider {
         );
 
 
-
         form.append(
             "fileName",
-            file.name || "cloudtok-upload"
+            "cloudtok-thumbnail-" + Date.now() + ".jpg"
         );
 
 
 
         form.append(
             "folder",
-            folder
+            "/cloudtok/thumbnails"
         );
-
-
 
 
 
         if(metadata.userId){
 
             form.append(
-                "customMetadata",
-                JSON.stringify({
-                    userId: metadata.userId
-                })
+                "tags",
+                "user_" + metadata.userId
             );
 
         }
@@ -121,17 +86,13 @@ class ImageKitProvider {
 
 
         const authString =
-
         btoa(
             credentials.privateKey + ":"
         );
 
 
 
-
-
         const response =
-
         await fetch(
 
             "https://upload.imagekit.io/api/v1/files/upload",
@@ -143,7 +104,10 @@ class ImageKitProvider {
                 headers:{
 
                     Authorization:
-                    `Basic ${authString}`
+                    "Basic " + authString,
+
+                    "x-public-key":
+                    credentials.publicKey
 
                 },
 
@@ -158,7 +122,6 @@ class ImageKitProvider {
 
 
         const result =
-
         await response.json();
 
 
@@ -167,7 +130,6 @@ class ImageKitProvider {
 
         if(!response.ok){
 
-
             return {
 
                 success:false,
@@ -175,13 +137,10 @@ class ImageKitProvider {
                 provider:this.name,
 
                 error:
-
                 result.message ||
-
                 "ImageKit upload failed"
 
             };
-
 
         }
 
@@ -191,22 +150,15 @@ class ImageKitProvider {
 
         return {
 
-
             success:true,
-
 
             provider:this.name,
 
-
             url:
-
             result.url,
 
-
             fileId:
-
             result.fileId
-
 
         };
 
@@ -242,14 +194,24 @@ class ImageKitProvider {
 
 
 
-    async healthCheck(){
+    async healthCheck(env){
+
+
+        const credentials =
+        StorageCredentials.getImageKit(env);
+
 
 
         return {
 
             provider:this.name,
 
-            healthy:true,
+            healthy:
+            Boolean(
+                credentials.publicKey &&
+                credentials.privateKey &&
+                credentials.urlEndpoint
+            ),
 
             message:
             "ImageKit configured"

@@ -138,7 +138,11 @@ window.CloudTokAPI = {
 
 },
     
-    async uploadVideo(file, caption = ""){
+    async uploadVideo(
+    file,
+    caption = "",
+    thumbnail = ""
+){
 
     const token =
     localStorage.getItem(
@@ -160,6 +164,16 @@ window.CloudTokAPI = {
         "caption",
         caption
     );
+
+
+    if(thumbnail){
+
+        form.append(
+            "thumbnail",
+            thumbnail
+        );
+
+    }
 
 
     const response =

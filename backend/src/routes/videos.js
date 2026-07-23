@@ -113,8 +113,30 @@ await StorageRouter.upload(
     uploadResult.url;
 
 
-  const thumbnail_url =
-    thumbnail || null;
+  let thumbnail_url = null;
+
+
+if(thumbnail){
+
+    const thumbnailResult =
+    await StorageRouter.upload(
+        thumbnail,
+        {
+            role:"thumbnail",
+            userId: auth.user.id,
+            env
+        }
+    );
+
+
+    if(thumbnailResult.success){
+
+        thumbnail_url =
+        thumbnailResult.url;
+
+    }
+
+}
 
 
   const result =
