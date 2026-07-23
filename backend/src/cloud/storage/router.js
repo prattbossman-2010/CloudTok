@@ -199,7 +199,11 @@ async healthCheck(env){
     const results = [];
 
     const providers =
-    StorageManager.getAvailableProviders();
+    StorageManager.providers
+    .filter(provider =>
+        provider.enabled &&
+        provider.apiConfigured
+    );
 
 
     for(const providerInfo of providers){
