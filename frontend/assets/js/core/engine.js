@@ -84,6 +84,12 @@ async init(){
 
     this.registerTouchEvents();
 
+    this.registerKeyboardEvents();
+
+    this.registerWheelEvents();
+
+    this.showPCHint();
+
 }
 
 
@@ -579,6 +585,71 @@ refreshCurrentVideoSound(){
     }
 
     video.muted = !this.soundEnabled;
+
+}
+
+
+registerKeyboardEvents(){
+
+    document.addEventListener("keydown",(e)=>{
+
+        if(e.key==="ArrowDown"){
+            e.preventDefault();
+            this.nextVideo();
+        }
+        else if(e.key==="ArrowUp"){
+            e.preventDefault();
+            this.previousVideo();
+        }
+
+    });
+
+}
+
+
+registerWheelEvents(){
+
+    let wheelTimeout=null;
+    let accumulated=0;
+
+    document.addEventListener("wheel",(e)=>{
+
+        accumulated+=e.deltaY;
+
+        if(wheelTimeout)return;
+
+        wheelTimeout=setTimeout(()=>{
+
+            if(Math.abs(accumulated)>50){
+
+                if(accumulated>0){
+                    this.nextVideo();
+                }
+                else{
+                    this.previousVideo();
+                }
+            }
+
+            accumulated=0;
+            wheelTimeout=null;
+
+        },200);
+
+    },{passive:true});
+
+}
+
+
+showPCHint(){
+
+    if("ontouchstart" in window)return;
+
+    const hint=document.createElement("div");
+    hint.textContent="Use \u2191 \u2193 arrow keys or scroll to navigate";
+    hint.style.cssText="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);color:#fff;padding:10px 20px;border-radius:999px;font-size:13px;z-index:9999;pointer-events:none;transition:opacity .5s;";
+    document.body.appendChild(hint);
+    setTimeout(()=>{hint.style.opacity="0";},4000);
+    setTimeout(()=>{hint.remove();},4500);
 
 }
 

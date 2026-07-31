@@ -13,7 +13,6 @@ export function corsHeaders(){
 
 export function handleCORS(request){
 
-
   if(request.method === "OPTIONS"){
     return new Response(null, {
       status: 204,
@@ -27,23 +26,16 @@ export function handleCORS(request){
 
 export function withCORS(response){
 
-
-  const newResponse = new Response(
-    response.body,
-    response
-  );
-
-
-  const headers = new Response(
-    response.body,
-    response
-  ).headers;
-
+  const newHeaders = new Headers(response.headers);
 
   Object.entries(CORS_HEADERS).forEach(([key, value])=>{
-    newResponse.headers.set(key, value);
+    newHeaders.set(key, value);
   });
 
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: newHeaders
+  });
 
-  return newResponse;
 }
