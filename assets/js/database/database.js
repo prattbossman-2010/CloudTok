@@ -183,7 +183,7 @@ catch(error){
 
 }
 
-loadCloudTokStorage();
+window._cloudtokStorageReady = loadCloudTokStorage();
 
 if(!CloudTokDatabase.users){
 CloudTokDatabase.users=[];

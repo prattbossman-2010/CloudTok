@@ -15,7 +15,12 @@ document
 .getElementById("password")
 .value;
 
+if(!email||!password){
+alert("Please fill in all fields");
+return;
+}
 
+try{
 
 const result =
 await CloudTokAPI.login(
@@ -72,8 +77,18 @@ encodeURIComponent(
 result.user.username
 )
 
+
 );
 
+
+}
+
+}
+
+catch(e){
+
+alert("Login failed. Please try again.");
+console.log("Login error:",e);
 
 }
 

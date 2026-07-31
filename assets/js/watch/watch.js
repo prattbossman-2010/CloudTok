@@ -4,7 +4,7 @@ let WatchEngine = null;
 
 document.addEventListener(
 "DOMContentLoaded",
-()=>{
+async ()=>{
 
 
 console.log(
@@ -26,7 +26,11 @@ params.get("id")
 );
 
 
-
+// Wait for videos to load from API
+if(window._cloudtokStorageReady){
+    try{ await window._cloudtokStorageReady; }
+    catch(e){}
+}
 
 
 /*
@@ -59,11 +63,16 @@ console.log(
 
 }
 
-
-
-
-
-
+// Show PC hint
+if(!("ontouchstart" in window)){
+    const hint=document.createElement("div");
+    hint.id="pcHint";
+    hint.textContent="Use ↑ ↓ arrow keys or scroll to navigate";
+    hint.style.cssText="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:#fff;padding:10px 20px;border-radius:999px;font-size:13px;z-index:9999;pointer-events:none;transition:opacity .5s;";
+    document.body.appendChild(hint);
+    setTimeout(()=>{hint.style.opacity="0";},4000);
+    setTimeout(()=>{hint.remove();},4500);
+}
 
 /*
 BACK BUTTON
@@ -106,6 +115,7 @@ history.back();
 
 
 }
+
 
 
 const soundBtn =
