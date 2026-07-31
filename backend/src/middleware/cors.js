@@ -24,7 +24,9 @@ export function handleCORS(request){
 }
 
 
-export function withCORS(response){
+export async function withCORS(responseOrPromise){
+
+  const response = await responseOrPromise;
 
   const newHeaders = new Headers(response.headers);
 
