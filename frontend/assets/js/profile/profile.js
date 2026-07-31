@@ -39,23 +39,19 @@ document.getElementById(
 );
 
 
-this.loadUser()
-.then(()=>{
+this.init();
 
-this.loadVideos();
+}
 
-this.updateProfileUI();
 
-this.setupProfileMode();
+async init(){
 
-this.setupButtons();
-
-this.setupTabs();
-
-this.loadTheme();
-
-})
-.catch(()=>{
+try{
+    await this.loadUser();
+}
+catch(e){
+    console.log("loadUser error:",e);
+}
 
 if(!this.user){
 
@@ -90,14 +86,12 @@ verified:false
 
 }
 
-this.loadVideos();
-this.updateProfileUI();
-this.setupProfileMode();
-this.setupButtons();
-this.setupTabs();
-this.loadTheme();
-
-});
+try{ this.loadVideos(); }catch(e){}
+try{ this.updateProfileUI(); }catch(e){}
+try{ this.setupProfileMode(); }catch(e){}
+try{ this.setupButtons(); }catch(e){}
+try{ this.setupTabs(); }catch(e){}
+try{ this.loadTheme(); }catch(e){}
 
 }
 
