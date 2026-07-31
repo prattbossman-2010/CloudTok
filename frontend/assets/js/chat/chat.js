@@ -1,82 +1,93 @@
-class CloudTokChat {
+class CloudTokChat{
 
-    constructor() {
+    constructor(){
 
-        this.list =
-document.getElementById(
-    "conversationList"
-);
+        this.list=
+        document.getElementById("conversationList");
 
         this.loadChats();
 
     }
 
-    loadChats() {
+    async loadChats(){
 
-        this.list.innerHTML = "";
+        this.list.innerHTML="";
 
-        let users =
-JSON.parse(
-    localStorage.getItem("CloudTokUsers")
-    || "[]"
-);
+        let users=[];
 
-// Add default users if they don't already exist
-CloudTokDatabase.users.forEach(user=>{
+        if(typeof CloudTokAPI!=="undefined"){
 
-    const exists =
-    users.some(u=>
-        u.username === user.username
-    );
+            try{
 
-    if(!exists){
+                const result=await CloudTokAPI.getConversations();
 
-        users.push(user);
+                if(result.conversations){
 
-    }
+                    users=result.conversations.map(c=>({
+                        username:c.other_username,
+                        displayName:c.other_display_name,
+                        avatar:c.other_avatar||
+                        "assets/images/default-avatar.png",
+                        lastMessage:c.last_message,
+                        lastMessageAt:c.last_message_at
+                    }));
 
-});
+                }
 
-        const currentUser =
-        getCurrentCloudTokUser();
+            }
+            catch(e){
+                console.log("Conversations API failed");
+            }
+
+        }
+
+        if(users.length===0){
+
+            let storedUsers=
+            JSON.parse(
+                localStorage.getItem("CloudTokUsers")||"[]"
+            );
+
+            CloudTokDatabase.users.forEach(user=>{
+                const exists=storedUsers.some(u=>u.username===user.username);
+                if(!exists)storedUsers.push(user);
+            });
+
+            const currentUser=getCurrentCloudTokUser();
+
+            users=storedUsers
+            .filter(u=>u.username!==currentUser)
+            .map(u=>({
+                username:u.username,
+                displayName:u.displayName,
+                avatar:u.avatar||
+                "assets/images/default-avatar.png",
+                lastMessage:"Start chatting...",
+                lastMessageAt:null
+            }));
+
+        }
 
         users.forEach(user=>{
 
-            if(user.username === currentUser){
+            const card=document.createElement("div");
+            card.className="chatCard";
 
-                return;
-
-            }
-
-            const card =
-            document.createElement("div");
-
-            card.className =
-            "chatCard";
-
-            card.innerHTML = `
-
-               <img
-src="${user.avatar || "assets/images/default-avatar.png"}"
+            card.innerHTML=`
+                <img
+src="${user.avatar||"assets/images/default-avatar.png"}"
 class="chatAvatar"
 onerror="this.src='assets/images/default-avatar.png'">
-
                 <div class="chatInfo">
-
                     <h3>${user.displayName}</h3>
-
-                    <p>Start chatting...</p>
-
+                    <p>${user.lastMessage||"Start chatting..."}</p>
                 </div>
-
             `;
 
-            card.onclick = ()=>{
-
-                window.location.href =
-                "conversation.html?user=" +
+            card.onclick=()=>{
+                window.location.href=
+                "conversation.html?user="+
                 encodeURIComponent(user.username);
-
             };
 
             this.list.appendChild(card);
@@ -88,28 +99,15 @@ onerror="this.src='assets/images/default-avatar.png'">
 }
 
 document.addEventListener(
-
-    "DOMContentLoaded",
-
-    ()=>{
-
-        new CloudTokChat();
-
-    }
-
+"DOMContentLoaded",
+()=>{
+    new CloudTokChat();
+}
 );
 
-const backBtn =
-document.getElementById(
-    "chatBackBtn"
-);
+const backBtn=
+document.getElementById("chatBackBtn");
 
 if(backBtn){
-
-    backBtn.onclick = ()=>{
-
-        history.back();
-
-    };
-
+    backBtn.onclick=()=>{history.back();};
 }

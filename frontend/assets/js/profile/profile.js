@@ -72,7 +72,13 @@ async loadUser(){
 
         if(!cloudUser.error){
 
-            this.user = cloudUser;
+            this.user = {
+                ...cloudUser,
+                followers: cloudUser.followersCount||0,
+                following: cloudUser.followingCount||0,
+                followersList:[],
+                followingList:[]
+            };
 
             return;
 
@@ -110,9 +116,13 @@ async loadUser(){
 
             bio:"",
 
-            followers:[],
+            followers:0,
 
-            following:[],
+            following:0,
+
+            followersList:[],
+
+            followingList:[],
 
             likes:0,
 
@@ -180,12 +190,16 @@ document.getElementById(
 "followersCount"
 ).textContent=
 
+typeof this.user.followers === "number" ?
+this.user.followers :
 (this.user.followers || []).length;
 
 document.getElementById(
 "followingCount"
 ).textContent=
 
+typeof this.user.following === "number" ?
+this.user.following :
 (this.user.following || []).length;
 
     const badge =
@@ -210,89 +224,68 @@ this.user.verified
 
 
 
+async loadVideos(){
 
-loadVideos(){
+let allVideos=[];
 
-const savedVideos=
+if(typeof CloudTokAPI!=="undefined"){
 
-JSON.parse(
+    try{
 
-localStorage.getItem(
-"CloudTokVideos"
-)
+        const result=
+        await CloudTokAPI.getUserVideos(this.currentUsername);
 
-||
+        if(result.videos){
 
-"[]"
+            allVideos=result.videos.map(v=>({
+                id:v.id,
+                username:v.username,
+                caption:v.caption||"",
+                thumbnail:v.thumbnail_url||
+                "assets/images/video-placeholder.png",
+                video:v.video_url||"",
+                likes:v.likes||0,
+                views:v.views||0,
+                comments:v.comments||0
+            }));
 
-);
+        }
 
-const builtIn=
+    }
+    catch(e){
+        console.log("User videos API failed");
+    }
 
-CloudTokDatabase.videos
+}
 
-||
+if(allVideos.length===0){
 
-[];
+    const savedVideos=
+    JSON.parse(localStorage.getItem("CloudTokVideos")||"[]");
 
-const all=[
+    const builtIn=CloudTokDatabase.videos||[];
 
-...savedVideos,
+    const all=[...savedVideos,...builtIn.filter(video=>
+        !savedVideos.some(saved=>saved.id===video.id)
+    )];
 
-...builtIn.filter(video=>
+    allVideos=all.filter(video=>
+        String(video.username).replace(/^@+/,"").trim().toLowerCase()===
+        String(this.currentUsername).toLowerCase()
+    );
 
-!savedVideos.some(
+}
 
-saved=>
-
-saved.id===video.id
-
-)
-
-)
-
-];
-
-this.videos=
-
-all.filter(video=>
-
-String(video.username)
-
-.replace(/^@+/,"")
-
-.trim()
-
-.toLowerCase()
-
-===
-
-String(this.user.username)
-.toLowerCase()
-
-);
+this.videos=allVideos;
 
 let totalLikes=0;
 
 this.videos.forEach(video=>{
-
-totalLikes+=
-
-video.likes || 0;
-
+    totalLikes+=video.likes||0;
 });
 
-document.getElementById(
-"likesCount"
-).textContent=
-
-totalLikes;
-
-document.getElementById(
-"videosCount"
-).textContent=
-
-this.videos.length;
+document.getElementById("likesCount").textContent=totalLikes;
+document.getElementById("videosCount").textContent=this.videos.length;
 
 const currentUser =
 
@@ -530,65 +523,53 @@ this.renderGrid(liked);
 
 
 
-showSavedVideos(){
+async showSavedVideos(){
 
-const saved=
+let videos=[];
 
-JSON.parse(
+if(typeof CloudTokAPI!=="undefined"){
 
-localStorage.getItem(
-"CloudTokSavedVideos"
-)
+    try{
 
-||
+        const result=await CloudTokAPI.getSavedVideos();
 
-"[]"
+        if(result.videos){
 
-);
+            videos=result.videos.map(v=>({
+                id:v.id,
+                username:v.username,
+                caption:v.caption||"",
+                thumbnail:v.thumbnail_url||
+                "assets/images/video-placeholder.png",
+                video:v.video_url||"",
+                likes:v.likes||0,
+                views:v.views||0
+            }));
 
-const ids=
+        }
 
-saved
+    }
+    catch(e){
+        console.log("Saved videos API failed");
+    }
 
-.filter(item=>
+}
 
-item.username===this.user.username
+if(videos.length===0){
 
-)
+    const saved=
+    JSON.parse(localStorage.getItem("CloudTokSavedVideos")||"[]");
 
-.map(item=>
+    const ids=
+    saved.filter(item=>item.username===this.user.username)
+    .map(item=>String(item.videoId));
 
-String(item.videoId)
+    const all=[...(CloudTokDatabase.videos||[]),
+    ...JSON.parse(localStorage.getItem("CloudTokVideos")||"[]")];
 
-);
+    videos=all.filter(video=>ids.includes(String(video.id)));
 
-const all=[
-
-...(CloudTokDatabase.videos || []),
-
-...JSON.parse(
-
-localStorage.getItem("CloudTokVideos")
-
-||
-
-"[]"
-
-)
-
-];
-
-const videos=
-
-all.filter(video=>
-
-ids.includes(
-
-String(video.id)
-
-)
-
-);
+}
 
 this.renderGrid(videos);
 
@@ -1155,7 +1136,7 @@ this.changeAvatar(e.target.files[0],true);
 
 
 
-changeAvatar(file,preview=false){
+async changeAvatar(file,preview=false){
 
 if(!file){
 
@@ -1163,127 +1144,82 @@ return;
 
 }
 
-const reader =
-new FileReader();
+if(typeof CloudTokAPI!=="undefined"){
 
+    try{
+
+        const result=await CloudTokAPI.updateAvatar(file);
+
+        if(result.success && result.avatar){
+
+            this.user.avatar=result.avatar;
+
+            const profileAvatar=
+            document.getElementById("profileAvatar");
+
+            if(profileAvatar){
+                profileAvatar.src=result.avatar;
+            }
+
+            if(preview){
+                const previewImage=
+                document.getElementById("accountAvatarPreview");
+                if(previewImage){
+                    previewImage.src=result.avatar;
+                }
+            }
+
+            return;
+
+        }
+
+    }
+    catch(e){
+        console.log("Avatar API failed, using local");
+    }
+
+}
+
+const reader = new FileReader();
 
 reader.onload = (e)=>{
 
-
 this.user.avatar = e.target.result;
-
-
-// Update visible profile image
 
 const profileAvatar =
 document.getElementById("profileAvatar");
 
-
 if(profileAvatar){
-
-profileAvatar.src =
-e.target.result;
-
+    profileAvatar.src = e.target.result;
 }
-
-
-// Update account settings preview
 
 if(preview){
-
-const previewImage =
-document.getElementById("accountAvatarPreview");
-
-
-if(previewImage){
-
-previewImage.src =
-e.target.result;
-
+    const previewImage =
+    document.getElementById("accountAvatarPreview");
+    if(previewImage){
+        previewImage.src = e.target.result;
+    }
 }
-
-}
-
-
-// SAVE USER DATA
 
 const users =
-
-JSON.parse(
-
-localStorage.getItem("CloudTokUsers")
-
-||
-
-"[]"
-
-);
-
-
+JSON.parse(localStorage.getItem("CloudTokUsers")||"[]");
 
 const index =
-
-users.findIndex(
-
-user =>
-
-user.id === this.user.id
-
-);
-
-
+users.findIndex(user=>user.id===this.user.id);
 
 if(index !== -1){
-
-users[index] = this.user;
-
-
-localStorage.setItem(
-
-"CloudTokUsers",
-
-JSON.stringify(users)
-
-);
-
+    users[index] = this.user;
+    localStorage.setItem("CloudTokUsers",JSON.stringify(users));
 }
-
-
-// update global memory
-
-if(typeof CloudTokUsers !== "undefined"){
-
-const globalIndex =
-
-CloudTokUsers.users.findIndex(
-
-user =>
-
-user.id === this.user.id
-
-);
-
-
-if(globalIndex !== -1){
-
-CloudTokUsers.users[globalIndex] =
-this.user;
-
-}
-
-
-}
-
 
 };
-
 
 reader.readAsDataURL(file);
 
 }
 
 
-saveAccount(){
+async saveAccount(){
 
 this.user.displayName=
 document.getElementById("accountDisplayName").value.trim();
@@ -1302,15 +1238,24 @@ document.getElementById("accountWebsite").value.trim();
 this.user.email=
 document.getElementById("accountEmail").value.trim();
 
-const password=
 
-document.getElementById("accountPassword").value.trim();
+if(typeof CloudTokAPI!=="undefined"){
 
-if(password){
+    try{
 
-this.user.password=password;
+        await CloudTokAPI.updateProfile(
+            this.user.displayName,
+            this.user.bio,
+            this.user.website
+        );
+
+    }
+    catch(e){
+        console.log("Profile update API failed");
+    }
 
 }
+
 
 const users=
 
@@ -1332,6 +1277,8 @@ user.id===this.user.id
 
 );
 
+if(index!==-1){
+
 users[index]=this.user;
 
 localStorage.setItem(
@@ -1341,6 +1288,8 @@ localStorage.setItem(
 JSON.stringify(users)
 
 );
+
+}
 
 localStorage.setItem(
 
@@ -1391,23 +1340,21 @@ const currentUser =
 
 
 
-const followers =
+let isFollowing=false;
 
-(this.user.followers || [])
-
-.map(user=>
-
-String(user)
-.replace("@","")
-.toLowerCase()
-
-);
-
+if(typeof CloudTokUsers!=="undefined"){
+    const currentUserData=CloudTokUsers.getCurrentUser();
+    if(currentUserData&&currentUserData.following){
+        isFollowing=currentUserData.following.includes(
+            this.user.username.replace("@","").toLowerCase()
+        );
+    }
+}
 
 
 followBtn.textContent =
 
-followers.includes(currentUser)
+isFollowing
 
 ?
 
@@ -1420,7 +1367,7 @@ followers.includes(currentUser)
 
 }
     
-    toggleFollow(){
+    async toggleFollow(){
 
 if(
 !CloudTokAuthGuard.requireLogin()
@@ -1432,13 +1379,14 @@ return;
 
 
 const username =
-this.user.username;
-        
-const current =
+this.user.username.replace("@","").toLowerCase();
+
+
+const currentUserData =
 CloudTokUsers.getCurrentUser();
 
 
-if(!current){
+if(!currentUserData){
 
 return;
 
@@ -1446,37 +1394,19 @@ return;
 
 
 
-if(
+const isFollowing=
+(currentUserData.following||[]).includes(username);
 
-current.following.includes(
-username
+if(isFollowing){
 
-)
-
-){
-
-CloudTokUsers.unfollow(
-username
-);
-
+    await CloudTokUsers.unfollow(username);
 
 }
 else{
 
-
-CloudTokUsers.follow(
-username
-);
-
+    await CloudTokUsers.follow(username);
 
 }
-
-
-
-this.user =
-CloudTokUsers.find(
-username
-);
 
 
 

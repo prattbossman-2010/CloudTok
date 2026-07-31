@@ -1,573 +1,267 @@
-class CloudTokComments {
+class CloudTokComments{
 
 
 constructor(video){
 
-
 this.video = video;
 
-
 this.currentUser =
-localStorage.getItem(
-"CloudTokCurrentUser"
-)
-||
-"PrattBossman";
-
-
+localStorage.getItem("CloudTokCurrentUser")||"";
 
 this.panel =
-document.getElementById(
-"commentsPanel"
-);
-
-
+document.getElementById("commentsPanel");
 
 this.list =
-document.getElementById(
-"commentsList"
-);
-
-
+document.getElementById("commentsList");
 
 this.input =
-document.getElementById(
-"commentInput"
-);
-
-
+document.getElementById("commentInput");
 
 this.sendBtn =
-document.getElementById(
-"sendCommentBtn"
-);
-
-
+document.getElementById("sendCommentBtn");
 
 this.closeBtn =
-document.getElementById(
-"closeCommentsBtn"
-);
-
-
+document.getElementById("closeCommentsBtn");
 
 this.setup();
 
-
-
 }
-
-
-
 
 
 setup(){
 
-
-
 if(!this.video.comments){
-
-
 this.video.comments=[];
-
-
 }
-
-
 
 if(this.sendBtn){
-
-
-this.sendBtn.onclick =
-()=>{
-
-
-this.addComment();
-
-
-};
-
-
+    this.sendBtn.onclick = ()=>{
+        this.addComment();
+    };
 }
-
-
-
-
 
 if(this.closeBtn){
-
-
-this.closeBtn.onclick =
-()=>{
-
-
-this.close();
-
-
-};
-
-
+    this.closeBtn.onclick = ()=>{
+        this.close();
+    };
 }
-
-
-
-
 
 this.render();
 
-
-
 }
-
-
-
-
-
-
-
 
 
 open(){
-
-
 if(this.panel){
-
-
-this.panel.style.display =
-"flex";
-
-
+    this.panel.style.display = "flex";
 }
-
-
 this.render();
-
-
 }
-
-
-
-
-
-
-
 
 
 close(){
-
-
 if(this.panel){
-
-
-this.panel.style.display =
-"none";
-
-
+    this.panel.style.display = "none";
+}
 }
 
 
-}
+async render(){
 
-
-
-
-
-
-
-
-
-render(){
-
-
-if(!this.list){
-
-return;
-
-}
-
-
+if(!this.list)return;
 
 this.list.innerHTML="";
 
 
+let comments=[];
 
-if(
-this.video.comments.length === 0
-){
+if(typeof CloudTokAPI!=="undefined"){
 
+    try{
 
-this.list.innerHTML =
-`
-<p class="noComments">
-No comments yet
-</p>
-`;
+        const result=
+        await CloudTokAPI.getComments(this.video.id);
 
+        if(result.comments && result.comments.length>0){
 
-return;
+            comments=result.comments.map(c=>({
+                id:c.id,
+                username:c.username,
+                text:c.comment,
+                time:new Date(c.created_at).getTime(),
+                avatar:c.avatar
+            }));
 
-}
+        }
 
-
-
-
-
-this.video.comments.forEach(
-comment=>{
-
-
-const item =
-document.createElement(
-"div"
-);
-
-
-item.className =
-"commentItem";
-
-
-
-
-
-let avatar =
-"assets/images/default-avatar.png";
-
-
-
-if(
-typeof CloudTokUserManager !== "undefined"
-){
-
-avatar =
-CloudTokUserManager.getAvatar(
-comment.username
-)
-||
-avatar;
+    }
+    catch(e){
+        console.log("Comments API failed");
+    }
 
 }
 
-
-
-
-
-item.innerHTML =
-`
-
-<div class="commentProfile">
-
-<img 
-class="commentAvatar"
-src="${avatar}"
-onerror="
-this.src='assets/images/default-avatar.png'
-">
-
-<div class="commentContent">
-
-
-<h4>
-@${comment.username}
-</h4>
-
-
-<p>
-${comment.text}
-</p>
-
-
-<span>
-${new Date(
-comment.time
-).toLocaleString()
-}
-</span>
-
-
-</div>
-
-
-</div>
-
-
-`;
-
-
-
-
-this.list.appendChild(
-item
-);
-
-
-
-});
-
-
+if(comments.length===0){
+    comments=this.video.comments||[];
 }
 
+if(comments.length===0){
 
-
-
-
-
-
-
-
-addComment(){
-
-
-if(
-!CloudTokAuthGuard.requireLogin()
-){
-
-return;
-
-}
-
-    
-const owner =
-CloudTokUsers.find(
-this.video.username
-);
-
-if(
-owner &&
-owner.privacy &&
-owner.privacy.allowComments === false
-){
-
-    alert(
-    "This creator has disabled comments."
-    );
-
+    this.list.innerHTML = `
+    <p class="noComments">No comments yet</p>
+    `;
     return;
 
 }
-    
-if(!this.input){
 
-return;
+
+comments.forEach(comment=>{
+
+    const item = document.createElement("div");
+    item.className = "commentItem";
+
+    let avatar = comment.avatar||
+    "assets/images/default-avatar.png";
+
+    if(typeof CloudTokUserManager !== "undefined"){
+        avatar = CloudTokUserManager.getAvatar(comment.username)||avatar;
+    }
+
+    item.innerHTML = `
+    <div class="commentProfile">
+    <img 
+    class="commentAvatar"
+    src="${avatar}"
+    onerror="this.src='assets/images/default-avatar.png'">
+    <div class="commentContent">
+    <h4>@${comment.username}</h4>
+    <p>${comment.text}</p>
+    <span>${new Date(comment.time).toLocaleString()}</span>
+    </div>
+    </div>
+    `;
+
+    this.list.appendChild(item);
+
+});
 
 }
 
 
-const text =
-this.input.value.trim();
+async addComment(){
+
+if(!CloudTokAuthGuard.requireLogin()){
+    return;
+}
+
+if(!this.input)return;
+
+const text = this.input.value.trim();
+if(!text)return;
 
 
-if(!text){
+if(typeof CloudTokAPI!=="undefined"){
 
-return;
+    try{
+
+        const result=
+        await CloudTokAPI.addComment(this.video.id,text);
+
+        if(result.success){
+            this.input.value="";
+            this.video.comments=(this.video.comments||[]);
+            this.video.comments.push({
+                id:Date.now(),
+                username:this.currentUser,
+                text:text,
+                time:Date.now()
+            });
+            this.render();
+            this.updateCount();
+            this.save();
+            return;
+        }
+
+    }
+    catch(e){
+        console.log("Comment API failed, using local");
+    }
 
 }
 
 
 const comment = {
-
-id:Date.now(),
-
-username:this.currentUser,
-
-text:text,
-
-time:Date.now()
-
+    id:Date.now(),
+    username:this.currentUser,
+    text:text,
+    time:Date.now()
 };
-
 
 this.video.comments.push(comment);
-
-
 this.save();
-
-
 this.input.value="";
-
-
 this.render();
-
-
 this.updateCount();
 
-
 if(window.CloudTokActiveVideoCard){
-
-    window.CloudTokActiveVideoCard
-    .updateCommentCount();
-
+    window.CloudTokActiveVideoCard.updateCommentCount();
 }
 
-
-};
+}
 
 
 
 save(){
 
-
-
-const index =
-CloudTokDatabase.videos.findIndex(
-
-video =>
-
-video.id === this.video.id
-
+const index = CloudTokDatabase.videos.findIndex(
+    video=>video.id===this.video.id
 );
-
-
 
 if(index !== -1){
-
-
-CloudTokDatabase.videos[index] =
-this.video;
-
-
+    CloudTokDatabase.videos[index] = this.video;
 }
-
-
-
-
 
 try{
-
-
-localStorage.setItem(
-
-"CloudTokVideos",
-
-JSON.stringify(
-CloudTokDatabase.videos
-)
-
-);
-
-
-
+    localStorage.setItem("CloudTokVideos",
+    JSON.stringify(CloudTokDatabase.videos));
 }
-
 catch(error){
-
-
-
-console.log(
-"COMMENT SAVE ERROR:",
-error
-);
-
-
-
+    console.log("COMMENT SAVE ERROR:",error);
 }
 
-
-
 }
-
-
-
-
-
-
-
 
 
 updateCount(){
 
-
-/*
-    UPDATE WATCH PAGE COUNT
-*/
-
-const watchCount =
-document.getElementById(
-"watchCommentCount"
-);
-
-
+const watchCount = document.getElementById("watchCommentCount");
 if(watchCount){
-
-    watchCount.textContent =
-    this.video.comments.length;
-
+    watchCount.textContent = this.video.comments.length;
 }
 
-
-
-/*
-    UPDATE INDEX PAGE COUNT
-*/
-
-if(
-window.CloudTokActiveVideoCard
-){
-
+if(window.CloudTokActiveVideoCard){
     window.CloudTokActiveVideoCard.updateCommentCount();
+}
 
 }
 
 
 }
-
-
-
-
-
-
-
-}
-
-
-
 
 
 let WatchComments = null;
 
 
-
-
-
-
-
-
-
 function loadWatchComments(videoId){
 
-
-
 const video =
-
-CloudTokDatabase.videos.find(
-
-v=>v.id===videoId
-
-);
-
-
+CloudTokDatabase.videos.find(v=>v.id===videoId);
 
 if(!video){
-
-
-console.log(
-"COMMENT VIDEO NOT FOUND"
-);
-
-
-return;
-
-
+    console.log("COMMENT VIDEO NOT FOUND");
+    return;
 }
 
-
-
-
-
-WatchComments =
-new CloudTokComments(
-video
-);
-
-
+WatchComments = new CloudTokComments(video);
 
 }    

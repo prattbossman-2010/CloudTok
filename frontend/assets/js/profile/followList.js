@@ -3,422 +3,228 @@ class CloudTokFollowList{
 
 constructor(){
 
-const params =
-new URLSearchParams(
-window.location.search
-);
+const params=
+new URLSearchParams(window.location.search);
 
-
-this.username =
+this.username=
 params.get("user")
-
 ||
+localStorage.getItem("CloudTokCurrentUser")
+||"";
 
-localStorage.getItem(
-"CloudTokCurrentUser"
-)
+this.username=
+CloudTokUsers.normalizeUsername(this.username);
 
-||
-
-"";
-
-
-this.username =
-CloudTokUsers.normalizeUsername(
-this.username
-);
-
-
-this.currentUser =
+this.currentUser=
 CloudTokUsers.getCurrentUser();
 
+this.list=
+document.getElementById("userList");
 
-this.list =
-document.getElementById(
-"userList"
-);
-
+this.isFollowersPage=
+window.location.pathname.includes("followers.html");
 
 this.load();
 
-
 this.setupBackButton();
 
-
 }
 
 
+async load(){
 
+let users=[];
 
-load(){
+if(typeof CloudTokAPI!=="undefined"){
 
+    try{
 
-const user =
-CloudTokUsers.find(
-this.username
-);
+        if(this.isFollowersPage){
 
+            const result=
+            await CloudTokAPI.getFollowers(this.username);
 
-if(!user){
+            if(result.followers){
+                users=result.followers.map(u=>({
+                    username:u.username,
+                    displayName:u.display_name,
+                    avatar:u.avatar||
+                    "assets/images/default-avatar.png",
+                    bio:u.bio||""
+                }));
+            }
 
-this.list.innerHTML = `
+        }
+        else{
 
-<h3>
-Users not found
-</h3>
+            const result=
+            await CloudTokAPI.getFollowing(this.username);
 
-`;
+            if(result.following){
+                users=result.following.map(u=>({
+                    username:u.username,
+                    displayName:u.display_name,
+                    avatar:u.avatar||
+                    "assets/images/default-avatar.png",
+                    bio:u.bio||""
+                }));
+            }
 
-return;
+        }
 
-}
-
-
-
-const isFollowersPage =
-window.location.pathname.includes(
-"followers.html"
-);
-
-
-
-const usernames =
-
-isFollowersPage
-
-?
-
-(user.followers || [])
-
-:
-
-(user.following || []);
-
-
-
-
-
-if(usernames.length===0){
-
-
-this.list.innerHTML=`
-
-<div class="emptyFollow">
-
-<h3>
-No users yet
-</h3>
-
-</div>
-
-`;
-
-
-return;
-
+    }
+    catch(e){
+        console.log("Follow API failed, using localStorage");
+    }
 
 }
 
+if(users.length===0){
 
+    const user=CloudTokUsers.find(this.username);
+
+    if(!user){
+        this.list.innerHTML=`
+        <h3>Users not found</h3>
+        `;
+        return;
+    }
+
+    const usernames=
+    this.isFollowersPage
+    ?(user.followers||user.followersList||[])
+    :(user.following||user.followingList||[]);
+
+    this.list.innerHTML="";
+
+    if(usernames.length===0){
+        this.list.innerHTML=`
+        <div class="emptyFollow">
+        <h3>No users yet</h3>
+        </div>
+        `;
+        return;
+    }
+
+    usernames.forEach(username=>{
+        const person=CloudTokUsers.find(username);
+        if(person)this.createUserCard(person);
+    });
+    return;
+
+}
 
 
 this.list.innerHTML="";
 
-
-
-usernames.forEach(username=>{
-
-
-const person =
-
-CloudTokUsers.find(
-username
-);
-
-
-
-if(person){
-
-this.createUserCard(
-person
-);
-
+if(users.length===0){
+    this.list.innerHTML=`
+    <div class="emptyFollow">
+    <h3>No users yet</h3>
+    </div>
+    `;
+    return;
 }
 
-
+users.forEach(user=>{
+    this.createUserCard(user);
 });
 
-
-
 }
-
-
-
 
 
 createUserCard(user){
 
+const card=
+document.createElement("div");
 
-const card =
-document.createElement(
-"div"
-);
+card.className="followUserCard";
 
-
-card.className =
-"followUserCard";
-
-
-
-card.innerHTML = `
+card.innerHTML=`
 
 <img
-
 class="followAvatar"
-
-src="${user.avatar || "assets/images/default-avatar.png"}"
-
+src="${user.avatar||"assets/images/default-avatar.png"}"
 >
 
-
 <div class="followInfo">
-
-<h3>
-${user.displayName}
-</h3>
-
-<p>
-@${user.username}
-</p>
-
+<h3>${user.displayName}</h3>
+<p>@${user.username}</p>
 </div>
 
-
 <button class="followAction">
-
 ${this.getFollowText(user.username)}
-
 </button>
-
 
 `;
 
-
-
-
-
 card.onclick=(e)=>{
-
-
-if(
-e.target.classList.contains(
-"followAction"
-)
-){
-
-return;
-
-}
-
-
-
-window.location.href =
-
-"profile.html?user="
-
-+
-
-encodeURIComponent(
-user.username
-);
-
-
+    if(e.target.classList.contains("followAction"))return;
+    window.location.href=
+    "profile.html?user="+encodeURIComponent(user.username);
 };
 
+const button=
+card.querySelector(".followAction");
 
-
-
-const button =
-
-card.querySelector(
-".followAction"
-);
-
-
-
-button.onclick=()=>{
-
-
-this.toggleFollow(
-user.username,
-button
-);
-
-
+button.onclick=async()=>{
+    await this.toggleFollow(user.username,button);
 };
 
-
-
-this.list.appendChild(
-card
-);
-
-
+this.list.appendChild(card);
 
 }
-
-
 
 
 getFollowText(username){
 
+const current=CloudTokUsers.getCurrentUser();
+if(!current)return"Follow";
 
-const current =
-CloudTokUsers.getCurrentUser();
+if((current.following||[]).includes(username)){
+    return"Following";
+}
 
-
-
-if(!current){
-
-return "Follow";
+return"Follow";
 
 }
 
 
-if(
+async toggleFollow(username,button){
 
-current.following.includes(
-username
+if(!CloudTokAuthGuard.requireLogin())return;
 
-)
+const current=CloudTokUsers.getCurrentUser();
+if(!current)return;
 
-){
+const isFollowing=(current.following||[]).includes(username);
 
-return "Following";
-
-}
-
-
-const target =
-CloudTokUsers.find(
-username
-);
-
-
-
-if(
-
-target.followers.includes(
-current.username
-)
-
-){
-
-return "Follow Back";
-
-}
-
-
-
-return "Follow";
-
-
-}
-
-
-
-
-
-toggleFollow(username,button){
-
-
-if(
-!CloudTokAuthGuard.requireLogin()
-){
-
-return;
-
-}
-
-
-
-const current =
-CloudTokUsers.getCurrentUser();
-
-
-
-if(
-current.following.includes(username)
-){
-
-console.log("FOLLOW LIST: Unfollowing", username);
-
-CloudTokUsers.unfollow(username);
-
+if(isFollowing){
+    await CloudTokUsers.unfollow(username);
 }
 else{
-
-console.log("FOLLOW LIST: Following", username);
-
-CloudTokUsers.follow(username);
-
+    await CloudTokUsers.follow(username);
 }
 
-
-
-button.textContent =
-this.getFollowText(
-username
-);
-
-
+button.textContent=this.getFollowText(username);
 
 }
-
-
-
-
 
 
 setupBackButton(){
 
-
-const back =
-document.getElementById(
-"backBtn"
-);
-
-
-if(back){
-
-back.onclick=()=>{
-
-history.back();
-
-};
+const back=document.getElementById("backBtn");
+if(back){back.onclick=()=>{history.back();};}
 
 }
 
 
 }
-
-
-
-}
-
-
 
 
 document.addEventListener(
-
 "DOMContentLoaded",
-
 ()=>{
-
-
-new CloudTokFollowList();
-
-
+    new CloudTokFollowList();
 }
-
 );

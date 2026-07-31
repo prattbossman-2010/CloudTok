@@ -1799,86 +1799,48 @@ updateCommentCount(){
 
     updateFollowButton(){
 
+if(!this.followPlus)return;
+
 const currentUser =
-(localStorage.getItem(
-"CloudTokCurrentUser"
-) || "")
-.replace("@","")
-.toLowerCase();
+(localStorage.getItem("CloudTokCurrentUser") || "")
+.replace("@","").toLowerCase();
 
-const users =
-JSON.parse(
-localStorage.getItem(
-"CloudTokUsers"
-) || "[]"
-);
+let isFollowing=false;
 
-const uploader =
-users.find(user=>
-
-String(user.username)
-.replace("@","")
-.toLowerCase()
-
-===
-
-String(this.data.username)
-.replace("@","")
-.toLowerCase()
-
-);
-
-if(!uploader || !this.followPlus){
-return;
+if(typeof CloudTokUsers!=="undefined"){
+    const currentUserData=CloudTokUsers.getCurrentUser();
+    if(currentUserData&&currentUserData.following){
+        isFollowing=currentUserData.following.includes(
+            this.data.username.replace("@","").toLowerCase()
+        );
+    }
 }
 
-const followers =
-(uploader.followers || [])
-.map(user=>
-
-String(user)
-.replace("@","")
-.toLowerCase()
-
-);
-
-this.followPlus.textContent =
-
-followers.includes(currentUser)
-
-?
-
-"✓"
-
-:
-
-"+";
+this.followPlus.textContent = isFollowing ? "✓" : "+";
 
 }
     
-    toggleFollow(){
+    async toggleFollow(){
 
     if(!CloudTokAuthGuard.requireLogin()){
         return;
     }
 
-    const username = this.data.username;
+    const username = this.data.username.replace("@","").toLowerCase();
 
     const current = CloudTokUsers.getCurrentUser();
 
-    const target = CloudTokUsers.find(username);
-
-    if(!current || !target){
+    if(!current){
         return;
     }
 
     const isFollowing =
-        current.following.includes(target.username);
+        (current.following||[]).includes(username);
 
     if(isFollowing){
-        CloudTokUsers.unfollow(target.username);
+        await CloudTokUsers.unfollow(username);
     }else{
-        CloudTokUsers.follow(target.username);
+        await CloudTokUsers.follow(username);
     }
 
     this.updateFollowButton();

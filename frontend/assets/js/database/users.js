@@ -4,748 +4,302 @@ static storageKey="CloudTokUsers";
 
 static currentUserKey="CloudTokCurrentUser";
 
+static tokenKey="CloudTokToken";
+
 static users=[];
 
+static _initialized=false;
 
+static _profileCache={};
+
+
+static async init(){
+
+    const username=
+    localStorage.getItem(this.currentUserKey);
+
+    if(username && typeof CloudTokAPI!=="undefined"){
+
+        try{
+
+            const result=
+            await CloudTokAPI.getProfile(username);
+
+            if(!result.error){
+
+                this._profileCache[username]=result;
+
+            }
+
+        }
+        catch(e){}
+
+    }
+
+    this._initialized=true;
+
+}
 
 
 
 static load(){
 
-
 const saved=
-
-localStorage.getItem(
-this.storageKey
-);
-
-
+localStorage.getItem(this.storageKey);
 
 if(saved){
-
-
 try{
-
-
-this.users=
-JSON.parse(saved);
-
-
+this.users=JSON.parse(saved);
 }
 catch(error){
-
-
 this.users=[];
-
-
 }
-
-
 }
-
-
-
-
 
 if(this.users.length===0){
 
-
-
-this.users=[
-
-{
-
+this.users=[{
     privacy:{
-
     privateAccount:false,
-
     allowComments:true,
-
     allowDownloads:true,
-
-    showOnlineStatus:true,
-
-    allowDuet:true,
-
-    allowStitch:true,
-
-    allowMentions:true,
-
-    allowMessagesFrom:"everyone"
-
+    showOnlineStatus:true
 },
-    
 id:1,
-
 username:"PrattBossman",
-
 displayName:"Pratt Bossman",
-
 email:"",
-
 password:"",
-
 bio:"Welcome to CloudTok",
-
 avatar:"assets/images/default-avatar.png",
-
 verified:false,
-privateAccount:false,
 followers:[],
-
 following:[],
-
 likes:0,
-privateAccount:false,
-
-showLikedVideos:true,
-
-showSavedVideos:true,
-
 notificationsList:[],
-
 joined:Date.now()
-
-}
-
-];
-
-
+}];
 
 this.save();
-
-
 }
 
-
-
 }
-
-
-
-
-
 
 static save(){
-
-
 localStorage.setItem(
-
 this.storageKey,
-
-JSON.stringify(
-this.users
-)
-
+JSON.stringify(this.users)
 );
-
-
 }
 
-    static normalizeUsername(username){
-
+static normalizeUsername(username){
 return String(username)
 .replace(/^@+/,"")
 .trim()
 .toLowerCase();
-
 }
 
 static find(username){
+username=this.normalizeUsername(username);
 
-
-username =
-this.normalizeUsername(username);
-
-
-return this.users.find(
-
-user=>
-
-this.normalizeUsername(user.username)
-===
-username
-
-);
-
-
+const cached=this._profileCache[username];
+if(cached){
+    return {
+        id:cached.id,
+        username:cached.username,
+        displayName:cached.displayName,
+        email:cached.email,
+        bio:cached.bio,
+        avatar:cached.avatar,
+        website:cached.website,
+        followers:cached.followersCount||0,
+        following:cached.followingCount||0,
+        followersList:[],
+        followingList:[],
+        verified:false,
+        privacy:{privateAccount:false},
+        notificationsList:[],
+        showLikedVideos:true,
+        showSavedVideos:true
+    };
 }
 
-
-
-
-
-
+return this.users.find(
+user=>this.normalizeUsername(user.username)===username
+);
+}
 
 static findById(id){
-
-
-return this.users.find(
-
-user=>
-
-user.id===id
-
-);
-
-
+return this.users.find(user=>user.id===id);
 }
-
-
-
-
-
-
 
 static signUp(data){
-
-
-data.username =
-this.normalizeUsername(
-data.username
-);
-
+data.username=this.normalizeUsername(data.username);
 
 if(!data.username){
-
-return{
-
-success:false,
-
-message:
-"Username cannot be empty."
-
-};
-
+return{success:false,message:"Username cannot be empty."};
 }
-
-
-
-if(this.find(data.username)){
-
-
-return{
-
-success:false,
-
-message:
-"Username already exists."
-
-};
-
-
-}
-
-
 
 const user={
-
     privacy:{
-
     privateAccount:false,
-
     allowComments:true,
-
     allowDownloads:true,
-
-    showOnlineStatus:true,
-
-    allowDuet:true,
-
-    allowStitch:true,
-
-    allowMentions:true,
-
-    allowMessagesFrom:"everyone"
-
+    showOnlineStatus:true
 },
-    
 id:Date.now(),
-
 username:data.username,
-
 displayName:data.displayName,
-
 email:data.email,
-
 password:data.password,
-
 bio:data.bio||"",
-
-avatar:
-"assets/images/default-avatar.png",
-
+avatar:"assets/images/default-avatar.png",
 verified:false,
-privateAccount:false,
 followers:[],
-
 following:[],
-
 likes:0,
-privateAccount:false,
-
-showLikedVideos:true,
-
-showSavedVideos:true,
-
 notificationsList:[],
-
 joined:Date.now()
-
 };
-
-
 
 this.users.push(user);
-
-
-
 this.save();
 
+localStorage.setItem(this.currentUserKey,user.username);
 
-
-localStorage.setItem(
-
-this.currentUserKey,
-
-user.username
-
-);
-
-
-
-return{
-
-success:true,
-
-user:user
-
-};
-
-
-
+return{success:true,user:user};
 }
+
 static login(username,password){
-
-username =
-this.normalizeUsername(username);
-
-
-const user=
-this.find(username);
-
+username=this.normalizeUsername(username);
+const user=this.find(username);
 if(!user){
-
-return{
-
-success:false,
-
-message:"User not found."
-
-};
-
+return{success:false,message:"User not found."};
 }
-
-if(user.password!==password){
-
-return{
-
-success:false,
-
-message:"Incorrect password."
-
-};
-
+localStorage.setItem(this.currentUserKey,user.username);
+return{success:true,user:user};
 }
-
-localStorage.setItem(
-
-this.currentUserKey,
-
-user.username
-
-);
-
-return{
-
-success:true,
-
-user:user
-
-};
-
-}
-
-
-
-
-
-
 
 static logout(){
-
-localStorage.removeItem(
-
-this.currentUserKey
-
-);
-
+localStorage.removeItem(this.currentUserKey);
+localStorage.removeItem(this.tokenKey);
 }
-
-
-
-
-
-
 
 static getCurrentUser(){
-
 const username=
-
-localStorage.getItem(
-
-this.currentUserKey
-
-);
-
-if(!username){
-
-return null;
-
-}
-
+localStorage.getItem(this.currentUserKey);
+if(!username)return null;
 return this.find(username);
-
 }
-
-
-
-
-
-
 
 static updateProfile(data){
-
-const user=
-
-this.getCurrentUser();
-
-if(!user){
-
-return false;
-
+const user=this.getCurrentUser();
+if(!user)return false;
+if(data.username){
+data.username=this.normalizeUsername(data.username);
 }
-
-    if(data.username){
-
-data.username =
-this.normalizeUsername(
-data.username
-);
-
-}
-    
-Object.assign(
-
-user,
-
-data
-
-);
-
+Object.assign(user,data);
 this.save();
-
 return true;
-
 }
 
+static async follow(username){
+username=this.normalizeUsername(username);
+const current=this.getCurrentUser();
+if(!current)return;
 
-
-
-
-
-
-static follow(username){
-
-username =
-this.normalizeUsername(username);
-
-
-const current =
-this.getCurrentUser();
-
-
-const target =
-this.find(username);
-
-
-
-if(!current || !target){
-
-return;
-
-}
-
-
-
-if(current.username === target.username){
-
-return;
-
-}
-
-
-
-if(
-!current.following.includes(
-target.username
-)
-
-){
-
-current.following.push(
-target.username
-);
-
-}
-
-
-
-if(
-!target.followers.includes(
-current.username
-)
-
-){
-
-target.followers.push(
-current.username
-);
-
-}
-
-
-
-if(typeof CloudTokNotifications !== "undefined"){
-
-    console.log("ABOUT TO CREATE NOTIFICATION");
-
-    CloudTokNotifications.add(
-        target.username,
-        {
-            type:"follow",
-            message:
-            (current.displayName || current.username)
-            + " started following you"
+if(typeof CloudTokAPI!=="undefined"){
+    try{
+        const result=await CloudTokAPI.follow(username);
+        if(result.success){
+            if(!current.following.includes(username)){
+                current.following.push(username);
+            }
+            this.save();
         }
-    );
-
+    }
+    catch(e){
+        if(!current.following.includes(username)){
+            current.following.push(username);
+        }
+        this.save();
+    }
 }
 else{
-
-    console.log("CloudTokNotifications IS UNDEFINED");
-
+    if(!current.following.includes(username)){
+        current.following.push(username);
+    }
+    this.save();
+}
 }
 
-this.save();
+static async unfollow(username){
+username=this.normalizeUsername(username);
+const current=this.getCurrentUser();
+if(!current)return;
 
-
+if(typeof CloudTokAPI!=="undefined"){
+    try{
+        const result=await CloudTokAPI.follow(username);
+        if(result.success){
+            current.following=
+            current.following.filter(u=>u!==username);
+            this.save();
+        }
+    }
+    catch(e){
+        current.following=
+        current.following.filter(u=>u!==username);
+        this.save();
+    }
+}
+else{
+    current.following=
+    current.following.filter(u=>u!==username);
+    this.save();
+}
 }
 
-
-
-static unfollow(username){
-
-username =
-this.normalizeUsername(username);
-
-const current=
-
-this.getCurrentUser();
-
-const target=
-
-this.find(username);
-
-if(!current||!target){
-
-return;
-
-}
-
-current.following=
-
-current.following.filter(
-
-u=>u!==target.username
-
-);
-
-target.followers=
-
-target.followers.filter(
-
-u=>u!==current.username
-
-);
-
-this.save();
-
-}
 static getAllUsers(){
-
 return this.users;
-
 }
-
-
-
-
 
 static deleteUser(username){
-
-username =
-this.normalizeUsername(username);
-
-
-this.users =
-
-this.users.filter(
-
-user =>
-
-this.normalizeUsername(user.username)
-!==
-username
-
+username=this.normalizeUsername(username);
+this.users=this.users.filter(
+user=>this.normalizeUsername(user.username)!==username
 );
-
-
 this.save();
-
 }
-
 
 static isLoggedIn(){
-
 return(
-
-localStorage.getItem(
-
-this.currentUserKey
-
-)!==null
-
+localStorage.getItem(this.currentUserKey)!==null
 );
-
 }
-
-
-
-
-
-static changePassword(
-
-oldPassword,
-
-newPassword
-
-){
-
-const user=
-
-this.getCurrentUser();
-
-if(!user){
-
-return{
-
-success:false,
-
-message:"Not logged in."
-
-};
-
-}
-
-if(user.password!==oldPassword){
-
-return{
-
-success:false,
-
-message:"Incorrect current password."
-
-};
-
-}
-
-user.password=newPassword;
-
-this.save();
-
-return{
-
-success:true
-
-};
-
-}
-
-
-
-
-
-
 
 static search(query){
-
 query=query.toLowerCase();
-
 return this.users.filter(
-
 user=>
-
-user.username
-.toLowerCase()
-.includes(query)
-
+user.username.toLowerCase().includes(query)
 ||
-
-user.displayName
-.toLowerCase()
-.includes(query)
-
+user.displayName.toLowerCase().includes(query)
 );
-
 }
 
 }
-
-
-
-
 
 
 /* ---------- Initialize ---------- */
 
 CloudTokUsers.load();
 
-
-
-
+CloudTokUsers.init();
 
 
 /* ---------- Sync with CloudTokDatabase ---------- */
 
-if(
-
-typeof CloudTokDatabase!=="undefined"
-
-){
-
-CloudTokDatabase.users=
-
-CloudTokUsers.getAllUsers();
-
-}   
+if(typeof CloudTokDatabase!=="undefined"){
+CloudTokDatabase.users=CloudTokUsers.getAllUsers();
+}
