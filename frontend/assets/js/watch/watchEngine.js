@@ -1,6 +1,5 @@
 class CloudTokWatchEngine{
 
-
 constructor(){
 
 
@@ -53,8 +52,6 @@ this.swipeLimit = 120;
 
 
 
-this.createVideoLayers();
-
 
 
 this.setupVideo();
@@ -66,6 +63,7 @@ this.setupSwipe();
 this.setupKeyboard();
 
 this.setupWheel();
+
 
 
 
@@ -307,9 +305,41 @@ this.togglePlay();
 
 
 
-init(id){
+async init(id){
 
 
+// Load videos from API if we only have built-in ones
+if(typeof CloudTokAPI!=="undefined"){
+    try{
+        const result = await CloudTokAPI.getVideos();
+        if(result.videos && result.videos.length > 0){
+            this.videos = result.videos.map(v=>({
+                id:v.id,
+                username:v.username,
+                displayName:v.username,
+                avatar:v.avatar||"assets/images/default-avatar.png",
+                caption:v.caption||"",
+                video:v.video_url||"",
+                thumbnail:v.thumbnail_url||"assets/images/video-placeholder.png",
+                likes:v.likes||0,
+                likedBy:[],
+                comments:[],
+                shares:0,
+                saves:0,
+                views:v.views||0
+            }));
+            // Add built-in videos if not already present
+            (CloudTokDatabase.videos||[]).forEach(builtin=>{
+                if(!this.videos.some(v=>String(v.id)===String(builtin.id))){
+                    this.videos.push(builtin);
+                }
+            });
+        }
+    }
+    catch(e){
+        console.log("Watch API load failed");
+    }
+}
 
 const index =
 
@@ -333,6 +363,8 @@ index;
 }
 
 
+
+this.createVideoLayers();
 
 this.loadVideo();
 
