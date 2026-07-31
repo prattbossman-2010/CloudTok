@@ -48,7 +48,7 @@ new CloudTokWatchEngine();
 
 
 
-WatchEngine.init(id);
+await WatchEngine.init(id);
 
 
 

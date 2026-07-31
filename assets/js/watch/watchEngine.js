@@ -1302,10 +1302,6 @@ this.area.innerHTML="";
 
 
 
-}
-
-
-
 setupKeyboard(){
 
 document.addEventListener("keydown",(e)=>{
@@ -1366,4 +1362,4 @@ document.addEventListener("wheel",(e)=>{
 }
 
 
-}    
+}
