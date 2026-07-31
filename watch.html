@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>
+CloudTok Watch
+</title>
+
+<link rel="stylesheet"
+href="assets/css/watch.css">
+<link rel="stylesheet" href="assets/css/theme.css">		
+
+</head>
+
+
+<body>
+
+
+<div id="watchContainer">
+
+
+<div id="topBar">
+
+<button id="backBtn">
+←
+</button>
+
+<h2>
+CloudTok
+</h2>
+
+</div>
+
+
+
+<div id="videoArea">
+
+
+<video
+id="watchVideo"
+muted
+loop
+playsinline
+webkit-playsinline>
+</video>
+
+
+
+<div class="watchActions">
+
+<button id="watchSoundBtn">
+🔇
+</button>
+		
+<div class="watchProfileButton">
+
+<button id="watchProfileBtn">
+
+<img 
+id="watchUploaderAvatar"
+class="profileActionIcon"
+src="assets/images/default-avatar.png">
+
+</button>
+
+
+<span id="followUserBtn" class="followPlus">
++
+</span>
+
+</div>
+
+
+
+<button id="watchLikeBtn">
+
+<img 
+id="watchHeartIcon"
+src="assets/icons/outline/heart.svg"
+class="actionIcon">
+
+<span id="watchLikeCount">
+0
+</span>
+
+</button>
+
+
+
+<button id="watchCommentBtn">
+
+💬
+
+<span id="watchCommentCount">
+0
+</span>
+
+</button>
+
+
+
+<button id="watchShareBtn">
+
+<img 
+src="assets/icons/solid/share.svg"
+class="actionIcon">
+
+</button>
+
+
+
+<button id="watchSaveBtn">
+
+<img 
+id="watchBookmarkIcon"
+src="assets/icons/outline/bookmark-outline.svg"
+class="actionIcon">
+
+</button>
+
+
+</div>
+
+
+
+<div id="videoInfo">
+
+
+<h3 id="watchUser"></h3>
+
+
+<p id="watchCaption"></p>
+
+
+<span id="watchTags"></span>
+
+
+</div>
+
+
+
+</div>
+
+
+</div>
+		<div id="commentsPanel">
+
+
+<div class="commentsHeader">
+
+
+<h2>
+Comments
+</h2>
+
+
+<button id="closeCommentsBtn">
+✕
+</button>
+
+
+</div>
+
+
+
+<div id="commentsList">
+
+</div>
+
+
+
+<div class="commentInputArea">
+
+
+<input
+id="commentInput"
+placeholder="Add comment..."
+>
+
+
+
+<button id="sendCommentBtn">
+
+Send
+
+</button>
+
+
+</div>
+
+
+</div>
+
+
+
+
+<script src="assets/js/core/theme.js"></script>
+<script src="assets/js/database/database.js"></script>
+
+<script src="assets/js/database/users.js"></script>
+<script src="assets/js/database/databaseMigration.js"></script>
+<script src="assets/js/database/userManager.js"></script>
+
+<script src="assets/js/database/authGuard.js"></script>
+<script src="assets/js/core/notifications.js"></script>
+
+
+
+<script src="assets/js/watch/watchActions.js"></script>
+
+<script src="assets/js/watch/watchComments.js"></script>
+<script src="assets/js/watch/watchEngine.js"></script>
+<script src="assets/js/watch/watch.js"></script>
+
+
+</body>
+
+</html>

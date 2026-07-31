@@ -1,0 +1,1140 @@
+*{
+
+margin:0;
+padding:0;
+box-sizing:border-box;
+
+}
+
+html,
+body{
+
+width:100%;
+height:100%;
+
+background:#000;
+
+color:#fff;
+
+font-family:Arial,sans-serif;
+
+overflow-x:hidden;
+
+}
+
+a{
+
+text-decoration:none;
+color:inherit;
+
+}
+
+button,
+input,
+textarea{
+
+font-family:inherit;
+
+}
+
+#profilePage{
+
+min-height:100vh;
+
+padding-bottom:120px;
+
+background:
+
+linear-gradient(
+
+180deg,
+
+#141d38 0%,
+
+#090909 220px,
+
+#000 100%
+
+);
+
+}
+
+/* ---------- HEADER ---------- */
+
+.profileHeader{
+
+position:relative;
+
+height:180px;
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:flex-start;
+
+padding:18px;
+
+overflow:hidden;
+
+}
+
+.headerBackground{
+
+position:absolute;
+
+left:-20%;
+
+top:-80px;
+
+width:140%;
+
+height:260px;
+
+border-radius:50%;
+
+background:
+
+radial-gradient(
+
+circle,
+
+rgba(80,180,255,.45),
+
+transparent 70%
+
+);
+
+filter:blur(25px);
+
+z-index:0;
+
+}
+
+.headerBtn{
+
+position:relative;
+
+z-index:2;
+
+width:42px;
+
+height:42px;
+
+border:none;
+
+border-radius:50%;
+
+background:rgba(255,255,255,.12);
+
+backdrop-filter:blur(12px);
+
+color:#fff;
+
+font-size:20px;
+
+cursor:pointer;
+
+transition:.25s;
+
+}
+
+.headerBtn:active{
+
+transform:scale(.92);
+
+}
+
+/* ---------- AVATAR ---------- */
+
+.avatarSection{
+
+margin-top:-70px;
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+padding:0 20px;
+
+position:relative;
+
+z-index:5;
+
+}
+
+.avatarWrapper{
+
+position:relative;
+
+}
+
+.profileAvatar{
+
+width:118px;
+
+height:118px;
+
+border-radius:50%;
+
+object-fit:cover;
+
+border:4px solid #fff;
+
+background:#222;
+
+box-shadow:
+
+0 0 30px
+
+rgba(88,170,255,.35);
+
+}
+
+.changeAvatarBtn{
+
+position:absolute;
+
+right:0;
+
+bottom:4px;
+
+width:34px;
+
+height:34px;
+
+border:none;
+
+border-radius:50%;
+
+background:#2b7fff;
+
+color:#fff;
+
+font-size:15px;
+
+cursor:pointer;
+
+}
+
+#displayName{
+
+margin-top:14px;
+
+font-size:26px;
+
+font-weight:bold;
+
+text-align:center;
+
+}
+
+.usernameRow{
+
+display:flex;
+
+align-items:center;
+
+gap:8px;
+
+margin-top:6px;
+
+color:#cfcfcf;
+
+font-size:15px;
+
+}
+
+.verifiedBadge{
+
+color:#65b8ff;
+
+font-size:18px;
+
+}
+
+/* ---------- BIO ---------- */
+
+.bioCard{
+
+margin:22px 18px;
+
+padding:18px;
+
+border-radius:22px;
+
+background:
+
+rgba(255,255,255,.05);
+
+backdrop-filter:blur(12px);
+
+text-align:center;
+
+}
+
+#profileBio{
+
+line-height:1.6;
+
+color:#f1f1f1;
+
+margin-bottom:12px;
+
+}
+
+#profileWebsite{
+
+color:#5ab4ff;
+
+word-break:break-word;
+
+font-size:14px;
+
+}
+/* ===========================
+   PROFILE STATS
+=========================== */
+
+.profileStats{
+
+display:flex;
+
+justify-content:space-evenly;
+
+align-items:center;
+
+margin:20px 15px;
+
+padding:18px;
+
+background:rgba(255,255,255,.05);
+
+backdrop-filter:blur(12px);
+
+border-radius:22px;
+
+}
+
+.statItem{
+
+flex:1;
+
+text-align:center;
+
+}
+
+.statItem h3{
+
+font-size:24px;
+
+font-weight:bold;
+
+color:#fff;
+
+margin-bottom:6px;
+
+}
+
+.statItem span{
+
+font-size:13px;
+
+color:#bdbdbd;
+
+}
+
+
+
+/* ===========================
+   PROFILE BUTTONS
+=========================== */
+
+.profileButtons{
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+gap:12px;
+
+padding:0 18px;
+
+margin-bottom:22px;
+
+flex-wrap:wrap;
+
+}
+
+.primaryButton{
+
+background:linear-gradient(
+
+135deg,
+
+#3a8dff,
+
+#6ec6ff
+
+);
+
+border:none;
+
+color:#fff;
+
+padding:12px 26px;
+
+border-radius:999px;
+
+font-size:15px;
+
+font-weight:bold;
+
+cursor:pointer;
+
+transition:.25s;
+
+}
+
+.primaryButton:active{
+
+transform:scale(.95);
+
+}
+
+.secondaryButton{
+
+background:rgba(255,255,255,.08);
+
+border:1px solid rgba(255,255,255,.12);
+
+color:#fff;
+
+padding:12px 22px;
+
+border-radius:999px;
+
+font-size:15px;
+
+cursor:pointer;
+
+transition:.25s;
+
+}
+
+.secondaryButton:active{
+
+transform:scale(.95);
+
+}
+
+
+
+/* ===========================
+   PROFILE TABS
+=========================== */
+
+.profileTabs{
+
+display:flex;
+
+justify-content:space-around;
+
+align-items:center;
+
+margin:12px 18px;
+
+padding:6px;
+
+background:rgba(255,255,255,.05);
+
+border-radius:18px;
+
+}
+
+.profileTab{
+
+flex:1;
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+justify-content:center;
+
+gap:5px;
+
+padding:10px;
+
+background:none;
+
+border:none;
+
+color:#999;
+
+font-size:20px;
+
+cursor:pointer;
+
+border-radius:14px;
+
+transition:.25s;
+
+}
+
+.profileTab span{
+
+font-size:12px;
+
+}
+
+.profileTab.active{
+
+background:#2d8cff;
+
+color:#fff;
+
+}
+
+
+
+/* ===========================
+   VIDEO GRID
+=========================== */
+
+.profileGrid{
+
+display:grid;
+
+grid-template-columns:
+
+repeat(3,1fr);
+
+gap:10px;
+
+padding:18px;
+
+}
+
+.profileVideo{
+
+position:relative;
+
+width:100%;
+
+aspect-ratio:9/16;
+
+border-radius:18px;
+
+overflow:hidden;
+
+background:#151515;
+
+cursor:pointer;
+
+}
+
+.profileVideo video,
+
+.profileVideo img{
+
+width:100%;
+
+height:100%;
+
+object-fit:cover;
+
+}
+
+.profileVideo:hover{
+
+transform:scale(1.03);
+
+transition:.2s;
+
+}
+
+.videoViews{
+
+position:absolute;
+
+left:8px;
+
+bottom:8px;
+
+padding:3px 8px;
+
+border-radius:999px;
+
+background:rgba(0,0,0,.55);
+
+font-size:11px;
+
+color:#fff;
+
+}
+
+
+
+/* Empty profile */
+
+.emptyProfile{
+
+padding:60px 20px;
+
+text-align:center;
+
+color:#9f9f9f;
+
+font-size:15px;
+
+}
+/* ===========================
+   EDIT PROFILE BOTTOM SHEET
+=========================== */
+
+.bottomSheet{
+
+position:fixed;
+
+left:0;
+
+right:0;
+
+bottom:-100%;
+
+width:100%;
+
+max-height:88vh;
+
+overflow-y:auto;
+
+background:#111827;
+
+border-radius:30px 30px 0 0;
+
+padding:20px;
+
+z-index:9999;
+
+transition:bottom .35s ease;
+
+box-shadow:
+0 -15px 40px rgba(0,0,0,.5);
+
+}
+
+.bottomSheet.open{
+
+bottom:0;
+
+}
+
+.sheetHandle{
+
+width:70px;
+
+height:6px;
+
+background:#666;
+
+border-radius:999px;
+
+margin:0 auto 20px;
+
+}
+
+.bottomSheet h2{
+
+text-align:center;
+
+margin-bottom:20px;
+
+font-size:24px;
+
+}
+
+.editAvatarArea{
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+margin-bottom:20px;
+
+}
+
+.editAvatarPreview{
+
+width:110px;
+
+height:110px;
+
+border-radius:50%;
+
+object-fit:cover;
+
+border:4px solid #4da6ff;
+
+background:#222;
+
+margin-bottom:15px;
+
+}
+
+#accountChangePhotoBtn{
+
+padding:10px 18px;
+
+border:none;
+
+border-radius:999px;
+
+background:#2d8cff;
+
+color:#fff;
+
+font-size:15px;
+
+cursor:pointer;
+
+}
+
+.bottomSheet input,
+
+.bottomSheet textarea{
+
+width:100%;
+
+margin-bottom:15px;
+
+padding:14px;
+
+border:none;
+
+border-radius:16px;
+
+background:#1b2436;
+
+color:white;
+
+font-size:15px;
+
+outline:none;
+
+}
+
+.bottomSheet textarea{
+
+min-height:110px;
+
+resize:none;
+
+}
+
+.sheetButtons{
+
+display:flex;
+
+gap:12px;
+
+margin-top:10px;
+
+}
+
+.sheetButtons button{
+
+flex:1;
+
+}
+
+
+
+/* ===========================
+   FLOATING UPLOAD BUTTON
+=========================== */
+
+.floatingUploadBtn{
+
+position:fixed;
+
+right:22px;
+
+bottom:28px;
+
+width:62px;
+
+height:62px;
+
+border:none;
+
+border-radius:50%;
+
+background:linear-gradient(
+135deg,
+#2d8cff,
+#68d5ff
+);
+
+color:white;
+
+font-size:34px;
+
+font-weight:bold;
+
+cursor:pointer;
+
+box-shadow:
+0 8px 25px rgba(45,140,255,.45);
+
+transition:.25s;
+
+z-index:999;
+
+}
+
+.floatingUploadBtn:active{
+
+transform:scale(.92);
+
+}
+
+
+
+/* ===========================
+   SCROLLBAR
+=========================== */
+
+::-webkit-scrollbar{
+
+width:5px;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+background:#3f8cff;
+
+border-radius:999px;
+
+}
+
+
+
+/* ===========================
+   MOBILE
+=========================== */
+
+@media(max-width:768px){
+
+.profileAvatar{
+
+width:105px;
+
+height:105px;
+
+}
+
+#displayName{
+
+font-size:23px;
+
+}
+
+.profileStats{
+
+padding:15px;
+
+}
+
+.statItem h3{
+
+font-size:21px;
+
+}
+
+.profileGrid{
+
+gap:8px;
+
+padding:12px;
+
+}
+
+.floatingUploadBtn{
+
+width:58px;
+
+height:58px;
+
+font-size:30px;
+
+}
+
+}
+
+/* ===========================
+   SETTINGS SIDEBAR
+=========================== */
+
+#settingsSidebar{
+
+    position:fixed;
+
+    top:0;
+
+    right:-320px;
+
+    width:300px;
+
+    height:100vh;
+
+    background:#111827;
+
+    z-index:10000;
+
+    padding:20px;
+
+    box-shadow:
+    -10px 0 30px rgba(0,0,0,.5);
+
+    transition:right .35s ease;
+
+}
+
+
+#settingsSidebar.open{
+
+    right:0;
+
+}
+
+
+.settingsHeader{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:30px;
+
+}
+
+
+.settingsHeader h2{
+
+    font-size:24px;
+
+}
+
+
+#closeSettingsBtn{
+
+    width:40px;
+
+    height:40px;
+
+    border:none;
+
+    border-radius:50%;
+
+    background:rgba(255,255,255,.1);
+
+    color:white;
+
+    font-size:25px;
+
+}
+
+
+.settingsItem{
+
+    padding:16px;
+
+    margin-bottom:12px;
+
+    border-radius:14px;
+
+    background:rgba(255,255,255,.08);
+
+    color:white;
+
+    cursor:pointer;
+
+}
+
+#privacySheet label{
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+padding:18px 0;
+
+font-size:17px;
+
+border-bottom:1px solid #222;
+
+}
+
+#privacySheet input[type="checkbox"]{
+
+width:22px;
+
+height:22px;
+
+}
+
+/* =========================
+   CLOUDTOK LIGHT THEME
+========================= */
+
+body.lightTheme{
+
+    background:#f5f5f5;
+
+    color:#111;
+
+}
+
+
+/* Cards */
+
+body.lightTheme .bioCard,
+body.lightTheme .profileStats,
+body.lightTheme .statItem,
+body.lightTheme .bottomSheet,
+body.lightTheme .settingsItem{
+
+    background:#ffffff;
+
+    color:#111;
+
+}
+
+
+/* All text inside cards */
+
+body.lightTheme .bioCard *,
+body.lightTheme .profileStats *,
+body.lightTheme .bottomSheet *,
+body.lightTheme .settingsItem{
+
+    color:#111;
+
+}
+
+
+/* Tabs */
+
+body.lightTheme .profileTab{
+
+    color:#555;
+
+}
+
+
+body.lightTheme .profileTab.active{
+
+    color:#111;
+
+}
+
+
+/* Inputs */
+
+body.lightTheme input,
+body.lightTheme textarea{
+
+    background:#fff;
+
+    color:#111;
+
+    border:1px solid #ccc;
+
+}
+
+
+/* Buttons */
+
+body.lightTheme .secondaryButton{
+
+    background:#e5e5e5;
+
+    color:#111;
+
+    border:1px solid #ccc;
+
+}
+
+
+body.lightTheme .primaryButton{
+
+    color:#fff;
+
+}
+
+
+/* Sheet buttons */
+
+body.lightTheme .sheetButtons button{
+
+    color:#111;
+
+}
+/* =========================
+   LIGHT THEME TEXT FIXES
+========================= */
+
+
+body.lightTheme #profileBio{
+
+    color:#111 !important;
+
+}
+
+
+body.lightTheme #profileWebsite{
+
+    color:#deepblue; !important;
+
+}
+
+
+/* Website hover */
+
+body.lightTheme #profileWebsite:hover{
+
+    color:#000 !important;
+
+}
+
+
+/* Bio card */
+
+body.lightTheme .bioCard{
+
+    background:#ffffff;
+
+    color:#111 !important;
+
+}
+
+
+body.lightTheme .bioCard p{
+
+    color:#111 !important;
+
+}
