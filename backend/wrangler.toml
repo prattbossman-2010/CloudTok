@@ -6,7 +6,3 @@ compatibility_date = "2026-07-18"
 binding = "DB"
 database_name = "cloudtok-db"
 database_id = "98c04ae5-8ca3-42b2-86ee-bd52bf690f01"
-
-[[r2_buckets]]
-binding = "R2_BUCKET"
-bucket_name = "cloudtok-media"
