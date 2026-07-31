@@ -54,15 +54,60 @@ this.setupTabs();
 
 this.loadTheme();
 
+})
+.catch(()=>{
+
+if(!this.user){
+
+this.user={
+
+id:null,
+
+displayName:
+this.currentUsername || "User",
+
+username:
+this.currentUsername || "user",
+
+avatar:
+"assets/images/default-avatar.png",
+
+bio:"",
+
+followers:0,
+
+following:0,
+
+followersList:[],
+
+followingList:[],
+
+likes:0,
+
+verified:false
+
+};
+
+}
+
+this.loadVideos();
+this.updateProfileUI();
+this.setupProfileMode();
+this.setupButtons();
+this.setupTabs();
+this.loadTheme();
+
 });
 
-}   // <-- THIS WAS MISSING
+}
 
 
 
 async loadUser(){
 
     if(typeof CloudTokAPI !== "undefined"){
+
+        try{
 
         const cloudUser =
         await CloudTokAPI.getProfile(
@@ -82,6 +127,11 @@ async loadUser(){
 
             return;
 
+        }
+
+        }
+        catch(e){
+            console.log("Profile API failed, using local");
         }
 
     }

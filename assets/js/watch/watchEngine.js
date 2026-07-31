@@ -63,6 +63,10 @@ this.setupVideo();
 
 this.setupSwipe();
 
+this.setupKeyboard();
+
+this.setupWheel();
+
 
 
 }
@@ -1264,6 +1268,70 @@ this.area.innerHTML="";
 
 }
 
+
+
+}
+
+
+
+setupKeyboard(){
+
+document.addEventListener("keydown",(e)=>{
+
+    if(this.locked)return;
+
+    if(e.key==="ArrowDown"){
+
+        if(this.currentIndex < this.videos.length-1){
+            this.animateSwipe("next");
+        }
+    }
+    else if(e.key==="ArrowUp"){
+
+        if(this.currentIndex > 0){
+            this.animateSwipe("previous");
+        }
+    }
+
+});
+
+}
+
+
+
+setupWheel(){
+
+let wheelTimeout=null;
+let accumulated=0;
+
+document.addEventListener("wheel",(e)=>{
+
+    if(this.locked)return;
+
+    accumulated+=e.deltaY;
+
+    if(wheelTimeout)return;
+
+    wheelTimeout=setTimeout(()=>{
+
+        if(Math.abs(accumulated)>50){
+
+            if(accumulated>0 && this.currentIndex<this.videos.length-1){
+                this.animateSwipe("next");
+            }
+            else if(accumulated<0 && this.currentIndex>0){
+                this.animateSwipe("previous");
+            }
+        }
+
+        accumulated=0;
+        wheelTimeout=null;
+
+    },150);
+
+},{passive:true});
+
+}
 
 
 }    
