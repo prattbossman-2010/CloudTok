@@ -467,6 +467,10 @@ body.profilePageBody{
 
 }
 
+.rightMenu .followPlus:active{
+    transform:translateX(-50%) scale(.85);
+}
+
 
 
 
