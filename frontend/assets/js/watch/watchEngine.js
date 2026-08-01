@@ -323,7 +323,7 @@ if(typeof CloudTokAPI!=="undefined"){
                 thumbnail:v.thumbnail_url||"assets/images/video-placeholder.png",
                 likes:v.likes||0,
                 likedBy:[],
-                comments:[],
+                comments:Array(v.comments||0).fill(null),
                 shares:0,
                 saves:0,
                 views:v.views||0
@@ -332,6 +332,15 @@ if(typeof CloudTokAPI!=="undefined"){
             (CloudTokDatabase.videos||[]).forEach(builtin=>{
                 if(!this.videos.some(v=>String(v.id)===String(builtin.id))){
                     this.videos.push(builtin);
+                }
+            });
+            // Sync API videos into CloudTokDatabase.videos so loadWatchActions/loadWatchComments can find them
+            if(!Array.isArray(CloudTokDatabase.videos)){
+                CloudTokDatabase.videos=[];
+            }
+            this.videos.forEach(v=>{
+                if(!CloudTokDatabase.videos.some(db=>String(db.id)===String(v.id))){
+                    CloudTokDatabase.videos.push(v);
                 }
             });
         }

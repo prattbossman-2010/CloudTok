@@ -145,7 +145,7 @@ async loadVideos(){
 
         likedBy:[],
 
-        comments:[],
+        comments: Array(video.comments || 0).fill(null),
 
         shares:0,
 
