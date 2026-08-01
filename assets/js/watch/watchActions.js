@@ -149,10 +149,38 @@ if(this.followBtn){
 }
 
 
-toggleLike(){
+async toggleLike(){
 
 if(!CloudTokAuthGuard.requireLogin()){
     return;
+}
+
+if(typeof CloudTokAPI!=="undefined"){
+    try{
+        const result=await CloudTokAPI.request(
+            "/videos/"+this.video.id+"/like",
+            {method:"POST"}
+        );
+        if(result.success){
+            this.isLiked=result.liked;
+            if(result.liked){
+                this.video.likes=(this.video.likes||0)+1;
+            }else{
+                this.video.likes=Math.max(0,(this.video.likes||0)-1);
+            }
+            if(result.liked){
+                this.video.likedBy.push(this.currentUser);
+            }else{
+                this.video.likedBy=this.video.likedBy.filter(u=>u!==this.currentUser);
+            }
+            this.saveDatabase();
+            this.updateUI();
+            return;
+        }
+    }
+    catch(e){
+        console.log("Like API failed, using local");
+    }
 }
 
 if(this.isLiked){
@@ -334,8 +362,12 @@ let WatchActions = null;
 
 function loadWatchActions(videoId){
 
-const video =
-CloudTokDatabase.videos.find(v=>v.id===videoId);
+let video =
+CloudTokDatabase.videos.find(v=>Number(v.id)===Number(videoId));
+
+if(!video && typeof WatchEngine!=="undefined" && WatchEngine){
+    video=WatchEngine.videos.find(v=>Number(v.id)===Number(videoId));
+}
 
 if(!video){
     console.log("VIDEO NOT FOUND FOR ACTIONS");

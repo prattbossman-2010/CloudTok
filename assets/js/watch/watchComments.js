@@ -254,8 +254,12 @@ let WatchComments = null;
 
 function loadWatchComments(videoId){
 
-const video =
-CloudTokDatabase.videos.find(v=>v.id===videoId);
+let video =
+CloudTokDatabase.videos.find(v=>Number(v.id)===Number(videoId));
+
+if(!video && typeof WatchEngine!=="undefined" && WatchEngine){
+    video=WatchEngine.videos.find(v=>Number(v.id)===Number(videoId));
+}
 
 if(!video){
     console.log("COMMENT VIDEO NOT FOUND");
