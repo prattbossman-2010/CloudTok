@@ -339,8 +339,12 @@ if(typeof CloudTokAPI!=="undefined"){
                 CloudTokDatabase.videos=[];
             }
             this.videos.forEach(v=>{
-                if(!CloudTokDatabase.videos.some(db=>String(db.id)===String(v.id))){
+                const existingIndex=CloudTokDatabase.videos.findIndex(db=>String(db.id)===String(v.id));
+                if(existingIndex===-1){
                     CloudTokDatabase.videos.push(v);
+                }else{
+                    // Update stale entries with fresh API data
+                    CloudTokDatabase.videos[existingIndex]=v;
                 }
             });
         }
