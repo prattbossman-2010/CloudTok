@@ -12,6 +12,8 @@ static _initialized=false;
 
 static _profileCache={};
 
+static _followingList=null;
+
 
 static async init(){
 
@@ -34,6 +36,59 @@ static async init(){
         }
         catch(e){}
 
+        // Fetch following list for current user
+        try{
+
+            const followingResult=
+            await CloudTokAPI.getFollowing(username);
+
+            if(followingResult.following){
+
+                this._followingList=
+                followingResult.following.map(u=>
+                    this.normalizeUsername(u.username)
+                );
+
+            }
+
+        }
+        catch(e){}
+
+    }
+
+    // Ensure current user exists in local users array
+    if(username){
+        const normalized=this.normalizeUsername(username);
+        let user=this.users.find(u=>this.normalizeUsername(u.username)===normalized);
+        if(!user){
+            // Create local entry from API data or defaults
+            const cached=this._profileCache[username];
+            user={
+                id:cached?cached.id:Date.now(),
+                username:normalized,
+                displayName:cached?cached.displayName:normalized,
+                email:cached?cached.email:"",
+                password:"",
+                bio:cached?cached.bio:"",
+                avatar:cached?cached.avatar:"assets/images/default-avatar.png",
+                verified:false,
+                followers:[],
+                following:this._followingList||[],
+                likes:0,
+                notificationsList:[],
+                joined:Date.now(),
+                privacy:{privateAccount:false,allowComments:true,allowDownloads:true,showOnlineStatus:true}
+            };
+            this.users.push(user);
+            this.save();
+        }
+        else{
+            // Update existing user's following from API
+            if(this._followingList){
+                user.following=this._followingList;
+                this.save();
+            }
+        }
     }
 
     this._initialized=true;
@@ -190,12 +245,32 @@ const username=
 localStorage.getItem(this.currentUserKey);
 if(!username)return null;
 const normalized=this.normalizeUsername(username);
-const user=this.users.find(
+let user=this.users.find(
 u=>this.normalizeUsername(u.username)===normalized
 );
+if(!user){
+    // Fallback: create from API cache
+    const cached=this._profileCache[username];
+    if(cached){
+        user={
+            id:cached.id,
+            username:normalized,
+            displayName:cached.displayName||normalized,
+            email:cached.email||"",
+            bio:cached.bio||"",
+            avatar:cached.avatar||"assets/images/default-avatar.png",
+            following:this._followingList||[],
+            followers:[],
+            verified:false,
+            privacy:{privateAccount:false}
+        };
+        this.users.push(user);
+        this.save();
+    }
+}
 if(user){
     if(!Array.isArray(user.following)){
-        user.following=[];
+        user.following=this._followingList||[];
     }
     if(!Array.isArray(user.followers)){
         user.followers=[];
