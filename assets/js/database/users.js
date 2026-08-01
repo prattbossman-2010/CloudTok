@@ -189,7 +189,19 @@ static getCurrentUser(){
 const username=
 localStorage.getItem(this.currentUserKey);
 if(!username)return null;
-return this.find(username);
+const normalized=this.normalizeUsername(username);
+const user=this.users.find(
+u=>this.normalizeUsername(u.username)===normalized
+);
+if(user){
+    if(!Array.isArray(user.following)){
+        user.following=[];
+    }
+    if(!Array.isArray(user.followers)){
+        user.followers=[];
+    }
+}
+return user||null;
 }
 
 static updateProfile(data){
@@ -207,6 +219,9 @@ static async follow(username){
 username=this.normalizeUsername(username);
 const current=this.getCurrentUser();
 if(!current)return;
+if(!Array.isArray(current.following)){
+    current.following=[];
+}
 
 if(typeof CloudTokAPI!=="undefined"){
     try{
@@ -237,6 +252,9 @@ static async unfollow(username){
 username=this.normalizeUsername(username);
 const current=this.getCurrentUser();
 if(!current)return;
+if(!Array.isArray(current.following)){
+    current.following=[];
+}
 
 if(typeof CloudTokAPI!=="undefined"){
     try{
