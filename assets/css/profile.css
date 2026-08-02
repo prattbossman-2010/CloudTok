@@ -836,49 +836,92 @@ border-radius:999px;
 @media(max-width:768px){
 
 .profileAvatar{
-
 width:105px;
-
 height:105px;
-
 }
 
 #displayName{
-
 font-size:23px;
-
 }
 
 .profileStats{
-
 padding:15px;
-
 }
 
 .statItem h3{
-
 font-size:21px;
-
 }
 
 .profileGrid{
-
 gap:8px;
-
 padding:12px;
-
 }
 
 .floatingUploadBtn{
-
 width:58px;
-
 height:58px;
-
 font-size:30px;
-
 }
 
+.profileHeader{
+padding:12px;
+flex-direction:column;
+align-items:center;
+text-align:center;
+}
+
+.profileBio{
+padding:0 15px;
+font-size:13px;
+max-width:90%;
+}
+
+.profileActions{
+padding:0 15px;
+}
+
+.profileActions button{
+padding:8px 16px;
+font-size:13px;
+}
+
+.profileGrid .gridItem{
+height:120px;
+}
+
+.profileTopBar{
+height:50px;
+padding:12px 15px;
+}
+
+.profileTopBar h2{
+font-size:16px;
+}
+}
+
+@media(max-width:420px){
+.profileAvatar{
+width:90px;
+height:90px;
+}
+
+#displayName{
+font-size:20px;
+}
+
+.statItem h3{
+font-size:18px;
+}
+
+.profileGrid{
+grid-template-columns:repeat(3,1fr);
+gap:4px;
+padding:8px;
+}
+
+.profileGrid .gridItem{
+height:100px;
+}
 }
 
 /* ===========================

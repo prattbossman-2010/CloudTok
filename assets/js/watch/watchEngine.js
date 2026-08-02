@@ -322,10 +322,10 @@ if(typeof CloudTokAPI!=="undefined"){
                 video:v.video_url||"",
                 thumbnail:v.thumbnail_url||"assets/images/video-placeholder.png",
                 likes:v.likes||0,
-                likedBy:[],
+                likedBy:v.liked?[getCurrentCloudTokUser()]:[],
                 comments:Array(v.comments||0).fill(null),
                 shares:0,
-                saves:0,
+                saves:v.saved?1:0,
                 views:v.views||0
             }));
             // Add built-in videos if not already present

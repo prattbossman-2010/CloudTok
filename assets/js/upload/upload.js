@@ -35,9 +35,22 @@ avatar:"assets/images/default-avatar.png"
 }
 
 uploadVideo(file,options={}){
-    
+
 
 return new Promise((resolve,reject)=>{
+
+// Upload limits: 100MB max file size
+const MAX_FILE_SIZE=100*1024*1024;
+if(file.size>MAX_FILE_SIZE){
+    reject(new Error("File too large. Maximum size is 100MB."));
+    return;
+}
+
+// Check file type
+if(!file.type.startsWith("video/")){
+    reject(new Error("Only video files are allowed."));
+    return;
+}
 
 const reader=new FileReader();
 
@@ -52,6 +65,19 @@ const localVideoURL=e.target.result;
 
 progress(25);
 
+// Get video duration to check limits
+const tempVideo=document.createElement("video");
+tempVideo.src=localVideoURL;
+tempVideo.onloadedmetadata=()=>{
+
+const duration=tempVideo.duration;
+const MAX_DURATION=180; // 3 minutes like TikTok
+
+if(duration>MAX_DURATION){
+    reject(new Error("Video too long. Maximum duration is 3 minutes."));
+    return;
+}
+
 this.createThumbnail(localVideoURL)
 
 .then(async (thumbnail)=>{
@@ -61,7 +87,7 @@ progress(60);
 const caption=
 (options.caption&&options.caption.trim())
 ?options.caption.trim()
-:file.name.replace(/\.[^/.]+$/,"");
+:"New video";
 
 const tags=
 this.generateTags(
@@ -212,6 +238,12 @@ resolve
 );
 
 });
+
+};
+
+tempVideo.onerror=()=>{
+    reject(new Error("Could not read video file."));
+};
 
 };
 

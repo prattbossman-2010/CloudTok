@@ -328,7 +328,7 @@ body.profilePageBody{
 
     right:15px;
 
-    bottom:7wpx;
+    bottom:70px;
 
 
     display:flex;
@@ -1270,25 +1270,81 @@ body{
 
 @media(max-width:768px){
 
-
     .globalSoundButton{
-
         width:45px;
-
         height:45px;
-
         font-size:21px;
-
     }
-
 
     .soundToast{
-
         font-size:14px;
-
     }
 
+    .topBar{
+        height:56px;
+        padding:10px 15px;
+    }
 
+    .logo{
+        font-size:20px;
+    }
+
+    .topActions button{
+        padding:6px 10px;
+        font-size:13px;
+    }
+
+    .rightMenu{
+        right:10px;
+        gap:18px;
+    }
+
+    .rightMenu button{
+        width:46px;
+        height:46px;
+    }
+
+    .rightMenu .actionIcon{
+        width:28px;
+        height:28px;
+    }
+
+    .rightMenu .followPlus{
+        width:18px;
+        height:18px;
+        font-size:15px;
+        line-height:18px;
+    }
+
+    .bottomNav{
+        height:60px;
+    }
+
+    .bottomNav button{
+        font-size:24px;
+    }
+
+    .videoDesc{
+        max-width:65%;
+        font-size:13px;
+    }
+
+    .videoDesc h4{
+        font-size:14px;
+    }
+
+    .videoDesc p{
+        font-size:12px;
+    }
+
+    .videoDesc .videoTags{
+        font-size:11px;
+    }
+
+    .commentAvatar{
+        width:34px;
+        height:34px;
+    }
 }
 
 /* ==========================

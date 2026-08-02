@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CloudTok Admin</title>
+<link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+
+<div class="adminLayout">
+    <aside class="adminSidebar">
+        <div class="adminLogo">CloudTok Admin</div>
+        <nav>
+            <button class="adminNav active" data-tab="dashboard">Dashboard</button>
+            <button class="adminNav" data-tab="users">Users</button>
+            <button class="adminNav" data-tab="videos">Videos</button>
+        </nav>
+        <button id="adminLogoutBtn" class="adminLogout">Logout</button>
+    </aside>
+
+    <main class="adminMain">
+        <!-- Dashboard -->
+        <div id="dashboardTab" class="adminTab active">
+            <h1>Dashboard</h1>
+            <div id="statsGrid" class="statsGrid"></div>
+        </div>
+
+        <!-- Users -->
+        <div id="usersTab" class="adminTab">
+            <h1>Users</h1>
+            <div id="usersTable" class="adminTable"></div>
+        </div>
+
+        <!-- Videos -->
+        <div id="videosTab" class="adminTab">
+            <h1>Videos</h1>
+            <div id="videosTable" class="adminTable"></div>
+        </div>
+    </main>
+</div>
+
+<script src="assets/js/api/api.js"></script>
+<script src="assets/js/admin/admin.js"></script>
+</body>
+</html>
