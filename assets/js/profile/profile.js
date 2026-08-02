@@ -184,11 +184,13 @@ async loadUser(){
 
 updateProfileUI(){
 
+const displayName=this.user.displayName||this.user.username||"User";
+
 document.getElementById(
 "displayName"
 ).textContent=
 
-this.user.displayName;
+displayName;
 
 document.getElementById(
 "username"

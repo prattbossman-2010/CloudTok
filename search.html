@@ -1,55 +1,37 @@
 <!DOCTYPE html>
-
 <html>
-
 <head>
-
-<title>
-CloudTok Search
-</title>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CloudTok Search</title>
 <link rel="stylesheet" href="assets/css/search.css">
-		<link rel="stylesheet" href="assets/css/theme.css">
-
+<link rel="stylesheet" href="assets/css/theme.css">
 </head>
-
 
 <body>
 
-
 <div class="searchPage">
 
+<div class="searchTopBar">
+    <button id="searchBackBtn" class="searchBackBtn">←</button>
+    <h2 class="searchTitle">Search</h2>
+</div>
 
 <div class="searchBox">
-
-
-<input 
-id="searchInput"
-placeholder="Search CloudTok..."
->
-
-
-<div id="suggestions"></div>
-
-
-<button id="searchButton">
-🔍Search
-</button>
-
+    <input id="searchInput" placeholder="Search CloudTok...">
+    <div id="suggestions"></div>
+    <button id="searchButton">🔍 Search</button>
+</div>
 
 </div>
 
-
-</div>
-
-
+<script>
+document.getElementById("searchBackBtn").onclick=()=>{window.location.href="index.html";};
+</script>
 <script src="assets/js/core/theme.js"></script>
 <script src="assets/js/database/database.js"></script>
 <script src="assets/js/search/search.js"></script>
 <script src="assets/js/api/api.js"></script>
 
-
 </body>
-
-
 </html>

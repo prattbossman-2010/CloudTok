@@ -14,10 +14,26 @@ document.getElementById("newChatUserList");
 this.searchInput=
 document.getElementById("newChatSearchInput");
 
+this.pollInterval=null;
+this.lastChatData="";
+
 this.loadChats();
-
 this.setupEvents();
+this.startPolling();
 
+}
+
+startPolling(){
+this.pollInterval=setInterval(()=>{
+    this.loadChats(true);
+},4000);
+}
+
+stopPolling(){
+if(this.pollInterval){
+    clearInterval(this.pollInterval);
+    this.pollInterval=null;
+}
 }
 
 setupEvents(){
@@ -43,66 +59,79 @@ this.searchInput.addEventListener("input",()=>{
     },300);
 });
 
+const back=document.getElementById("chatBackBtn");
+if(back){
+    back.onclick=()=>{
+        this.stopPolling();
+        window.location.href="index.html";
+    };
 }
 
-async loadChats(){
+window.addEventListener("beforeunload",()=>{
+    this.stopPolling();
+});
+
+}
+
+async loadChats(isPoll=false){
+
+if(isPoll){
+    // Only re-render if data changed
+    try{
+        const result=await CloudTokAPI.getConversations();
+        const newData=JSON.stringify(result);
+        if(newData===this.lastChatData) return;
+        this.lastChatData=newData;
+    }catch(e){return;}
+}
 
 this.list.innerHTML="";
 
 let conversations=[];
 
+// Try API first
 if(typeof CloudTokAPI!=="undefined"){
 
     try{
 
-        const result=await CloudTokAPI.getConversations();
+        const result=
+        await CloudTokAPI.getConversations();
 
         if(result.conversations){
 
-            conversations=result.conversations.map(c=>({
-                username:c.other_username,
-                displayName:c.other_display_name||c.other_username,
-                avatar:c.other_avatar||
-                "assets/images/default-avatar.png",
-                lastMessage:c.last_message,
-                lastMessageAt:c.last_message_at
-            }));
+            conversations=result.conversations;
+
+            if(!isPoll) this.lastChatData=JSON.stringify(result);
 
         }
 
     }
     catch(e){
-        console.log("Conversations API failed");
+        console.log("Chat API failed, using local");
     }
+
+}
+
+// Fallback to local
+if(conversations.length===0){
+
+    conversations=this.getLocalConversations();
 
 }
 
 if(conversations.length===0){
-
-    const currentUser=localStorage.getItem("CloudTokCurrentUser")||"";
-
-    if(typeof CloudTokUsers!=="undefined"){
-
-        const allUsers=CloudTokUsers.getAllUsers();
-
-        conversations=allUsers
-        .filter(u=>u.username!==currentUser.toLowerCase())
-        .map(u=>({
-            username:u.username,
-            displayName:u.displayName||u.username,
-            avatar:u.avatar||"assets/images/default-avatar.png",
-            lastMessage:"Start chatting...",
-            lastMessageAt:null
-        }));
-
-    }
-
+    this.list.innerHTML=`
+    <div style="text-align:center;padding:60px 20px;color:#555;">
+        <div style="font-size:48px;margin-bottom:16px;">💬</div>
+        No conversations yet.<br>Tap ✏️ to start chatting.
+    </div>
+    `;
+    return;
 }
 
+// Sort by most recent
 conversations.sort((a,b)=>{
-    if(!a.lastMessageAt) return 1;
-    if(!b.lastMessageAt) return -1;
-    return new Date(b.lastMessageAt)-new Date(a.lastMessageAt);
+    return new Date(b.lastMessageAt||0)-new Date(a.lastMessageAt||0);
 });
 
 conversations.forEach(user=>{
@@ -110,23 +139,28 @@ conversations.forEach(user=>{
     const card=document.createElement("div");
     card.className="chatCard";
 
+    const unread=user.unreadCount||0;
+
     card.innerHTML=`
         <img
 src="${user.avatar||"assets/images/default-avatar.png"}"
 class="chatAvatar"
 onerror="this.src='assets/images/default-avatar.png'">
         <div class="chatInfo">
-            <h3>${user.displayName}</h3>
-            <p>${user.lastMessage||"Start chatting..."}</p>
+            <h3>${user.displayName||user.username}</h3>
+            <p class="lastMessageText">${user.lastMessage||"Start chatting..."}</p>
         </div>
+        ${unread>0?`<span class="unreadBadge">${unread}</span>`:""}
     `;
 
     card.querySelector(".chatAvatar").onclick=(e)=>{
         e.stopPropagation();
+        this.stopPolling();
         window.location.href="profile.html?user="+encodeURIComponent(user.username);
     };
 
     card.onclick=()=>{
+        this.stopPolling();
         window.location.href=
         "conversation.html?user="+
         encodeURIComponent(user.username);
@@ -138,98 +172,93 @@ onerror="this.src='assets/images/default-avatar.png'">
 
 }
 
+getLocalConversations(){
+
+const currentUsername=
+localStorage.getItem("CloudTokCurrentUser")||"";
+const conversations={};
+
+for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(key.startsWith("CloudTokChat_")){
+        const username=key.replace("CloudTokChat_","");
+        const messages=JSON.parse(localStorage.getItem(key)||"[]");
+        if(messages.length>0){
+            const last=messages[messages.length-1];
+            const otherMsgs=messages.filter(m=>m.sender!==currentUsername);
+            conversations[username]={
+                username:username,
+                displayName:username,
+                avatar:"assets/images/default-avatar.png",
+                lastMessage:last.text||"",
+                lastMessageAt:last.time||Date.now(),
+                unreadCount:0
+            };
+        }
+    }
+}
+
+return Object.values(conversations);
+
+}
+
 async loadAllUsers(query=""){
 
-this.userList.innerHTML="";
+if(typeof CloudTokAPI==="undefined") return;
 
-let users=[];
+try{
 
-if(query && typeof CloudTokAPI!=="undefined"){
+    const result=await CloudTokAPI.searchUsers(query);
+    const users=result.users||[];
 
-    try{
+    this.userList.innerHTML="";
 
-        const result=await CloudTokAPI.search(query);
-
-        if(result.users){
-
-            users=result.users.map(u=>({
-                username:u.username,
-                displayName:u.display_name||u.username,
-                avatar:u.avatar||"assets/images/default-avatar.png"
-            }));
-
-        }
-
-    }
-    catch(e){
-        console.log("Search API failed");
+    if(users.length===0){
+        this.userList.innerHTML=`
+        <div style="text-align:center;padding:40px;color:#555;">
+            No users found
+        </div>
+        `;
+        return;
     }
 
-}
+    users.forEach(user=>{
 
-if(users.length===0 && typeof CloudTokUsers!=="undefined"){
+        const card=document.createElement("div");
+        card.className="newChatUserCard";
 
-    const currentUser=localStorage.getItem("CloudTokCurrentUser")||"";
-    const allUsers=CloudTokUsers.getAllUsers();
-
-    users=allUsers
-    .filter(u=>{
-        const match=u.username!==currentUser.toLowerCase();
-        if(!query) return match;
-        return match && (
-            u.username.includes(query.toLowerCase())||
-            (u.displayName||"").toLowerCase().includes(query.toLowerCase())
-        );
-    })
-    .map(u=>({
-        username:u.username,
-        displayName:u.displayName||u.username,
-        avatar:u.avatar||"assets/images/default-avatar.png"
-    }));
-
-}
-
-if(users.length===0){
-
-    this.userList.innerHTML=`
-    <div style="text-align:center;padding:40px;color:#555;">
-        No users found
-    </div>
-    `;
-    return;
-
-}
-
-users.forEach(user=>{
-
-    const card=document.createElement("div");
-    card.className="newChatUserCard";
-
-    card.innerHTML=`
-        <img
+        card.innerHTML=`
+            <img
 src="${user.avatar||"assets/images/default-avatar.png"}"
 class="newChatAvatar"
 onerror="this.src='assets/images/default-avatar.png'">
-        <div class="newChatUserInfo">
-            <h3>${user.displayName}</h3>
-            <p>@${user.username}</p>
-        </div>
-    `;
+            <div class="newChatUserInfo">
+                <h3>${user.displayName||user.username}</h3>
+                <p>@${user.username}</p>
+            </div>
+        `;
 
-    card.querySelector(".newChatAvatar").onclick=(e)=>{
-        e.stopPropagation();
-        window.location.href="profile.html?user="+encodeURIComponent(user.username);
-    };
+        card.querySelector(".newChatAvatar").onclick=(e)=>{
+            e.stopPropagation();
+            this.stopPolling();
+            window.location.href="profile.html?user="+encodeURIComponent(user.username);
+        };
 
-    card.onclick=()=>{
-        window.location.href=
-        "conversation.html?user="+
-        encodeURIComponent(user.username);
-    };
+        card.onclick=()=>{
+            this.stopPolling();
+            window.location.href=
+            "conversation.html?user="+
+            encodeURIComponent(user.username);
+        };
 
-    this.userList.appendChild(card);
+        this.userList.appendChild(card);
 
-});
+    });
+
+}
+catch(e){
+    console.log("Search users failed");
+}
 
 }
 
@@ -247,16 +276,4 @@ cards.forEach(card=>{
 
 }
 
-document.addEventListener(
-"DOMContentLoaded",
-()=>{
-    new CloudTokChat();
-}
-);
-
-const backBtn=
-document.getElementById("chatBackBtn");
-
-if(backBtn){
-    backBtn.onclick=()=>{history.back();};
-}
+const chatApp=new CloudTokChat();

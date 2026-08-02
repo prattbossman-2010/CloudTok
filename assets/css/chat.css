@@ -387,6 +387,8 @@ background:#111;
 
 color:white;
 
+position:relative;
+
 }
 
 
@@ -423,6 +425,30 @@ color:#aaa;
 
 font-size:14px;
 
+}
+
+.unreadBadge{
+background:#fe2c55;
+color:#fff;
+font-size:11px;
+font-weight:700;
+min-width:20px;
+height:20px;
+border-radius:10px;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:0 6px;
+margin-left:auto;
+flex-shrink:0;
+}
+
+.lastMessageText{
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+max-width:180px;
+display:block;
 }
 
 .conversationAvatar{

@@ -1,149 +1,74 @@
-body{
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#000;color:white;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
 
-background:#000;
+.searchPage{min-height:100vh;max-width:600px;margin:0 auto;}
 
-color:white;
-
-font-family:Arial;
-
+.searchTopBar{
+display:flex;align-items:center;gap:15px;
+padding:16px;background:#111;border-bottom:1px solid #222;
+position:sticky;top:0;z-index:10;
 }
 
-
-
-.searchBox{
-
-position:relative;
-
-padding:20px;
-
+.searchBackBtn{
+background:none;border:none;color:white;font-size:22px;
+cursor:pointer;padding:8px;border-radius:50%;
+transition:background .2s;
 }
+.searchBackBtn:hover{background:rgba(255,255,255,.1);}
 
+.searchTitle{margin:0;font-size:20px;font-weight:700;}
 
+.searchBox{padding:20px;}
 
 #searchInput{
-
-width:90%;
-
-padding:15px;
-
-border-radius:25px;
-
-border:none;
-
-font-size:18px;
-
+width:100%;padding:16px 20px;border-radius:30px;
+border:none;font-size:17px;background:#1a1a1a;color:#fff;
+outline:none;transition:border .2s;
 }
-
-
+#searchInput:focus{border:2px solid #fe2c55;}
 
 #suggestions{
-
-position:absolute;
-
-top:70px;
-
-left:20px;
-
-right:20px;
-
-background:#222;
-
-border-radius:15px;
-
+position:absolute;top:140px;left:20px;right:20px;
+background:#1a1a1a;border-radius:16px;
+box-shadow:0 8px 30px rgba(0,0,0,.4);
+z-index:20;overflow:hidden;
+display:none;
 }
-
-
+#suggestions:not(:empty){display:block;}
 
 .suggestion{
-
-padding:15px;
-
-border-bottom:1px solid #444;
-
+padding:14px 20px;border-bottom:1px solid #222;
+cursor:pointer;transition:background .2s;font-size:15px;
 }
+.suggestion:hover{background:#222;}
+.suggestion:last-child{border-bottom:none;}
 
 #searchButton{
-  width: 6.8%;
-  height:50px;
-  border-radius: 20%;
-  font-weight: bold;
-  font-size: 2.5vh;
+width:100%;margin-top:14px;height:52px;
+border-radius:30px;border:none;
+background:#fe2c55;color:#fff;
+font-size:17px;font-weight:700;
+cursor:pointer;transition:opacity .2s;
 }
-
-/* =========================
-   LIGHT THEME SEARCH
-========================= */
-
-
-body.lightTheme{
-
-    background:#f5f5f5;
-
-    color:#111;
-
-}
-
-
-body.lightTheme #searchInput{
-
-    background:#fff;
-
-    color:#111;
-
-    border:1px solid #ccc;
-
-}
-
-
-body.lightTheme #searchInput::placeholder{
-
-    color:#666;
-
-}
-
-
-body.lightTheme #searchButton{
-
-    background:#ddd;
-
-    color:#111;
-
-}
-
-
-body.lightTheme #suggestions{
-
-    background:#fff;
-
-    border:1px solid #ccc;
-
-}
-
-
-body.lightTheme .suggestion{
-
-    color:#111;
-
-    border-bottom:1px solid #ddd;
-
-}
-
-
-body.lightTheme .suggestion:hover{
-
-background:#eee;
-
-}
+#searchButton:active{opacity:.8;}
 
 @media(max-width:768px){
+.searchTopBar{padding:12px 15px;}
 .searchBox{padding:15px;}
-#searchInput{width:100%;font-size:16px;padding:14px;}
-#searchButton{width:100%;margin-top:10px;height:48px;font-size:16px;border-radius:25px;}
-#suggestions{top:65px;left:15px;right:15px;}
-.suggestion{padding:12px;font-size:14px;}
+#searchInput{padding:14px 18px;font-size:16px;}
+#searchButton{height:48px;font-size:16px;}
 }
 
 @media(max-width:420px){
 .searchBox{padding:12px;}
-#searchInput{padding:12px;font-size:15px;}
+#searchInput{padding:12px 16px;font-size:15px;}
 }
+
+/* Light Theme */
+body.lightTheme{background:#f5f5f5;color:#111;}
+body.lightTheme #searchInput{background:#fff;color:#111;border:1px solid #ccc;}
+body.lightTheme #searchInput::placeholder{color:#666;}
+body.lightTheme #searchButton{background:#ddd;color:#111;}
+body.lightTheme #suggestions{background:#fff;border:1px solid #ccc;}
+body.lightTheme .suggestion{color:#111;border-bottom:1px solid #ddd;}
+body.lightTheme .suggestion:hover{background:#eee;}

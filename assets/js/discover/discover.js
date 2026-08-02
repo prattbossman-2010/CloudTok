@@ -5,7 +5,7 @@ constructor(){
 this.grid=
 document.getElementById("discoverGrid");
 
-this.currentCategory="All";
+this.currentCategory="all";
 
 this.searchText="";
 
@@ -39,7 +39,7 @@ if(typeof CloudTokAPI!=="undefined"){
     try{
 
         const category=
-        this.currentCategory!=="All"
+        this.currentCategory!=="all"
         ?this.currentCategory
         :null;
 
@@ -88,7 +88,7 @@ if(videos.length===0){
 
     }
 
-    if(this.currentCategory!=="All"){
+    if(this.currentCategory!=="all"){
 
         videos=videos.filter(video=>{
             return(video.category||"")
@@ -110,6 +110,16 @@ if(videos.length===0){
 
 }
 
+if(videos.length===0){
+    this.grid.innerHTML=`
+    <div class="discoverEmpty">
+        <div class="discoverEmptyIcon">🔍</div>
+        <p>No videos found</p>
+    </div>
+    `;
+    return;
+}
+
 videos.forEach(video=>{
 
 const card=
@@ -121,10 +131,16 @@ card.innerHTML=`
 
 <img
 src="${video.thumbnail||"assets/images/video-placeholder.png"}"
-class="discoverThumbnail">
+class="discoverThumbnail"
+onerror="this.src='assets/images/video-placeholder.png'">
 
-<div class="discoverCaption">
-${video.caption||""}
+<div class="discoverOverlay">
+    <div class="discoverCaption">${video.caption||"Untitled"}</div>
+    <div class="discoverMeta">
+        <span class="views">❤️ ${video.likes||0}</span>
+        <span>💬 ${video.comments||0}</span>
+        <span>👁 ${video.views||0}</span>
+    </div>
 </div>
 
 `;
@@ -153,7 +169,7 @@ buttons.forEach(button=>{
         });
         button.classList.add("active");
         this.currentCategory=
-        button.textContent.trim();
+        button.dataset.cat||"all";
         this.loadVideos();
     };
 
@@ -170,10 +186,3 @@ document.addEventListener(
     new CloudTokDiscover();
 }
 );
-
-const backBtn=
-document.getElementById("discoverBackBtn");
-
-if(backBtn){
-    backBtn.onclick=()=>{history.back();};
-}
