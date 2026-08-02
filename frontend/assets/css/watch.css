@@ -930,3 +930,29 @@ overflow:visible;
 .followPlus:active{
     transform:translateX(-50%) scale(0.85) !important;
 }
+
+@media(max-width:768px){
+    #topBar{height:56px;padding:12px 15px;}
+    #topBar h2{font-size:18px;}
+    #backBtn{font-size:20px;padding:8px 10px;}
+    .watchActions{right:10px;bottom:100px;gap:18px;}
+    .actionIcon{width:28px;height:28px;}
+    .watchActions button{font-size:11px;}
+    #videoInfo{left:12px;bottom:80px;max-width:65%;}
+    #videoInfo h3{font-size:16px;margin-bottom:6px;}
+    #videoInfo p{font-size:13px;}
+    #videoInfo span{font-size:12px;}
+    .followPlus{width:16px;height:16px;font-size:14px;line-height:16px;}
+    .watchAvatar{width:38px;height:38px;}
+    #commentsPanel{width:100%;height:55vh;}
+    .commentAvatar{width:34px;height:34px;}
+    .commentInputArea input{font-size:16px;padding:12px;}
+}
+
+@media(max-width:420px){
+    .watchActions{right:8px;bottom:90px;gap:15px;}
+    .actionIcon{width:26px;height:26px;}
+    #videoInfo{max-width:58%;left:10px;bottom:75px;}
+    #videoInfo h3{font-size:15px;}
+    #videoInfo p{font-size:12px;}
+}

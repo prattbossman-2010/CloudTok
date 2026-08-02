@@ -150,13 +150,14 @@ async loadVideos(){
         likes:
         video.likes || 0,
 
-        likedBy:[],
+        likedBy:
+        video.liked ? [getCurrentCloudTokUser()] : [],
 
         comments: Array(video.comments || 0).fill(null),
 
         shares:0,
 
-        saves:0,
+        saves: video.saved ? 1 : 0,
 
         views:
         video.views || 0,

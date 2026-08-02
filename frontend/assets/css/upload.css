@@ -192,28 +192,51 @@ body.uploadPageBody{
 
 @media(max-width:768px){
 
+.uploadPage{
+padding:15px;
+}
 
-    .uploadPage{
+.uploadCard{
+padding:16px;
+border-radius:16px;
+}
 
-        padding:15px;
+#preview{
+max-height:55vh;
+}
 
-    }
+.uploadArea{
+padding:20px;
+border-radius:12px;
+}
 
+.uploadArea h2{
+font-size:18px;
+}
 
-    .uploadCard{
+.uploadArea p{
+font-size:13px;
+}
 
-        padding:16px;
+.uploadForm input,
+.uploadForm textarea,
+.uploadForm select{
+font-size:15px;
+padding:12px;
+}
 
-        border-radius:16px;
+}
 
-    }
+@media(max-width:420px){
+.uploadPage{
+padding:10px;
+}
 
+.uploadCard{
+padding:12px;
+}
 
-    #preview{
-
-        max-height:55vh;
-
-    }
-
-
+#preview{
+max-height:45vh;
+}
 }

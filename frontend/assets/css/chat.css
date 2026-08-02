@@ -513,3 +513,23 @@ margin:3px 0 0;
 color:#888;
 font-size:13px;
 }
+
+@media(max-width:768px){
+.chatHeader h2{font-size:18px;}
+.conversation img{width:48px;height:48px;}
+.conversationName{font-size:15px;}
+.lastMessage{font-size:13px;}
+.conversationHeader h2{font-size:16px;}
+.conversationHeader button{font-size:24px;}
+.message{font-size:14px;padding:10px 14px;}
+.messageBar input{font-size:14px;padding:10px 14px;}
+.messageBar button{padding:0 16px;font-size:14px;}
+.newChatOverlay{max-width:100%;}
+.newChatAvatar{width:44px;height:44px;}
+}
+
+@media(max-width:420px){
+.conversation img{width:42px;height:42px;margin-right:10px;}
+.conversation{padding:12px;}
+.messageBar{padding:10px;}
+}

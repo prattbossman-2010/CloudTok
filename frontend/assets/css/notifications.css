@@ -157,3 +157,19 @@ transition:all .2s;
 border-color:#fe2c55;
 color:#fe2c55;
 }
+
+@media(max-width:768px){
+.notificationsHeader h2{font-size:18px;}
+.notificationAvatar{width:40px;height:40px;}
+.notificationIcon{width:40px;height:40px;font-size:16px;}
+.notificationText{font-size:13px;}
+.notificationTime{font-size:11px;}
+}
+
+@media(max-width:420px){
+#notificationsPage{max-width:100%;}
+.notificationItem{padding:12px;}
+.notificationAvatar{width:36px;height:36px;}
+.notificationIcon{width:36px;height:36px;font-size:15px;}
+.notificationText{font-size:12px;}
+}
