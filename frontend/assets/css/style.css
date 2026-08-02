@@ -1309,6 +1309,7 @@ body{
 
     .rightMenu{
         right:10px;
+        bottom:90px;
         gap:18px;
     }
 
@@ -1607,6 +1608,21 @@ body{
 
     }
 
+    .rightMenu{
+        right:8px;
+        bottom:80px;
+        gap:15px;
+    }
+
+    .rightMenu button{
+        width:42px;
+        height:42px;
+    }
+
+    .rightMenu .actionIcon{
+        width:26px;
+        height:26px;
+    }
 
 }
 .doubleHeart{

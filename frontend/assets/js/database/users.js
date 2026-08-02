@@ -66,7 +66,7 @@ static async init(){
             user={
                 id:cached?cached.id:Date.now(),
                 username:normalized,
-                displayName:cached?cached.displayName:normalized,
+                displayName:cached&&cached.displayName?cached.displayName:normalized,
                 email:cached?cached.email:"",
                 password:"",
                 bio:cached?cached.bio:"",
