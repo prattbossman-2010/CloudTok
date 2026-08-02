@@ -632,6 +632,9 @@ document.getElementById(
 "settingsBtn"
 );
 
+const adminBtn =
+document.getElementById("adminBtn");
+
 const changeAvatarBtn =
 document.getElementById("changeAvatarBtn");
 
@@ -690,6 +693,14 @@ settingsBtn.style.display =
 
 }
 
+if(adminBtn){
+adminBtn.style.display =
+(this.user.role==="admin")?"block":"none";
+adminBtn.onclick=()=>{
+    window.location.href="admin.html";
+};
+}
+
 if(changeAvatarBtn){
 
 changeAvatarBtn.style.display = "block";
@@ -722,6 +733,10 @@ if(settingsBtn){
 settingsBtn.style.display =
 "none";
 
+}
+
+if(adminBtn){
+adminBtn.style.display="none";
 }
 
 if(changeAvatarBtn){

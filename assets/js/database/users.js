@@ -259,6 +259,7 @@ if(!user){
             email:cached.email||"",
             bio:cached.bio||"",
             avatar:cached.avatar||"assets/images/default-avatar.png",
+            role:cached.role||"user",
             following:this._followingList||[],
             followers:[],
             verified:false,

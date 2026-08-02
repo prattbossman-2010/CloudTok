@@ -141,6 +141,14 @@ comments.forEach(comment=>{
     </div>
     `;
 
+    const avatarEl=item.querySelector(".commentAvatar");
+    if(avatarEl){
+        avatarEl.style.cursor="pointer";
+        avatarEl.onclick=()=>{
+            window.location.href="profile.html?user="+encodeURIComponent(comment.username);
+        };
+    }
+
     this.list.appendChild(item);
 
 });
