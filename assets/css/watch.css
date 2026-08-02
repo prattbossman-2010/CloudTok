@@ -935,28 +935,28 @@ overflow:visible;
     #topBar{height:56px;padding:12px 15px;}
     #topBar h2{font-size:18px;}
     #backBtn{font-size:20px;padding:8px 10px;}
-    .watchActions{right:12px;bottom:130px;gap:22px;}
-    .actionIcon{width:34px;height:34px;}
-    .watchActions img.actionIcon{width:34px;height:34px;}
-    .watchActions button{font-size:12px;}
+    .watchActions{right:14px;bottom:140px;gap:24px;}
+    .actionIcon{width:38px;height:38px;}
+    .watchActions img.actionIcon{width:38px;height:38px;}
+    .watchActions button{font-size:13px;}
     .watchActions span{font-size:14px;}
-    .watchAvatar{width:46px;height:46px;}
-    .followPlus{width:20px;height:20px;font-size:17px;line-height:20px;}
-    #videoInfo{left:12px;bottom:80px;max-width:65%;}
-    #videoInfo h3{font-size:16px;margin-bottom:6px;}
-    #videoInfo p{font-size:13px;}
+    .watchAvatar{width:50px;height:50px;}
+    .followPlus{width:22px;height:22px;font-size:18px;line-height:22px;}
+    #videoInfo{left:14px;bottom:90px;max-width:65%;}
+    #videoInfo h3{font-size:17px;margin-bottom:6px;}
+    #videoInfo p{font-size:14px;}
     #videoInfo span{font-size:12px;}
     #commentsPanel{width:100%;height:55vh;}
-    .commentAvatar{width:34px;height:34px;}
+    .commentAvatar{width:36px;height:36px;}
     .commentInputArea input{font-size:16px;padding:12px;}
 }
 
 @media(max-width:420px){
-    .watchActions{right:10px;bottom:120px;gap:20px;}
-    .actionIcon{width:32px;height:32px;}
-    .watchActions img.actionIcon{width:32px;height:32px;}
-    .watchAvatar{width:42px;height:42px;}
-    .followPlus{width:18px;height:18px;font-size:16px;line-height:18px;}
+    .watchActions{right:12px;bottom:130px;gap:22px;}
+    .actionIcon{width:36px;height:36px;}
+    .watchActions img.actionIcon{width:36px;height:36px;}
+    .watchAvatar{width:46px;height:46px;}
+    .followPlus{width:20px;height:20px;font-size:17px;line-height:20px;}
     #videoInfo{max-width:58%;left:10px;bottom:75px;}
     #videoInfo h3{font-size:15px;}
     #videoInfo p{font-size:12px;}
