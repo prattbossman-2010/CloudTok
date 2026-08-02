@@ -535,30 +535,21 @@ break;
 showLikedVideos(){
 
 const all=[
-
 ...(CloudTokDatabase.videos || []),
-
-...JSON.parse(
-
-localStorage.getItem("CloudTokVideos")
-
-||
-
-"[]"
-
-)
-
+...JSON.parse(localStorage.getItem("CloudTokVideos") || "[]")
 ];
 
-const liked=
+const currentUser=localStorage.getItem("CloudTokCurrentUser")||"";
+const normalizedCurrentUser=currentUser.replace(/^@+/,"").trim().toLowerCase();
 
-all.filter(video=>
-
-(video.likedBy || [])
-
-.includes(this.user.username)
-
-);
+const liked=all.filter(video=>{
+    if(video.liked===true) return true;
+    const likedBy=video.likedBy||[];
+    return likedBy.some(u=>{
+        const nu=String(u).replace(/^@+/,"").trim().toLowerCase();
+        return nu===normalizedCurrentUser;
+    });
+});
 
 this.renderGrid(liked);
 
