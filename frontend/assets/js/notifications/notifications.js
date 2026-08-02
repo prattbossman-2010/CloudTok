@@ -106,6 +106,15 @@ notifications.forEach(notification=>{
         </div>
     `;
 
+    const avatarEl=item.querySelector(".notificationAvatar");
+    if(avatarEl&&notification.from){
+        avatarEl.style.cursor="pointer";
+        avatarEl.onclick=(e)=>{
+            e.stopPropagation();
+            window.location.href="profile.html?user="+encodeURIComponent(notification.from);
+        };
+    }
+
     item.onclick=()=>{
         this.markRead(notification.id);
         item.classList.remove("unread");

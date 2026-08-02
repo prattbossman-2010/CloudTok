@@ -121,6 +121,11 @@ onerror="this.src='assets/images/default-avatar.png'">
         </div>
     `;
 
+    card.querySelector(".chatAvatar").onclick=(e)=>{
+        e.stopPropagation();
+        window.location.href="profile.html?user="+encodeURIComponent(user.username);
+    };
+
     card.onclick=()=>{
         window.location.href=
         "conversation.html?user="+
@@ -210,6 +215,11 @@ onerror="this.src='assets/images/default-avatar.png'">
             <p>@${user.username}</p>
         </div>
     `;
+
+    card.querySelector(".newChatAvatar").onclick=(e)=>{
+        e.stopPropagation();
+        window.location.href="profile.html?user="+encodeURIComponent(user.username);
+    };
 
     card.onclick=()=>{
         window.location.href=

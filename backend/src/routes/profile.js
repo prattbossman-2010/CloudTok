@@ -16,6 +16,8 @@ export async function getUserProfile(request, env, username){
         avatar,
         bio,
         website,
+        role,
+        status,
         created_at,
         updated_at
       FROM users
@@ -72,6 +74,7 @@ export async function getUserProfile(request, env, username){
     avatar: user.avatar,
     bio: user.bio,
     website: user.website,
+    role: user.role || "user",
     followersCount: followersCount.count,
     followingCount: followingCount.count,
     videosCount: videosCount.count,
