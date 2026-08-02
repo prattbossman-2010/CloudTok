@@ -2187,11 +2187,40 @@ opacity:.6;
 @media(min-width:769px){
 
     .videoCard{
-        width:380px;
-        height:82%;
+        width:440px;
+        height:calc(100vh - 100px);
         left:50%;
         top:50%;
         transform:translate(-50%,-50%);
+        border-radius:8px;
+    }
+
+    .rightMenu{
+        right:calc(50% - 260px);
+        bottom:calc(50% - 200px);
+        gap:20px;
+    }
+
+    .rightMenu button{
+        width:52px;
+        height:52px;
+    }
+
+    .videoDesc{
+        left:calc(50% - 260px);
+        max-width:400px;
+        bottom:100px;
+    }
+
+    .globalSoundButton{
+        left:calc(50% - 270px);
+        top:100px;
+    }
+
+    #topBarContainer{
+        position:absolute;
+        top:0;left:0;right:0;
+        z-index:500;
     }
 
 }
