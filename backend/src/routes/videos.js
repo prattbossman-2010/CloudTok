@@ -197,3 +197,14 @@ if(thumbnail){
 });
 
 }
+
+
+export async function incrementViews(request, env, videoId) {
+
+  await env.DB.prepare(
+    "UPDATE videos SET views = views + 1 WHERE id = ?"
+  ).bind(videoId).run();
+
+  return Response.json({ success: true });
+
+}

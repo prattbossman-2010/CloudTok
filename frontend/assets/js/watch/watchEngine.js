@@ -438,7 +438,9 @@ error
 
 );
 
-
+if(typeof CloudTokAPI!=="undefined"&&data.id){
+    CloudTokAPI.incrementViews(data.id).catch(()=>{});
+}
 
 this.updateInfo();
 

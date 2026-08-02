@@ -10,7 +10,7 @@ import {
   getUserVideos
 } from "./routes/profile.js";
 import { toggleLike } from "./routes/interactions.js";
-import { getVideos, createVideo } from "./routes/videos.js";
+import { getVideos, createVideo, incrementViews } from "./routes/videos.js";
 import { followUser, getFollowers, getFollowing } from "./routes/follows.js";
 import {
   getNotifications,
@@ -230,6 +230,15 @@ export default {
     ){
       const videoId = path.split("/")[3];
       return withCORS(toggleLike(request, env, videoId));
+    }
+
+
+    if(
+      path.match(/^\/api\/videos\/\d+\/view$/) &&
+      method === "POST"
+    ){
+      const videoId = path.split("/")[3];
+      return withCORS(incrementViews(request, env, videoId));
     }
 
 
