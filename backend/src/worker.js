@@ -28,6 +28,7 @@ import { getTrending, getDiscoverVideos } from "./routes/discover.js";
 import { toggleSave, getSavedVideos } from "./routes/saves.js";
 import { deleteVideo } from "./routes/videoDelete.js";
 import { handleCORS, withCORS } from "./middleware/cors.js";
+import { adminGetStats, adminGetUsers, adminUpdateUser, adminDeleteVideo, adminGetVideos } from "./routes/admin.js";
 
 
 export default {
@@ -338,6 +339,29 @@ export default {
     if(path === "/api/storage/health"){
       const result = await StorageRouter.healthCheck(env);
       return withCORS(Response.json(result));
+    }
+
+    // Admin routes
+    if(path === "/api/admin/stats" && method === "GET"){
+      return withCORS(adminGetStats(request, env));
+    }
+
+    if(path === "/api/admin/users" && method === "GET"){
+      return withCORS(adminGetUsers(request, env));
+    }
+
+    if(path.match(/^\/api\/admin\/users\/\d+$/) && method === "PUT"){
+      const userId = path.split("/")[4];
+      return withCORS(adminUpdateUser(request, env, userId));
+    }
+
+    if(path === "/api/admin/videos" && method === "GET"){
+      return withCORS(adminGetVideos(request, env));
+    }
+
+    if(path.match(/^\/api\/admin\/videos\/\d+$/) && method === "DELETE"){
+      const videoId = path.split("/")[4];
+      return withCORS(adminDeleteVideo(request, env, videoId));
     }
 
 
