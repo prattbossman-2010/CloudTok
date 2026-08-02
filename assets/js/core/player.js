@@ -1380,6 +1380,13 @@ showSavedMessage(text){
 
     if(this.video.readyState < 2){
         this.video.load();
+        this.video.oncanplay=()=>{
+            this.video.oncanplay=null;
+            if(!this.userPaused){
+                this.video.play().catch(()=>{});
+            }
+        };
+        return;
     }
 
     this.watchStart = Date.now();

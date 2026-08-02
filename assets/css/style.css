@@ -2187,10 +2187,8 @@ opacity:.6;
 @media(min-width:769px){
 
     .videoCard{
-        width:38%;
-        left:31%;
-        height:70%;
-        top:15%;
+        height:82%;
+        top:9%;
     }
 
 }
