@@ -8,9 +8,24 @@
 </head>
 <body>
 
-<div class="adminLayout">
+<!-- Admin Login Gate -->
+<div id="adminLoginGate" class="adminLoginGate">
+    <div class="adminLoginCard">
+        <div class="adminLoginLogo">🛡 CloudTok Admin</div>
+        <p class="adminLoginSub">Enter your admin credentials to continue</p>
+        <form id="adminLoginForm">
+            <input id="adminEmail" type="email" placeholder="Email" required>
+            <input id="adminPassword" type="password" placeholder="Password" required>
+            <button type="submit" id="adminLoginBtn">Login</button>
+        </form>
+        <p id="adminLoginError" class="adminLoginError"></p>
+    </div>
+</div>
+
+<!-- Admin Panel (hidden until authenticated) -->
+<div id="adminPanel" class="adminLayout" style="display:none">
     <aside class="adminSidebar">
-        <div class="adminLogo">CloudTok Admin</div>
+        <div class="adminLogo">🛡 Admin</div>
         <nav>
             <button class="adminNav active" data-tab="dashboard">Dashboard</button>
             <button class="adminNav" data-tab="users">Users</button>
@@ -20,19 +35,16 @@
     </aside>
 
     <main class="adminMain">
-        <!-- Dashboard -->
         <div id="dashboardTab" class="adminTab active">
             <h1>Dashboard</h1>
             <div id="statsGrid" class="statsGrid"></div>
         </div>
 
-        <!-- Users -->
         <div id="usersTab" class="adminTab">
             <h1>Users</h1>
             <div id="usersTable" class="adminTable"></div>
         </div>
 
-        <!-- Videos -->
         <div id="videosTab" class="adminTab">
             <h1>Videos</h1>
             <div id="videosTable" class="adminTable"></div>
@@ -40,7 +52,15 @@
     </main>
 </div>
 
-<script src="assets/js/api/api.js"></script>
+<!-- Video Preview Modal -->
+<div id="videoPreviewModal" class="videoPreviewModal" style="display:none">
+    <div class="videoPreviewContent">
+        <button id="closePreviewBtn" class="closePreviewBtn">✕</button>
+        <video id="previewVideo" controls playsinline></video>
+        <div id="previewInfo" class="previewInfo"></div>
+    </div>
+</div>
+
 <script src="assets/js/admin/admin.js"></script>
 </body>
 </html>

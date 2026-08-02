@@ -28,7 +28,7 @@ import { getTrending, getDiscoverVideos } from "./routes/discover.js";
 import { toggleSave, getSavedVideos } from "./routes/saves.js";
 import { deleteVideo } from "./routes/videoDelete.js";
 import { handleCORS, withCORS } from "./middleware/cors.js";
-import { adminGetStats, adminGetUsers, adminUpdateUser, adminDeleteVideo, adminGetVideos } from "./routes/admin.js";
+import { adminLogin, adminGetStats, adminGetUsers, adminUpdateUser, adminDeleteVideo, adminGetVideos } from "./routes/admin.js";
 
 
 export default {
@@ -342,6 +342,10 @@ export default {
     }
 
     // Admin routes
+    if(path === "/api/admin/login" && method === "POST"){
+      return withCORS(adminLogin(request, env));
+    }
+
     if(path === "/api/admin/stats" && method === "GET"){
       return withCORS(adminGetStats(request, env));
     }

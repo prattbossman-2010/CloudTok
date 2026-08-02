@@ -23,6 +23,9 @@ constructor(){
     this.sendBtn=
     document.getElementById("sendMessageBtn");
 
+    this.lastMessageCount=0;
+    this.pollInterval=null;
+
     this.setup();
 
 }
@@ -32,6 +35,20 @@ setup(){
     this.loadUser();
     this.loadMessages();
     this.setupButtons();
+    this.startPolling();
+}
+
+startPolling(){
+    this.pollInterval=setInterval(()=>{
+        this.loadMessages(true);
+    },3000);
+}
+
+stopPolling(){
+    if(this.pollInterval){
+        clearInterval(this.pollInterval);
+        this.pollInterval=null;
+    }
 }
 
 
@@ -88,7 +105,7 @@ async loadUser(){
 }
 
 
-async loadMessages(){
+async loadMessages(isPoll=false){
 
     if(typeof CloudTokAPI!=="undefined"){
 
@@ -99,6 +116,11 @@ async loadMessages(){
 
             if(result.messages){
 
+                if(isPoll&&result.messages.length===this.lastMessageCount){
+                    return;
+                }
+
+                this.lastMessageCount=result.messages.length;
                 this.messages.innerHTML="";
 
                 const currentUsername=
@@ -129,10 +151,12 @@ async loadMessages(){
 
         }
         catch(e){
-            console.log("Messages API failed, using localStorage");
+            if(!isPoll) console.log("Messages API failed, using localStorage");
         }
 
     }
+
+    if(isPoll) return;
 
     const key="CloudTokChat_"+this.username;
 
@@ -149,13 +173,15 @@ async loadMessages(){
         bubble.className=
         msg.sender===getCurrentCloudTokUser()
         ?"message sent"
-        :"/message received";
+        :"message received";
 
         bubble.textContent=msg.text;
 
         this.messages.appendChild(bubble);
 
     });
+
+    this.messages.scrollTop=this.messages.scrollHeight;
 
 }
 
@@ -174,6 +200,7 @@ async sendMessage(){
 
             if(result.success){
                 this.input.value="";
+                this.lastMessageCount=0;
                 await this.loadMessages();
                 return;
             }
@@ -220,8 +247,15 @@ setupButtons(){
     document.getElementById("conversationBackBtn");
 
     if(back){
-        back.onclick=()=>{history.back();};
+        back.onclick=()=>{
+            this.stopPolling();
+            history.back();
+        };
     }
+
+    window.addEventListener("beforeunload",()=>{
+        this.stopPolling();
+    });
 
 }
 

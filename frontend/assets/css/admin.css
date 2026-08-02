@@ -1,75 +1,94 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0a0a;color:#fff;}
 
-.adminLayout{display:flex;min-height:100vh;}
+/* Login Gate */
+.adminLoginGate{
+display:flex;align-items:center;justify-content:center;
+min-height:100vh;background:#0a0a0a;
+}
+.adminLoginCard{
+background:#111;border:1px solid #222;border-radius:16px;
+padding:40px;width:100%;max-width:380px;margin:20px;
+}
+.adminLoginLogo{
+font-size:24px;font-weight:700;text-align:center;
+margin-bottom:8px;color:#fe2c55;
+}
+.adminLoginSub{
+text-align:center;color:#888;font-size:14px;margin-bottom:24px;
+}
+#adminLoginForm{display:flex;flex-direction:column;gap:12px;}
+#adminLoginForm input{
+padding:14px;border:1px solid #333;border-radius:10px;
+background:#1a1a1a;color:#fff;font-size:15px;outline:none;
+}
+#adminLoginForm input:focus{border-color:#fe2c55;}
+#adminLoginBtn{
+padding:14px;border:none;border-radius:10px;
+background:#fe2c55;color:#fff;font-size:16px;font-weight:700;
+cursor:pointer;transition:opacity .2s;
+}
+#adminLoginBtn:disabled{opacity:.5;cursor:not-allowed;}
+.adminLoginError{color:#fe2c55;text-align:center;font-size:13px;margin-top:12px;min-height:18px;}
 
+/* Layout */
+.adminLayout{display:flex;min-height:100vh;}
 .adminSidebar{
 width:240px;background:#111;border-right:1px solid #222;
 display:flex;flex-direction:column;padding:20px 0;
 position:fixed;height:100vh;
 }
-
-.adminLogo{
-font-size:20px;font-weight:700;padding:0 20px 20px;
-border-bottom:1px solid #222;color:#fe2c55;
-}
-
+.adminLogo{font-size:18px;font-weight:700;padding:0 20px 20px;border-bottom:1px solid #222;color:#fe2c55;}
 .adminSidebar nav{flex:1;padding:20px 0;}
-
 .adminNav{
 display:block;width:100%;padding:12px 20px;border:none;
 background:none;color:#888;font-size:14px;text-align:left;
 cursor:pointer;transition:all .2s;
 }
-
 .adminNav:hover{color:#fff;background:rgba(255,255,255,.05);}
 .adminNav.active{color:#fe2c55;background:rgba(254,44,85,.1);border-right:3px solid #fe2c55;}
-
 .adminLogout{
 margin:20px;padding:10px;background:rgba(255,255,255,.05);
-border:1px solid #333;color:#888;border-radius:8px;
-cursor:pointer;font-size:13px;
+border:1px solid #333;color:#888;border-radius:8px;cursor:pointer;font-size:13px;
 }
-
 .adminMain{flex:1;margin-left:240px;padding:30px;}
-
 .adminTab{display:none;}
 .adminTab.active{display:block;}
-
 .adminTab h1{font-size:24px;margin-bottom:24px;font-weight:700;}
 
-.statsGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:30px;}
-
-.statCard{
-background:#111;border:1px solid #222;border-radius:12px;
-padding:20px;text-align:center;
-}
-
+/* Stats */
+.statsGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:30px;}
+.statCard{background:#111;border:1px solid #222;border-radius:12px;padding:20px;text-align:center;}
 .statNumber{font-size:32px;font-weight:700;color:#fe2c55;}
 .statLabel{font-size:13px;color:#888;margin-top:4px;}
 
+/* Tables */
 .adminTable{overflow-x:auto;}
-
-.adminTable table{
-width:100%;border-collapse:collapse;background:#111;
-border-radius:12px;overflow:hidden;
-}
-
-.adminTable th,.adminTable td{
-padding:12px 16px;text-align:left;border-bottom:1px solid #222;
-font-size:13px;
-}
-
+.adminTable table{width:100%;border-collapse:collapse;background:#111;border-radius:12px;overflow:hidden;}
+.adminTable th,.adminTable td{padding:12px 16px;text-align:left;border-bottom:1px solid #222;font-size:13px;}
 .adminTable th{background:#1a1a1a;color:#888;font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.5px;}
 .adminTable td{color:#ddd;}
-
 .adminTable tr:hover td{background:rgba(255,255,255,.03);}
 
+/* User Cell */
+.userCell{display:flex;align-items:center;gap:10px;}
+.userCellAvatar{width:36px;height:36px;border-radius:50%;object-fit:cover;}
+
+/* Video Thumbnail */
+.videoPreviewThumb{
+width:60px;height:80px;border-radius:8px;overflow:hidden;
+cursor:pointer;background:#1a1a1a;display:flex;align-items:center;
+justify-content:center;transition:transform .2s;border:1px solid #333;
+}
+.videoPreviewThumb:hover{transform:scale(1.05);border-color:#fe2c55;}
+.videoPreviewThumb img{width:100%;height:100%;object-fit:cover;}
+.noThumb{font-size:24px;}
+
+/* Buttons */
 .adminBtn{
 padding:6px 12px;border:none;border-radius:6px;
 font-size:12px;cursor:pointer;font-weight:600;transition:all .2s;
 }
-
 .adminBtn.ban{background:rgba(254,44,85,.15);color:#fe2c55;}
 .adminBtn.ban:hover{background:#fe2c55;color:#fff;}
 .adminBtn.unban{background:rgba(0,200,83,.15);color:#00c853;}
@@ -77,26 +96,57 @@ font-size:12px;cursor:pointer;font-weight:600;transition:all .2s;
 .adminBtn.delete{background:rgba(255,255,255,.08);color:#888;}
 .adminBtn.delete:hover{background:#ff4444;color:#fff;}
 .adminBtn.makeAdmin{background:rgba(138,43,226,.15);color:#8a2be2;}
+.adminBtn.makeAdmin:hover{background:#8a2be2;color:#fff;}
 
-.statusBadge{
-display:inline-block;padding:3px 8px;border-radius:999px;
-font-size:11px;font-weight:600;
-}
+.actionsCell{display:flex;gap:6px;flex-wrap:wrap;}
+
+.statusBadge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:600;}
 .statusBadge.active{background:rgba(0,200,83,.15);color:#00c853;}
 .statusBadge.banned{background:rgba(254,44,85,.15);color:#fe2c55;}
 .statusBadge.suspended{background:rgba(255,193,7,.15);color:#ffc107;}
 .statusBadge.admin{background:rgba(138,43,226,.15);color:#8a2be2;}
+.statusBadge.user{background:rgba(255,255,255,.08);color:#888;}
 
+/* Video Preview Modal */
+.videoPreviewModal{
+position:fixed;top:0;left:0;right:0;bottom:0;
+background:rgba(0,0,0,.85);z-index:1000;
+display:flex;align-items:center;justify-content:center;
+backdrop-filter:blur(5px);
+}
+.videoPreviewContent{
+background:#111;border-radius:16px;overflow:hidden;
+max-width:400px;width:90%;position:relative;
+box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.videoPreviewContent video{
+width:100%;max-height:60vh;background:#000;display:block;
+}
+.closePreviewBtn{
+position:absolute;top:10px;right:10px;
+background:rgba(0,0,0,.6);border:none;color:#fff;
+width:32px;height:32px;border-radius:50%;font-size:16px;
+cursor:pointer;z-index:10;
+}
+.previewInfo{padding:16px;}
+.previewInfo h3{font-size:16px;margin-bottom:6px;}
+.previewInfo p{color:#888;font-size:13px;margin-bottom:10px;}
+.previewStats{display:flex;gap:16px;font-size:13px;color:#aaa;}
+
+/* Mobile */
 @media(max-width:768px){
 .adminSidebar{width:60px;padding:10px 0;}
 .adminLogo{font-size:0;padding:0 10px 15px;text-align:center;}
-.adminLogo::before{content:"CT";font-size:16px;color:#fe2c55;}
+.adminLogo::before{content:"🛡";font-size:18px;}
 .adminNav{padding:12px;text-align:center;font-size:0;}
 .adminNav::before{content:"📊";font-size:16px;}
 .adminNav[data-tab="users"]::before{content:"👥";}
 .adminNav[data-tab="videos"]::before{content:"🎬";}
-.adminLogout{padding:10px;font-size:0;}
+.adminLogout{padding:10px;font-size:0;text-align:center;}
 .adminLogout::before{content:"🚪";font-size:16px;}
 .adminMain{margin-left:60px;padding:15px;}
 .statsGrid{grid-template-columns:repeat(2,1fr);}
+.userCell{flex-direction:column;align-items:flex-start;gap:4px;}
+.userCellAvatar{width:28px;height:28px;}
+.videoPreviewThumb{width:50px;height:65px;}
 }

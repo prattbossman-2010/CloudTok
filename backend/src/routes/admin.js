@@ -1,4 +1,55 @@
 import { authenticate } from "../middleware/auth.js";
+import { hashPassword } from "../utils/crypto.js";
+import { createToken } from "../utils/jwt.js";
+
+export async function adminLogin(request, env) {
+    const body = await request.json();
+    const { email, password } = body;
+
+    if (!email || !password) {
+        return Response.json({ error: "Email and password required" }, { status: 400 });
+    }
+
+    const { results } = await env.DB.prepare(`
+        SELECT id, username, email, display_name, avatar, role, password_hash
+        FROM users WHERE email = ?
+    `).bind(email).all();
+
+    if (results.length === 0) {
+        return Response.json({ error: "Invalid credentials" }, { status: 401 });
+    }
+
+    const user = results[0];
+    const passwordHash = await hashPassword(password);
+
+    if (passwordHash !== user.password_hash) {
+        return Response.json({ error: "Invalid credentials" }, { status: 401 });
+    }
+
+    if (user.role !== "admin") {
+        return Response.json({ error: "Admin access required" }, { status: 403 });
+    }
+
+    const token = await createToken({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+    }, env.JWT_SECRET);
+
+    return Response.json({
+        success: true,
+        token,
+        user: {
+            id: user.id,
+            username: user.username,
+            displayName: user.display_name,
+            email: user.email,
+            avatar: user.avatar,
+            role: user.role
+        }
+    });
+}
 
 export async function adminCheck(request, env) {
     const auth = await authenticate(request, env);
