@@ -153,6 +153,15 @@ window.CloudTokAPI = {
     },
 
 
+    async incrementViews(videoId){
+
+        return await this.request(
+            "/videos/" + videoId + "/view",
+            { method: "POST" }
+        );
+    },
+
+
     async getComments(videoId){
 
         const response =
