@@ -1444,11 +1444,17 @@ const isFollowing=
 if(isFollowing){
 
     await CloudTokUsers.unfollow(username);
+    if(typeof this.user.followers==="number"){
+        this.user.followers=Math.max(0,this.user.followers-1);
+    }
 
 }
 else{
 
     await CloudTokUsers.follow(username);
+    if(typeof this.user.followers==="number"){
+        this.user.followers=this.user.followers+1;
+    }
 
 }
 

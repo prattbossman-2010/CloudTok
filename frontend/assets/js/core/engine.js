@@ -90,6 +90,13 @@ async init(){
 
     this.showPCHint();
 
+    // Re-fetch videos when returning to this page (e.g. from watch page)
+    document.addEventListener("visibilitychange",()=>{
+        if(!document.hidden){
+            this.loadVideos();
+        }
+    });
+
 }
 
 
