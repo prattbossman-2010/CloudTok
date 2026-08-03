@@ -4,56 +4,72 @@ class CloudTokWebRTC {
         this.pc = null;
         this.localStream = null;
         this.remoteStream = null;
-        this.pollInterval = null;
+        this.pollTimeout = null;
         this.lastSignalId = 0;
         this.onRemoteStream = null;
         this.onCallEnd = null;
         this.onIncomingCall = null;
         this.onAnswerReceived = null;
+        this.onConnectionStateChange = null;
         this.isInitiator = false;
         this.backendReady = false;
         this.iceCandidateQueue = [];
         this.isInCall = false;
+        this._targetUsername = null;
+        this._polling = false;
+    }
+
+    _log(...args) {
+        console.log("[WebRTC]", ...args);
     }
 
     async startLocalStream(video = true) {
+        this._log("Requesting media, video=", video);
         try {
             this.localStream = await navigator.mediaDevices.getUserMedia({
                 audio: true,
-                video: video ? { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } : false
+                video: video ? { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } : false
             });
+            this._log("Media OK, tracks:", this.localStream.getTracks().map(t => t.kind));
             return this.localStream;
         } catch (e) {
-            console.error("getUserMedia failed:", e);
+            console.error("[WebRTC] getUserMedia FAILED:", e.name, e.message);
+            this.localStream = null;
             return null;
         }
     }
 
+    _getICEServers() {
+        return [
+            { urls: "stun:stun.l.google.com:19302" },
+            { urls: "stun:stun1.l.google.com:19302" },
+            { urls: "stun:stun2.l.google.com:19302" },
+            { urls: "stun:stun3.l.google.com:19302" },
+            { urls: "stun:stun4.l.google.com:19302" },
+            { urls: "turn:openrelay.metered.ca:80", username: "openrelayproject", credential: "openrelayproject" },
+            { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" },
+            { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" }
+        ];
+    }
+
     createPeerConnection() {
         if (this.pc) {
+            this._log("Closing existing PC");
             this.pc.close();
             this.pc = null;
         }
 
-        const config = {
-            iceServers: [
-                { urls: "stun:stun.l.google.com:19302" },
-                { urls: "stun:stun1.l.google.com:19302" },
-                { urls: "stun:stun2.l.google.com:19302" },
-                { urls: "stun:stun3.l.google.com:19302" },
-                { urls: "stun:stun4.l.google.com:19302" }
-            ]
-        };
-
-        this.pc = new RTCPeerConnection(config);
+        this.pc = new RTCPeerConnection({ iceServers: this._getICEServers() });
 
         this.pc.onicecandidate = (e) => {
             if (e.candidate) {
+                this._log("ICE candidate generated, sending...");
                 this.sendSignal("ice-candidate", e.candidate.toJSON());
             }
         };
 
         this.pc.ontrack = (e) => {
+            this._log("ontrack:", e.track.kind, "streams:", e.streams.length);
             this.remoteStream = e.streams[0];
             if (this.onRemoteStream) {
                 this.onRemoteStream(this.remoteStream);
@@ -62,88 +78,121 @@ class CloudTokWebRTC {
 
         this.pc.onconnectionstatechange = () => {
             const state = this.pc ? this.pc.connectionState : "closed";
-            if (state === "failed" || state === "closed") {
+            this._log("connectionState:", state);
+            if (this.onConnectionStateChange) {
+                this.onConnectionStateChange(state);
+            }
+            if (state === "failed") {
                 this.endCall(false);
             }
         };
 
         this.pc.oniceconnectionstatechange = () => {
             const state = this.pc ? this.pc.iceConnectionState : "closed";
-            if (state === "failed") {
-                this.endCall(false);
+            this._log("iceConnectionState:", state);
+            if (state === "connected" || state === "completed") {
+                this._log("*** ICE CONNECTED - media flowing ***");
             }
         };
 
         if (this.localStream) {
-            this.localStream.getTracks().forEach(track => {
+            const tracks = this.localStream.getTracks();
+            this._log("Adding", tracks.length, "tracks to PC");
+            tracks.forEach(track => {
                 this.pc.addTrack(track, this.localStream);
             });
+        } else {
+            this._log("WARNING: no localStream when creating PC");
         }
 
         return this.pc;
     }
 
     async initiateCall(toUsername, video = true) {
+        this._log("Initiating call to", toUsername);
         this.isInitiator = true;
         this.isInCall = true;
         this.iceCandidateQueue = [];
+        this._targetUsername = toUsername;
 
-        await this.startLocalStream(video);
+        if (!this.localStream) {
+            const stream = await this.startLocalStream(video);
+            if (!stream) {
+                this._log("FAILED to get media");
+                return false;
+            }
+        }
+
         this.createPeerConnection();
 
-        const offer = await this.pc.createOffer();
-        await this.pc.setLocalDescription(offer);
+        try {
+            const offer = await this.pc.createOffer();
+            await this.pc.setLocalDescription(offer);
+            this._log("Offer created, SDP length:", this.pc.localDescription.sdp.length);
 
-        await this.sendSignal("call-offer", {
-            sdp: this.pc.localDescription.sdp,
-            type: this.pc.localDescription.type,
-            video: video
-        });
+            await this.sendSignal("call-offer", {
+                sdp: this.pc.localDescription.sdp,
+                type: this.pc.localDescription.type,
+                video: video
+            });
 
-        this.startPolling(toUsername);
+            this._log("Offer sent, starting polling");
+            this.startPolling(toUsername);
+            return true;
+        } catch (e) {
+            console.error("[WebRTC] initiateCall FAILED:", e);
+            return false;
+        }
     }
 
     async handleAnswer(signalData) {
-        if (this.pc && signalData) {
-            try {
-                await this.pc.setRemoteDescription(new RTCSessionDescription({
-                    sdp: signalData.sdp,
-                    type: signalData.type
-                }));
+        if (!this.pc || !signalData) {
+            this._log("handleAnswer: pc=", !!this.pc, "data=", !!signalData);
+            return;
+        }
 
-                for (const candidate of this.iceCandidateQueue) {
-                    try {
-                        await this.pc.addIceCandidate(new RTCIceCandidate(candidate));
-                    } catch (e) {}
-                }
-                this.iceCandidateQueue = [];
+        try {
+            this._log("Setting remote description from answer...");
+            await this.pc.setRemoteDescription(new RTCSessionDescription({
+                sdp: signalData.sdp,
+                type: signalData.type
+            }));
+            this._log("Remote description set OK");
 
-                if (this.onAnswerReceived) {
-                    this.onAnswerReceived();
-                }
-            } catch (e) {
-                console.error("handleAnswer error:", e);
+            this._log("Draining", this.iceCandidateQueue.length, "queued ICE candidates");
+            for (const candidate of this.iceCandidateQueue) {
+                try {
+                    await this.pc.addIceCandidate(new RTCIceCandidate(candidate));
+                } catch (e) {}
             }
+            this.iceCandidateQueue = [];
+
+            if (this.onAnswerReceived) {
+                this.onAnswerReceived();
+            }
+        } catch (e) {
+            console.error("[WebRTC] handleAnswer FAILED:", e);
         }
     }
 
     async handleIceCandidate(signalData) {
-        if (signalData) {
+        if (!signalData) return;
+
+        if (this.pc && this.pc.remoteDescription) {
             try {
-                if (this.pc && this.pc.remoteDescription) {
-                    await this.pc.addIceCandidate(new RTCIceCandidate(signalData));
-                } else {
-                    this.iceCandidateQueue.push(signalData);
-                }
+                await this.pc.addIceCandidate(new RTCIceCandidate(signalData));
+                this._log("Added ICE candidate");
             } catch (e) {
-                console.error("ICE candidate error:", e);
+                console.error("[WebRTC] addIceCandidate FAILED:", e);
             }
+        } else {
+            this._log("Queuing ICE candidate");
+            this.iceCandidateQueue.push(signalData);
         }
     }
 
     async sendSignal(type, data) {
         if (typeof CloudTokAPI === "undefined") return;
-
         const target = this._targetUsername;
         if (!target) return;
 
@@ -158,63 +207,84 @@ class CloudTokWebRTC {
                 })
             });
         } catch (e) {
-            console.error("Signal send failed:", e);
+            console.error("[WebRTC] sendSignal FAILED:", e);
         }
     }
 
     startPolling(username) {
         this._targetUsername = username;
         this.lastSignalId = 0;
+        this._polling = true;
 
-        if (this.pollInterval) {
-            clearInterval(this.pollInterval);
+        if (this.pollTimeout) {
+            clearTimeout(this.pollTimeout);
+            this.pollTimeout = null;
         }
 
-        const pollMs = this.isInCall ? 500 : 2000;
+        this._log("Starting polling for:", username);
+        this._pollOnce();
+    }
 
-        this.pollInterval = setInterval(async () => {
-            if (typeof CloudTokAPI === "undefined") return;
+    async _pollOnce() {
+        if (!this._polling) return;
 
+        if (typeof CloudTokAPI !== "undefined") {
             try {
                 const result = await CloudTokAPI.request(
                     "/webrtc/poll?after=" + this.lastSignalId
                 );
 
-                if (result.error) return;
+                if (!result.error) {
+                    this.backendReady = true;
 
-                this.backendReady = true;
+                    if (result.signals && result.signals.length > 0) {
+                        this._log("Poll got", result.signals.length, "signals");
 
-                if (result.signals) {
-                    for (const signal of result.signals) {
-                        if (signal.id > this.lastSignalId) {
-                            this.lastSignalId = signal.id;
-                        }
+                        for (const signal of result.signals) {
+                            if (signal.id > this.lastSignalId) {
+                                this.lastSignalId = signal.id;
+                            }
 
-                        switch (signal.type) {
-                            case "call-offer":
-                                if (this.onIncomingCall) {
-                                    this.onIncomingCall(signal.from, signal.data);
-                                }
-                                break;
-                            case "call-answer":
-                                this.handleAnswer(signal.data);
-                                break;
-                            case "ice-candidate":
-                                this.handleIceCandidate(signal.data);
-                                break;
-                            case "call-end":
-                                this.endCall(false);
-                                break;
+                            switch (signal.type) {
+                                case "call-offer":
+                                    if (this.onIncomingCall) {
+                                        this.onIncomingCall(signal.from, signal.data);
+                                    }
+                                    break;
+                                case "call-answer":
+                                    this.handleAnswer(signal.data);
+                                    break;
+                                case "ice-candidate":
+                                    this.handleIceCandidate(signal.data);
+                                    break;
+                                case "call-end":
+                                    this.endCall(false);
+                                    break;
+                            }
                         }
                     }
                 }
             } catch (e) {
                 this.backendReady = false;
             }
-        }, pollMs);
+        }
+
+        if (this._polling) {
+            const delay = this.isInCall ? 300 : 2000;
+            this.pollTimeout = setTimeout(() => this._pollOnce(), delay);
+        }
+    }
+
+    stopPolling() {
+        this._polling = false;
+        if (this.pollTimeout) {
+            clearTimeout(this.pollTimeout);
+            this.pollTimeout = null;
+        }
     }
 
     endCall(notify = true) {
+        this._log("endCall");
         this.isInCall = false;
 
         if (notify && this._targetUsername) {
@@ -231,11 +301,7 @@ class CloudTokWebRTC {
             this.localStream = null;
         }
 
-        if (this.pollInterval) {
-            clearInterval(this.pollInterval);
-            this.pollInterval = null;
-        }
-
+        this.stopPolling();
         this.remoteStream = null;
         this._targetUsername = null;
         this.iceCandidateQueue = [];
@@ -247,14 +313,12 @@ class CloudTokWebRTC {
 
     async startLiveStream(title) {
         if (typeof CloudTokAPI === "undefined") return { error: "API not loaded" };
-
         try {
-            const result = await CloudTokAPI.request("/live/create", {
+            return await CloudTokAPI.request("/live/create", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ title })
             });
-            return result;
         } catch (e) {
             return { error: "Network error" };
         }
@@ -262,7 +326,6 @@ class CloudTokWebRTC {
 
     async getLiveStreams() {
         if (typeof CloudTokAPI === "undefined") return [];
-
         try {
             const result = await CloudTokAPI.request("/live/streams");
             return result.streams || [];

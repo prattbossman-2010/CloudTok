@@ -7,105 +7,46 @@
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/chat.css">
 <style>
-.emojiBar{
-    display:none;flex-direction:column;gap:4px;padding:8px 12px;
-    position:absolute;bottom:60px;left:0;right:0;
-    max-height:200px;overflow-y:auto;
-    background:#111;border-top:1px solid rgba(255,255,255,.08);
-    z-index:50;
-}
+.emojiBar{display:none;flex-direction:column;gap:4px;padding:8px 12px;position:absolute;bottom:60px;left:0;right:0;max-height:200px;overflow-y:auto;background:#111;border-top:1px solid rgba(255,255,255,.08);z-index:50;}
 .emojiBar.show{display:flex;}
 .emojiBar .emojiRow{display:flex;gap:4px;flex-wrap:wrap;}
-.emojiBar button{
-    background:none;border:none;font-size:24px;cursor:pointer;
-    padding:6px;border-radius:8px;transition:background .2s;flex-shrink:0;
-}
+.emojiBar button{background:none;border:none;font-size:24px;cursor:pointer;padding:6px;border-radius:8px;transition:background .2s;flex-shrink:0;}
 .emojiBar button:hover{background:rgba(255,255,255,.08);}
-.emojiToggleBtn{
-    background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;
-    cursor:pointer;padding:8px;
-}
+.emojiToggleBtn{background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;cursor:pointer;padding:8px;}
 .emojiToggleBtn:hover{color:#fff;}
-.gifPanel{
-    display:none;position:absolute;bottom:60px;left:0;right:0;
-    background:#111;border-top:1px solid rgba(255,255,255,.08);
-    max-height:250px;overflow-y:auto;padding:10px;z-index:50;
-}
+.gifPanel{display:none;position:absolute;bottom:60px;left:0;right:0;background:#111;border-top:1px solid rgba(255,255,255,.08);max-height:250px;overflow-y:auto;padding:10px;z-index:50;}
 .gifPanel.show{display:block;}
 .gifGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-.gifItem{
-    border-radius:10px;overflow:hidden;cursor:pointer;
-    aspect-ratio:1;background:rgba(255,255,255,.05);
-    display:flex;align-items:center;justify-content:center;
-    font-size:40px;transition:transform .2s;
-}
+.gifItem{border-radius:10px;overflow:hidden;cursor:pointer;aspect-ratio:1;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:40px;transition:transform .2s;}
 .gifItem:hover{transform:scale(1.05);}
 .gifSearch{width:100%;padding:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;font-size:14px;margin-bottom:10px;outline:none;}
 .gifSearch::placeholder{color:rgba(255,255,255,.3);}
 .messageBar{position:relative;}
-.gifToggleBtn{
-    background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;
-    cursor:pointer;padding:8px;
-}
+.gifToggleBtn{background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;cursor:pointer;padding:8px;}
 .gifToggleBtn:hover{color:#fff;}
 .callBtns{display:flex;gap:4px;}
-.callBtn{
-    background:none;border:none;font-size:18px;cursor:pointer;
-    padding:6px 8px;border-radius:8px;
-}
+.callBtn{background:none;border:none;font-size:18px;cursor:pointer;padding:6px 8px;border-radius:8px;}
 .callBtn:hover{background:rgba(255,255,255,.08);}
 
-.callOverlay{
-    display:none;position:fixed;inset:0;background:#000;z-index:999;
-    flex-direction:column;align-items:center;justify-content:center;
-}
+.callOverlay{display:none;position:fixed;inset:0;background:#000;z-index:999;flex-direction:column;align-items:center;justify-content:center;}
 .callOverlay.active{display:flex;}
-.callVideoContainer{
-    width:100%;max-width:500px;aspect-ratio:3/4;
-    background:#111;border-radius:20px;overflow:hidden;
-    position:relative;
-}
-.callVideoContainer video{
-    width:100%;height:100%;object-fit:cover;
-}
-.callVideoContainer .remoteVideo{
-    position:absolute;inset:0;
-}
-.callVideoContainer .localVideo{
-    position:absolute;bottom:16px;right:16px;
-    width:120px;height:160px;border-radius:12px;
-    border:2px solid #fff;z-index:2;
-}
-.callInfo{
-    margin-top:20px;text-align:center;
-}
+.callVideoContainer{width:100%;max-width:500px;aspect-ratio:3/4;background:#111;border-radius:20px;overflow:hidden;position:relative;}
+.callVideoContainer video{width:100%;height:100%;object-fit:cover;}
+.callVideoContainer .remoteVideo{position:absolute;inset:0;}
+.callVideoContainer .localVideo{position:absolute;bottom:16px;right:16px;width:120px;height:160px;border-radius:12px;border:2px solid #fff;z-index:2;}
+.callInfo{margin-top:20px;text-align:center;}
 .callInfo h3{color:#fff;font-size:18px;margin:0;}
 .callInfo p{color:rgba(255,255,255,.5);font-size:14px;margin:6px 0 0;}
-.callActions{
-    display:flex;gap:16px;margin-top:24px;
-}
-.callActionBtn{
-    width:60px;height:60px;border-radius:50%;border:none;
-    font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;
-}
+.callActions{display:flex;gap:16px;margin-top:24px;}
+.callActionBtn{width:60px;height:60px;border-radius:50%;border:none;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .callActionBtn.end{background:#ff2d55;color:#fff;}
 .callActionBtn.mute{background:rgba(255,255,255,.15);color:#fff;}
 .callActionBtn.video-toggle{background:rgba(255,255,255,.15);color:#fff;}
-.callIncoming{
-    display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:999;
-    flex-direction:column;align-items:center;justify-content:center;gap:20px;
-}
-.callIncoming.active{display:flex;}
-.callIncoming h2{color:#fff;font-size:22px;}
-.callIncoming p{color:rgba(255,255,255,.5);}
-.callIncoming .callActions{margin-top:0;}
 .callActionBtn.accept{background:#00c853;color:#fff;}
-.callStatusBadge{
-    position:fixed;top:10px;right:10px;padding:6px 12px;border-radius:20px;
-    font-size:11px;font-weight:600;z-index:1000;
-}
+.callStatusBadge{position:fixed;top:10px;right:10px;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:600;z-index:1000;}
 .callStatusBadge.connected{background:#00c853;color:#fff;}
 .callStatusBadge.disconnected{background:rgba(255,255,255,.15);color:rgba(255,255,255,.5);}
+.callError{color:#ff2d55;font-size:14px;margin-top:10px;text-align:center;}
 </style>
 </head>
 <body>
@@ -145,6 +86,7 @@
     <div class="callInfo">
         <h3 id="callName">Calling...</h3>
         <p id="callStatus">Connecting...</p>
+        <div class="callError" id="callError"></div>
     </div>
     <div class="callActions">
         <button class="callActionBtn mute" id="muteBtn">🎤</button>
@@ -153,138 +95,26 @@
     </div>
 </div>
 
-<div class="callIncoming" id="callIncoming">
-    <div style="font-size:60px;margin-bottom:10px;">📞</div>
-    <h2 id="incomingName">Incoming Call</h2>
-    <p id="incomingType">Voice call</p>
-    <div class="callActions">
-        <button class="callActionBtn accept" id="acceptCallBtn">📞</button>
-        <button class="callActionBtn end" id="declineCallBtn">✕</button>
-    </div>
-</div>
-
 <div class="callStatusBadge disconnected" id="callStatusBadge">Calls unavailable</div>
 
 <script src="assets/js/database/database.js"></script>
 <script src="assets/js/api/api.js"></script>
 <script src="assets/js/core/webrtc.js"></script>
-<script src="assets/js/chat/conversation.js"></script>
 <script>
-document.addEventListener("DOMContentLoaded", ()=>{
-    const emojis = ["😀","😂","😍","🥰","😎","🤩","🥳","😢","😭","😡","🥺","😏","🤔","👍","👎","❤️","🔥","💯","🎉","👏","🙌","💪","🙏","✨","🌟","💖","🎵","🎶","📸","🎬"];
-    const emojiBar = document.getElementById("emojiBar");
-    const input = document.getElementById("messageInput");
-    const emojiToggle = document.getElementById("emojiToggleBtn");
-
-    function renderEmojiGrid(){
-        emojiBar.innerHTML="";
-        const row=document.createElement("div");
-        row.className="emojiRow";
-        emojis.forEach(e=>{
-            const btn = document.createElement("button");
-            btn.textContent = e;
-            btn.onclick = ()=>{ input.value += e; input.focus(); };
-            row.appendChild(btn);
-        });
-        emojiBar.appendChild(row);
-    }
-    renderEmojiGrid();
-
-    emojiToggle.onclick = ()=>{
-        emojiBar.classList.toggle("show");
-        document.getElementById("gifPanel").classList.remove("show");
-    };
-
-    const gifToggle = document.getElementById("gifToggleBtn");
-    const gifPanel = document.getElementById("gifPanel");
-    const gifGrid = document.getElementById("gifGrid");
-
-    let gifDebounce = null;
-    let currentGifQuery = "";
-
-    gifToggle.onclick = ()=>{
-        gifPanel.classList.toggle("show");
-        emojiBar.classList.remove("show");
-        if(gifPanel.classList.contains("show") && !currentGifQuery) renderGIFs("trending");
-    };
-
-    const gifSearch = document.getElementById("gifSearch");
-    if(gifSearch){
-        gifSearch.oninput = ()=>{
-            clearTimeout(gifDebounce);
-            gifDebounce = setTimeout(()=>{
-                const q = gifSearch.value.trim();
-                if(q) renderGIFs(q);
-                else renderGIFs("trending");
-            }, 400);
-        };
-    }
-
-    async function renderGIFs(query){
-        gifGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.3);padding:20px;">Loading GIFs...</div>';
-        currentGifQuery = query;
-
-        try {
-            const apiKey = "AIzaSyBBJFS7BYOhPz2G0JnZpjfHfVWnKg1mFNI";
-            const resp = await fetch("https://tenor.googleapis.com/v2/search?key=" + apiKey + "&q=" + encodeURIComponent(query) + "&limit=20&media_filter=gif,tinygif&contentfilter=medium");
-            const data = await resp.json();
-            const results = data.results || [];
-
-            gifGrid.innerHTML = "";
-            if(results.length === 0){
-                gifGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.3);padding:20px;">No GIFs found</div>';
-                return;
-            }
-
-            results.forEach(gif => {
-                const item = document.createElement("div");
-                item.className = "gifItem";
-                item.innerHTML = '<img src="' + (gif.media_formats?.tinygif?.url || gif.media_formats?.gif?.url || '') + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">';
-                item.onclick = ()=>{
-                    input.value += (gif.media_formats?.gif?.url || "");
-                    gifPanel.classList.remove("show");
-                    input.focus();
-                };
-                gifGrid.appendChild(item);
-            });
-        } catch(e){
-            gifGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.3);padding:20px;">GIFs unavailable</div>';
-        }
-    }
-
-    document.addEventListener("click",(e)=>{
-        if(!e.target.closest(".emojiBar")&&!e.target.closest(".emojiToggleBtn")){
-            emojiBar.classList.remove("show");
-        }
-    });
-
+(function(){
     const params = new URLSearchParams(window.location.search);
     const chatUsername = params.get("user");
+    if(!chatUsername) return;
+
     const webrtc = window.CloudTokWebRTC;
     const badge = document.getElementById("callStatusBadge");
-
     let isMuted = false;
     let isVideoOff = false;
-
-    function toggleMute(){
-        isMuted = !isMuted;
-        if(webrtc.localStream){
-            webrtc.localStream.getAudioTracks().forEach(t=>t.enabled=!isMuted);
-        }
-        document.getElementById("muteBtn").textContent = isMuted ? "🔇" : "🎤";
-    }
-
-    function toggleVideo(){
-        isVideoOff = !isVideoOff;
-        if(webrtc.localStream){
-            webrtc.localStream.getVideoTracks().forEach(t=>t.enabled=!isVideoOff);
-        }
-        document.getElementById("videoToggleBtn").textContent = isVideoOff ? "📷" : "📹";
-    }
 
     function showCallOverlay(name, statusText){
         document.getElementById("callName").textContent = name;
         document.getElementById("callStatus").textContent = statusText;
+        document.getElementById("callError").textContent = "";
         document.getElementById("callOverlay").classList.add("active");
     }
 
@@ -292,7 +122,54 @@ document.addEventListener("DOMContentLoaded", ()=>{
         document.getElementById("callOverlay").classList.remove("active");
         document.getElementById("remoteVideo").srcObject = null;
         document.getElementById("localVideo").srcObject = null;
+        document.getElementById("callError").textContent = "";
     }
+
+    function showCallError(msg){
+        document.getElementById("callError").textContent = msg;
+    }
+
+    webrtc.onRemoteStream = (stream) => {
+        console.log("[Conv] onRemoteStream, tracks:", stream.getTracks().length);
+        const remoteVideo = document.getElementById("remoteVideo");
+        remoteVideo.srcObject = stream;
+    };
+
+    webrtc.onCallEnd = () => {
+        hideCallOverlay();
+    };
+
+    webrtc.onAnswerReceived = () => {
+        document.getElementById("callStatus").textContent = "Connected";
+    };
+
+    webrtc.onConnectionStateChange = (state) => {
+        const statusEl = document.getElementById("callStatus");
+        if(state === "connected" || state === "completed"){
+            statusEl.textContent = "Connected";
+        } else if(state === "connecting"){
+            statusEl.textContent = "Connecting...";
+        } else if(state === "failed"){
+            statusEl.textContent = "Call failed";
+            showCallError("Connection failed. Try again.");
+        } else if(state === "disconnected"){
+            statusEl.textContent = "Reconnecting...";
+        }
+    };
+
+    document.getElementById("voiceCallBtn").onclick = () => startCall(false);
+    document.getElementById("videoCallBtn").onclick = () => startCall(true);
+    document.getElementById("endCallBtn").onclick = () => webrtc.endCall(true);
+    document.getElementById("muteBtn").onclick = () => {
+        isMuted = !isMuted;
+        if(webrtc.localStream) webrtc.localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+        document.getElementById("muteBtn").textContent = isMuted ? "🔇" : "🎤";
+    };
+    document.getElementById("videoToggleBtn").onclick = () => {
+        isVideoOff = !isVideoOff;
+        if(webrtc.localStream) webrtc.localStream.getVideoTracks().forEach(t => t.enabled = !isVideoOff);
+        document.getElementById("videoToggleBtn").textContent = isVideoOff ? "📷" : "📹";
+    };
 
     async function startCall(video){
         if(!localStorage.getItem("CloudTokToken")){
@@ -300,68 +177,79 @@ document.addEventListener("DOMContentLoaded", ()=>{
             return;
         }
 
-        webrtc.onRemoteStream = (stream)=>{
-            document.getElementById("remoteVideo").srcObject = stream;
-        };
-
-        webrtc.onCallEnd = ()=>{
-            hideCallOverlay();
-            document.getElementById("callStatus").textContent = "Call ended";
-        };
-
-        webrtc.onAnswerReceived = ()=>{
-            document.getElementById("callStatus").textContent = "Connected";
-        };
-
-        showCallOverlay(chatUsername, "Calling...");
+        console.log("[Conv] Starting call, video=", video);
+        showCallOverlay(chatUsername, "Requesting camera...");
 
         const stream = await webrtc.startLocalStream(video);
-        if(stream){
-            document.getElementById("localVideo").srcObject = stream;
+        if(!stream){
+            showCallError("Camera/microphone access denied. Please allow access and try again.");
+            document.getElementById("callStatus").textContent = "Camera access denied";
+            return;
         }
 
-        await webrtc.initiateCall(chatUsername, video);
+        document.getElementById("localVideo").srcObject = stream;
+        document.getElementById("callStatus").textContent = "Calling...";
+
+        const ok = await webrtc.initiateCall(chatUsername, video);
+        if(!ok){
+            showCallError("Failed to start call. Check your connection.");
+            document.getElementById("callStatus").textContent = "Call failed";
+            return;
+        }
+
         document.getElementById("callStatus").textContent = "Ringing...";
     }
 
-    webrtc._targetUsername = chatUsername;
+    async function answerCall(from, callData){
+        console.log("[Conv] Answering call from", from);
+        showCallOverlay(from, "Connecting...");
 
-    webrtc.onIncomingCall = async (from, data)=>{
-        document.getElementById("incomingName").textContent = from;
-        document.getElementById("incomingType").textContent = data.video !== false ? "Video call" : "Voice call";
-        document.getElementById("callIncoming").classList.add("active");
+        const video = callData.video !== false;
+        const stream = await webrtc.startLocalStream(video);
+        if(!stream){
+            showCallError("Camera/microphone access denied.");
+            document.getElementById("callStatus").textContent = "Camera access denied";
+            return;
+        }
 
-        document.getElementById("acceptCallBtn").onclick = async ()=>{
-            document.getElementById("callIncoming").classList.remove("active");
-            webrtc._targetUsername = from;
-            webrtc.onRemoteStream = (stream)=>{
-                document.getElementById("remoteVideo").srcObject = stream;
-            };
-            webrtc.onCallEnd = ()=>{
-                hideCallOverlay();
-            };
+        document.getElementById("localVideo").srcObject = stream;
 
-            showCallOverlay(from, "Connecting...");
+        webrtc.isInCall = true;
+        webrtc._targetUsername = from;
+        webrtc.createPeerConnection();
 
-            const stream = await webrtc.startLocalStream(data.video !== false);
-            if(stream) document.getElementById("localVideo").srcObject = stream;
+        try {
+            await webrtc.pc.setRemoteDescription(new RTCSessionDescription({
+                sdp: callData.sdp,
+                type: callData.type
+            }));
 
-            webrtc.createPeerConnection();
-            await webrtc.pc.setRemoteDescription(new RTCSessionDescription({sdp:data.sdp,type:data.type}));
-            for(const c of webrtc.iceCandidateQueue){try{await webrtc.pc.addIceCandidate(new RTCIceCandidate(c));}catch(e){}}
+            for(const c of webrtc.iceCandidateQueue){
+                try { await webrtc.pc.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
+            }
             webrtc.iceCandidateQueue = [];
+
             const answer = await webrtc.pc.createAnswer();
             await webrtc.pc.setLocalDescription(answer);
-            await webrtc.sendSignal("call-answer",{sdp:answer.sdp,type:answer.type});
-            document.getElementById("callStatus").textContent = "Connected";
-        };
+            await webrtc.sendSignal("call-answer", { sdp: answer.sdp, type: answer.type });
 
-        document.getElementById("declineCallBtn").onclick = ()=>{
-            document.getElementById("callIncoming").classList.remove("active");
-        };
-    };
+            document.getElementById("callStatus").textContent = "Connected";
+        } catch(e) {
+            console.error("[Conv] Answer failed:", e);
+            showCallError("Failed to connect. Try again.");
+        }
+    }
 
     webrtc.startPolling(chatUsername);
+
+    webrtc.onIncomingCall = async (from, data) => {
+        console.log("[Conv] Incoming call from", from);
+        if(webrtc.isInCall){
+            webrtc.sendSignal("call-end", {});
+            return;
+        }
+        answerCall(from, data);
+    };
 
     const urlParams = new URLSearchParams(window.location.search);
     if(urlParams.get("call") === "accept"){
@@ -371,40 +259,12 @@ document.addEventListener("DOMContentLoaded", ()=>{
             localStorage.removeItem("CloudTokPendingCall");
 
             if(callData.from === chatUsername && callData.data){
-                setTimeout(async ()=>{
-                    webrtc._targetUsername = chatUsername;
-                    webrtc.onRemoteStream = (stream)=>{
-                        document.getElementById("remoteVideo").srcObject = stream;
-                    };
-                    webrtc.onCallEnd = ()=>{
-                        hideCallOverlay();
-                    };
-
-                    showCallOverlay(chatUsername, "Connecting...");
-
-                    const stream = await webrtc.startLocalStream(callData.data.video !== false);
-                    if(stream) document.getElementById("localVideo").srcObject = stream;
-
-                    webrtc.createPeerConnection();
-                    await webrtc.pc.setRemoteDescription(new RTCSessionDescription({
-                        sdp: callData.data.sdp,
-                        type: callData.data.type
-                    }));
-                    for(const c of webrtc.iceCandidateQueue){try{await webrtc.pc.addIceCandidate(new RTCIceCandidate(c));}catch(e){}}
-                    webrtc.iceCandidateQueue = [];
-                    const answer = await webrtc.pc.createAnswer();
-                    await webrtc.pc.setLocalDescription(answer);
-                    await webrtc.sendSignal("call-answer", {
-                        sdp: answer.sdp,
-                        type: answer.type
-                    });
-                    document.getElementById("callStatus").textContent = "Connected";
-                }, 500);
+                setTimeout(() => answerCall(chatUsername, callData.data), 300);
             }
         }
     }
 
-    setInterval(()=>{
+    setInterval(() => {
         if(webrtc.backendReady){
             badge.textContent = "Calls active";
             badge.className = "callStatusBadge connected";
@@ -413,13 +273,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
             badge.className = "callStatusBadge disconnected";
         }
     }, 3000);
-
-    document.getElementById("voiceCallBtn").onclick = ()=> startCall(false);
-    document.getElementById("videoCallBtn").onclick = ()=> startCall(true);
-    document.getElementById("endCallBtn").onclick = ()=> webrtc.endCall(true);
-    document.getElementById("muteBtn").onclick = toggleMute;
-    document.getElementById("videoToggleBtn").onclick = toggleVideo;
-});
+})();
 </script>
 </body>
 </html>

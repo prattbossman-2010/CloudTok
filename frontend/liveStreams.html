@@ -23,7 +23,6 @@ body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Seg
 .empty{text-align:center;padding:60px 20px;color:rgba(255,255,255,.3);}
 .empty .icon{font-size:60px;margin-bottom:16px;}
 .empty p{font-size:14px;}
-
 .viewer{display:none;position:fixed;inset:0;background:#000;z-index:999;flex-direction:column;}
 .viewer.active{display:flex;}
 .viewerVideo{width:100%;height:100vh;object-fit:contain;background:#000;}
@@ -61,12 +60,19 @@ body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Seg
 <script src="assets/js/database/database.js"></script>
 <script src="assets/js/api/api.js"></script>
 <script src="assets/js/core/webrtc.js"></script>
-<script src="assets/js/core/callPoller.js"></script>
 <script>
 let currentStream = null;
 let viewerPC = null;
-let signalPoll = null;
+let signalPollInterval = null;
 let lastSignalId = 0;
+
+const ICE_SERVERS = [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+    { urls: "stun:stun2.l.google.com:19302" },
+    { urls: "turn:openrelay.metered.ca:80", username: "openrelayproject", credential: "openrelayproject" },
+    { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" }
+];
 
 function showToast(msg, type="success"){
     const t=document.createElement("div");
@@ -109,26 +115,28 @@ async function loadStreams(){
 }
 
 async function joinStream(stream){
+    if(!localStorage.getItem("CloudTokToken")){
+        showToast("Please login first","error");
+        return;
+    }
+
     currentStream = stream;
     document.getElementById("viewerTitle").textContent = stream.title || "Live Stream";
     document.getElementById("viewerHost").textContent = "@" + stream.username;
     document.getElementById("viewer").classList.add("active");
     document.getElementById("viewerStatus").textContent = "Connecting...";
 
-    viewerPC = new RTCPeerConnection({
-        iceServers: [
-            { urls: "stun:stun.l.google.com:19302" },
-            { urls: "stun:stun1.l.google.com:19302" }
-        ]
-    });
+    viewerPC = new RTCPeerConnection({ iceServers: ICE_SERVERS });
 
     viewerPC.ontrack = (e) => {
+        console.log("[Viewer] ontrack:", e.track.kind);
         document.getElementById("viewerVideo").srcObject = e.streams[0];
         document.getElementById("viewerStatus").textContent = "Watching live";
     };
 
     viewerPC.onicecandidate = (e) => {
         if(e.candidate){
+            console.log("[Viewer] Sending ICE candidate");
             CloudTokAPI.request("/webrtc/signal", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -142,16 +150,23 @@ async function joinStream(stream){
     };
 
     viewerPC.onconnectionstatechange = () => {
+        console.log("[Viewer] connection:", viewerPC ? viewerPC.connectionState : "closed");
         const state = viewerPC ? viewerPC.connectionState : "closed";
-        if(state === "disconnected" || state === "failed"){
-            document.getElementById("viewerStatus").textContent = "Stream ended";
-            setTimeout(closeViewer, 2000);
+        if(state === "connected"){
+            document.getElementById("viewerStatus").textContent = "Watching live";
+        } else if(state === "failed"){
+            document.getElementById("viewerStatus").textContent = "Connection failed";
         }
+    };
+
+    viewerPC.oniceconnectionstatechange = () => {
+        console.log("[Viewer] ICE:", viewerPC ? viewerPC.iceConnectionState : "closed");
     };
 
     try {
         const offer = await viewerPC.createOffer();
         await viewerPC.setLocalDescription(offer);
+        console.log("[Viewer] Offer created, SDP length:", viewerPC.localDescription.sdp.length);
 
         await CloudTokAPI.request("/webrtc/signal", {
             method: "POST",
@@ -165,36 +180,46 @@ async function joinStream(stream){
                 }
             })
         });
+        console.log("[Viewer] Join signal sent, starting poll");
 
         startSignalPoll();
     } catch(e){
+        console.error("[Viewer] Failed to join:", e);
         document.getElementById("viewerStatus").textContent = "Failed to connect";
         showToast("Could not connect to stream", "error");
     }
 }
 
 function startSignalPoll(){
-    if(signalPoll) clearInterval(signalPoll);
+    if(signalPollInterval){ clearTimeout(signalPollInterval); }
     lastSignalId = 0;
 
-    signalPoll = setInterval(async ()=>{
+    async function poll(){
         if(!currentStream) return;
         try {
             const result = await CloudTokAPI.request("/webrtc/poll?after=" + lastSignalId);
-            if(result.signals){
+            if(result && result.signals){
                 for(const signal of result.signals){
                     if(signal.id > lastSignalId) lastSignalId = signal.id;
+                    console.log("[Viewer] Signal:", signal.type);
 
                     if(signal.type === "live-answer" && viewerPC){
-                        await viewerPC.setRemoteDescription(new RTCSessionDescription(signal.data));
-                        document.getElementById("viewerStatus").textContent = "Watching live";
+                        try {
+                            await viewerPC.setRemoteDescription(new RTCSessionDescription(signal.data));
+                            console.log("[Viewer] Remote description set from answer");
+                            document.getElementById("viewerStatus").textContent = "Connected";
+                        } catch(e){ console.error("[Viewer] setRemoteDescription failed:", e); }
                     }
-                    else if(signal.type === "live-ice" && viewerPC && signal.data){
+                    else if(signal.type === "live-ice" && viewerPC && signal.data && signal.data.candidate){
                         try {
                             if(viewerPC.remoteDescription){
                                 await viewerPC.addIceCandidate(new RTCIceCandidate(signal.data.candidate));
+                                console.log("[Viewer] Added streamer ICE candidate");
+                            } else {
+                                console.log("[Viewer] Queuing ICE candidate (no remoteDescription yet)");
+                                viewerPC.addIceCandidate(new RTCIceCandidate(signal.data.candidate)).catch(()=>{});
                             }
-                        } catch(e){}
+                        } catch(e){ console.error("[Viewer] ICE error:", e); }
                     }
                     else if(signal.type === "live-end"){
                         document.getElementById("viewerStatus").textContent = "Stream ended";
@@ -202,18 +227,23 @@ function startSignalPoll(){
                     }
                 }
             }
-        } catch(e){}
-    }, 1000);
+        } catch(e){ console.error("[Viewer] Poll error:", e); }
+
+        if(currentStream){
+            signalPollInterval = setTimeout(poll, 800);
+        }
+    }
+    poll();
 }
 
 function closeViewer(){
     if(viewerPC){
-        viewerPC.close();
+        try { viewerPC.close(); } catch(e){}
         viewerPC = null;
     }
-    if(signalPoll){
-        clearInterval(signalPoll);
-        signalPoll = null;
+    if(signalPollInterval){
+        clearTimeout(signalPollInterval);
+        signalPollInterval = null;
     }
 
     if(currentStream){
