@@ -161,14 +161,15 @@ class CloudTokWebRTC {
             tracks.forEach(track => {
                 this.pc.addTrack(track, this.localStream);
             });
+            const hasAudio = tracks.some(t => t.kind === "audio");
+            if (!hasAudio) {
+                this._log("No audio track in stream, adding recvonly audio transceiver");
+                try { this.pc.addTransceiver("audio", { direction: "recvonly" }); } catch (e) {}
+            }
         } else {
             this._log("No localStream - call will proceed without local media (recvonly)");
-            try {
-                this.pc.addTransceiver("audio", { direction: "recvonly" });
-            } catch (e) {}
-            try {
-                this.pc.addTransceiver("video", { direction: "recvonly" });
-            } catch (e) {}
+            try { this.pc.addTransceiver("audio", { direction: "recvonly" }); } catch (e) {}
+            try { this.pc.addTransceiver("video", { direction: "recvonly" }); } catch (e) {}
         }
 
         return this.pc;

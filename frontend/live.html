@@ -290,6 +290,22 @@ document.getElementById("streamEndBtn").onclick = endStream;
 async function endStream(){
     window.removeEventListener("beforeunload", endStream);
 
+    for(const v of viewerConnections){
+        try {
+            await CloudTokAPI.request("/webrtc/signal", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    to_username: v.username,
+                    signal_type: "live-end",
+                    signal_data: { stream_key: streamKey }
+                })
+            });
+        } catch(e){}
+        try { v.pc.close(); } catch(e){}
+    }
+    viewerConnections = [];
+
     if(streamKey){
         try {
             await CloudTokAPI.request("/live/end", {
@@ -299,9 +315,6 @@ async function endStream(){
             });
         } catch(e){}
     }
-
-    viewerConnections.forEach(v => { try { v.pc.close(); } catch(e){} });
-    viewerConnections = [];
 
     if(localStream){
         localStream.getTracks().forEach(t=>t.stop());
