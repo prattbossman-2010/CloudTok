@@ -321,6 +321,15 @@ window.CloudTokAPI = {
                 body: JSON.stringify({ text })
             }
         );
+    },
+
+
+    async runMigration(){
+
+        return await this.request("/admin/migrate", {
+            method: "POST"
+        });
+
     }
 
 };
