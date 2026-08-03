@@ -128,9 +128,9 @@ class CloudTokWebRTC {
     }
 
     async handleIceCandidate(signalData) {
-        if (this.pc && signalData) {
+        if (signalData) {
             try {
-                if (this.pc.remoteDescription) {
+                if (this.pc && this.pc.remoteDescription) {
                     await this.pc.addIceCandidate(new RTCIceCandidate(signalData));
                 } else {
                     this.iceCandidateQueue.push(signalData);
