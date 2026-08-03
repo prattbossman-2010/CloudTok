@@ -101,6 +101,8 @@ caption,
 tags,
 options.category
 );
+
+progress(70);
     
  const uploadResult =
 await CloudTokAPI.uploadVideo(
@@ -109,19 +111,17 @@ await CloudTokAPI.uploadVideo(
     thumbnail,
     JSON.stringify(tags),
     category
-);
+).catch(e=>null);
+
+progress(80);
 
 
-if(!uploadResult.success){
+let cloudVideoURL=localVideoURL;
 
-    throw new Error(
-        "Cloud upload failed"
-    );
-
+if(uploadResult && uploadResult.success && uploadResult.videoUrl){
+    cloudVideoURL=uploadResult.videoUrl;
 }
-    
-const cloudVideoURL =
-uploadResult.videoUrl;
+
 const video={
 
 id:Date.now(),
