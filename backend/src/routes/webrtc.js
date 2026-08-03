@@ -83,7 +83,7 @@ export async function createLiveStream(request, env) {
 
 export async function getLiveStreams(request, env) {
     const { results } = await env.DB.prepare(
-        "SELECT ls.*, u.username, u.avatar, u.display_name FROM live_streams ls JOIN users u ON ls.user_id = u.id WHERE ls.status = 'active' ORDER BY ls.created_at DESC"
+        "SELECT ls.*, u.username, u.avatar, u.display_name FROM live_streams ls JOIN users u ON ls.user_id = u.id WHERE ls.status = 'active' AND ls.created_at > datetime('now', '-10 minutes') ORDER BY ls.created_at DESC"
     ).all();
 
     return Response.json({ streams: results });
