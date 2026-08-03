@@ -10,6 +10,7 @@ class CloudTokWebRTC {
         this.onCallEnd = null;
         this.onIncomingCall = null;
         this.isInitiator = false;
+        this.backendReady = false;
     }
 
     async startLocalStream(video = true) {
@@ -146,6 +147,10 @@ class CloudTokWebRTC {
         this._targetUsername = username;
         this.lastSignalId = 0;
 
+        if (this.pollInterval) {
+            clearInterval(this.pollInterval);
+        }
+
         this.pollInterval = setInterval(async () => {
             if (typeof CloudTokAPI === "undefined") return;
 
@@ -153,6 +158,10 @@ class CloudTokWebRTC {
                 const result = await CloudTokAPI.request(
                     "/webrtc/poll?after=" + this.lastSignalId
                 );
+
+                if (result.error === "Not authenticated") return;
+
+                this.backendReady = true;
 
                 if (result.signals) {
                     for (const signal of result.signals) {
@@ -179,9 +188,9 @@ class CloudTokWebRTC {
                     }
                 }
             } catch (e) {
-                console.error("Signal poll failed:", e);
+                this.backendReady = false;
             }
-        }, 1000);
+        }, 2000);
     }
 
     endCall(notify = true) {

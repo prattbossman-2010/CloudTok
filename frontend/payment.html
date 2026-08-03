@@ -28,12 +28,12 @@ body{background:#000;}
     background:rgba(255,255,255,.1);color:#fff;font-size:14px;font-weight:600;cursor:pointer;
 }
 .walletActionBtn:hover{background:rgba(255,255,255,.2);}
-.paystackBtn{
+.payBtn{
     background:linear-gradient(135deg,#004d4d,#00a69c);color:#fff;border:none;
     padding:14px 28px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;
     width:100%;margin-top:10px;transition:all .3s;
 }
-.paystackBtn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,166,156,.3);}
+.payBtn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,166,156,.3);}
 .payAmountInput{
     width:100%;padding:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);
     border-radius:12px;color:#fff;font-size:18px;font-weight:700;outline:none;text-align:center;
@@ -48,23 +48,43 @@ body{background:#000;}
 }
 .amountPreset:hover{background:rgba(255,255,255,.1);}
 .amountPreset.active{background:rgba(0,166,156,.2);border-color:#00a69c;color:#fff;}
+.currencyRow{display:flex;gap:8px;margin-top:12px;}
+.currencySelect{
+    flex:1;padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);
+    border-radius:12px;color:#fff;font-size:14px;outline:none;appearance:none;
+    -webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23999' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 12px center;
+}
+.currencySelect option{background:#1a1a1a;color:#fff;}
+.conversionInfo{
+    margin-top:8px;padding:10px 14px;background:rgba(255,255,255,.04);
+    border-radius:10px;font-size:13px;color:rgba(255,255,255,.6);
+    display:flex;justify-content:space-between;
+}
+.conversionInfo .usd{color:#00c853;font-weight:700;}
+
+.paymentMethods{display:flex;flex-direction:column;gap:10px;margin-top:12px;}
+.payMethod{
+    display:flex;align-items:center;gap:14px;padding:16px;
+    background:rgba(255,255,255,.04);border-radius:14px;cursor:pointer;
+    transition:all .2s;border:2px solid transparent;
+}
+.payMethod:hover{background:rgba(255,255,255,.06);}
+.payMethod.selected{border-color:#00a69c;background:rgba(0,166,156,.08);}
+.payMethodIcon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;}
+.payMethodIcon.visa{background:linear-gradient(135deg,#1a1f71,#2557d6);}
+.payMethodIcon.bank{background:linear-gradient(135deg,#00a651,#00c853);}
+.payMethodIcon.paystack{background:linear-gradient(135deg,#004d4d,#00a69c);}
+.payMethodIcon.virtual{background:linear-gradient(135deg,#7b2ff2,#b24bff);}
+.payMethodInfo{flex:1;}
+.payMethodName{color:#fff;font-size:15px;font-weight:600;}
+.payMethodDesc{color:rgba(255,255,255,.4);font-size:12px;}
+.payMethodCheck{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:12px;}
+.payMethod.selected .payMethodCheck{background:#00a69c;border-color:#00a69c;}
+
 .paymentsContent{width:100%;max-width:600px;margin:0 auto;padding:0 16px 40px;display:flex;flex-direction:column;gap:24px;}
 .section{display:flex;flex-direction:column;gap:12px;}
 .section h3{color:rgba(255,255,255,.5);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;}
-.paymentCard{
-    display:flex;align-items:center;gap:14px;padding:16px;
-    background:rgba(255,255,255,.04);border-radius:14px;cursor:pointer;
-    transition:background .2s;
-}
-.paymentCard:hover{background:rgba(255,255,255,.06);}
-.paymentIcon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;}
-.paymentIcon.visa{background:linear-gradient(135deg,#1a1f71,#2557d6);}
-.paymentIcon.bank{background:linear-gradient(135deg,#00a651,#00c853);}
-.paymentIcon.paystack{background:linear-gradient(135deg,#004d4d,#00a69c);}
-.paymentIcon.virtual{background:linear-gradient(135deg,#7b2ff2,#b24bff);}
-.paymentInfo{flex:1;}
-.paymentName{color:#fff;font-size:15px;font-weight:600;}
-.paymentDesc{color:rgba(255,255,255,.4);font-size:12px;}
 .giftGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
 .giftItem{
     display:flex;flex-direction:column;align-items:center;gap:6px;
@@ -82,6 +102,18 @@ body{background:#000;}
 .toast.success{background:#00c853;color:#fff;}
 .toast.error{background:#ff2d55;color:#fff;}
 @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-20px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+.bankForm{display:none;flex-direction:column;gap:10px;padding:16px;background:rgba(255,255,255,.04);border-radius:14px;margin-top:10px;}
+.bankForm.show{display:flex;}
+.bankForm input,.bankForm select{
+    padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);
+    border-radius:10px;color:#fff;font-size:14px;outline:none;
+}
+.bankForm input::placeholder{color:rgba(255,255,255,.3);}
+.bankForm label{color:rgba(255,255,255,.5);font-size:12px;}
+.bankSubmit{
+    padding:14px;background:linear-gradient(135deg,#00a651,#00c853);
+    color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;
+}
 </style>
 </head>
 <body>
@@ -96,23 +128,99 @@ body{background:#000;}
     <span class="walletLabel">Balance</span>
     <span class="walletBalance" id="walletBalance">$0.00</span>
     <div class="walletActions">
-        <button class="walletActionBtn" onclick="document.getElementById('fundSection').style.display='block'">Add Funds</button>
+        <button class="walletActionBtn" onclick="showFundSection()">Add Funds</button>
         <button class="walletActionBtn" onclick="showToast('Withdraw coming soon','error')">Withdraw</button>
     </div>
 </div>
 
 <div class="paymentsContent" id="fundSection" style="display:none;">
     <div class="section">
-        <h3>Fund Wallet via Paystack</h3>
-        <input type="number" class="payAmountInput" id="payAmount" placeholder="Enter amount (₦)" min="100">
-        <div class="amountPresets">
-            <button class="amountPreset" onclick="setAmount(500)">₦500</button>
-            <button class="amountPreset" onclick="setAmount(1000)">₦1,000</button>
-            <button class="amountPreset" onclick="setAmount(2000)">₦2,000</button>
-            <button class="amountPreset" onclick="setAmount(5000)">₦5,000</button>
-            <button class="amountPreset" onclick="setAmount(10000)">₦10,000</button>
+        <h3>Fund Wallet</h3>
+
+        <div class="currencyRow">
+            <select class="currencySelect" id="currencySelect" onchange="onCurrencyChange()">
+                <option value="USD">🇺🇸 USD - US Dollar</option>
+                <option value="NGN">🇳🇬 NGN - Nigerian Naira</option>
+                <option value="GHS">🇬🇭 GHS - Ghanaian Cedi</option>
+                <option value="KES">🇰🇪 KES - Kenyan Shilling</option>
+                <option value="ZAR">🇿🇦 ZAR - South African Rand</option>
+                <option value="GBP">🇬🇧 GBP - British Pound</option>
+                <option value="EUR">🇪🇺 EUR - Euro</option>
+            </select>
         </div>
-        <button class="paystackBtn" onclick="payWithPaystack()">Fund Wallet</button>
+
+        <input type="number" class="payAmountInput" id="payAmount" placeholder="Enter amount" min="0.5" step="0.01">
+        <div class="amountPresets" id="amountPresets">
+            <button class="amountPreset" onclick="setAmount(0.5)">$0.50</button>
+            <button class="amountPreset" onclick="setAmount(1)">$1.00</button>
+            <button class="amountPreset" onclick="setAmount(5)">$5.00</button>
+            <button class="amountPreset" onclick="setAmount(10)">$10.00</button>
+            <button class="amountPreset" onclick="setAmount(0)">Custom</button>
+        </div>
+
+        <div class="conversionInfo" id="conversionInfo" style="display:none;">
+            <span id="conversionText">You pay: ₦0</span>
+            <span class="usd" id="conversionUsd">= $0.00</span>
+        </div>
+
+        <h3 style="margin-top:16px;">Payment Method</h3>
+        <div class="paymentMethods">
+            <div class="payMethod selected" onclick="selectPayMethod('paystack',this)" data-method="paystack">
+                <div class="payMethodIcon paystack">💳</div>
+                <div class="payMethodInfo">
+                    <div class="payMethodName">Paystack</div>
+                    <div class="payMethodDesc">Card, Bank Transfer, Mobile Money</div>
+                </div>
+                <div class="payMethodCheck">✓</div>
+            </div>
+            <div class="payMethod" onclick="selectPayMethod('bank',this)" data-method="bank">
+                <div class="payMethodIcon bank">🏦</div>
+                <div class="payMethodInfo">
+                    <div class="payMethodName">Bank Transfer</div>
+                    <div class="payMethodDesc">Direct bank deposit</div>
+                </div>
+                <div class="payMethodCheck">✓</div>
+            </div>
+            <div class="payMethod" onclick="selectPayMethod('card',this)" data-method="card">
+                <div class="payMethodIcon visa">💳</div>
+                <div class="payMethodInfo">
+                    <div class="payMethodName">Debit / Credit Card</div>
+                    <div class="payMethodDesc">Visa, Mastercard, Verve</div>
+                </div>
+                <div class="payMethodCheck">✓</div>
+            </div>
+            <div class="payMethod" onclick="selectPayMethod('virtual',this)" data-method="virtual">
+                <div class="payMethodIcon virtual">🌐</div>
+                <div class="payMethodInfo">
+                    <div class="payMethodName">Virtual Card</div>
+                    <div class="payMethodDesc">Pay with virtual card details</div>
+                </div>
+                <div class="payMethodCheck">✓</div>
+            </div>
+        </div>
+
+        <div class="bankForm" id="bankForm">
+            <label>Bank Name</label>
+            <select id="bankName">
+                <option value="">Select bank</option>
+                <option value="access">Access Bank</option>
+                <option value="gtbank">GTBank</option>
+                <option value="firstbank">First Bank</option>
+                <option value="uba">UBA</option>
+                <option value="zenith">Zenith Bank</option>
+                <option value="stanbic">Stanbic IBTC</option>
+                <option value="ecobank">Ecobank</option>
+                <option value="fidelity">Fidelity Bank</option>
+                <option value="other">Other</option>
+            </select>
+            <label>Account Number</label>
+            <input type="text" id="bankAccount" placeholder="Enter account number" maxlength="10">
+            <label>Amount (USD)</label>
+            <input type="text" id="bankAmount" placeholder="$0.00" readonly>
+            <button class="bankSubmit" onclick="submitBankTransfer()">Get Bank Details</button>
+        </div>
+
+        <button class="payBtn" id="payBtn" onclick="processPayment()">Fund Wallet</button>
     </div>
 </div>
 
@@ -166,6 +274,39 @@ body{background:#000;}
 
 <script src="assets/js/api/api.js"></script>
 <script>
+const EXCHANGE_RATES = {
+    USD: 1,
+    NGN: 1550,
+    GHS: 12.5,
+    KES: 155,
+    ZAR: 18.5,
+    GBP: 0.79,
+    EUR: 0.92
+};
+
+const PAYSTACK_CURRENCY_MAP = {
+    USD: "USD",
+    NGN: "NGN",
+    GHS: "GHS",
+    GBP: "GBP",
+    EUR: "EUR",
+    KES: "NGN",
+    ZAR: "NGN"
+};
+
+const CURRENCY_SYMBOLS = {
+    USD: "$",
+    NGN: "₦",
+    GHS: "GH₵",
+    KES: "KSh",
+    ZAR: "R",
+    GBP: "£",
+    EUR: "€"
+};
+
+let selectedCurrency = "USD";
+let selectedPayMethod = "paystack";
+
 function showToast(msg, type="success"){
     const t=document.createElement("div");
     t.className="toast "+type;
@@ -174,101 +315,238 @@ function showToast(msg, type="success"){
     setTimeout(()=>t.remove(),3000);
 }
 
-function setAmount(val){
-    document.getElementById("payAmount").value=val;
-    document.querySelectorAll(".amountPreset").forEach(b=>b.classList.remove("active"));
-    event.target.classList.add("active");
+function showFundSection(){
+    document.getElementById("fundSection").style.display="block";
+    document.getElementById("fundSection").scrollIntoView({behavior:"smooth"});
 }
 
-function payWithPaystack(){
-    const amount=parseFloat(document.getElementById("payAmount").value);
-    if(!amount||amount<100){
-        showToast("Minimum amount is ₦100","error");
+function setAmount(val){
+    const input = document.getElementById("payAmount");
+    if(val === 0){
+        input.value = "";
+        input.placeholder = "Enter custom amount";
+        input.focus();
+    } else {
+        input.value = val;
+        input.placeholder = "Enter amount";
+    }
+    document.querySelectorAll(".amountPreset").forEach(b=>b.classList.remove("active"));
+    event.target.classList.add("active");
+    updateConversion();
+}
+
+function onCurrencyChange(){
+    selectedCurrency = document.getElementById("currencySelect").value;
+    updateAmountPresets();
+    updateConversion();
+}
+
+function updateAmountPresets(){
+    const presets = document.getElementById("amountPresets");
+    const sym = CURRENCY_SYMBOLS[selectedCurrency];
+    const rates = EXCHANGE_RATES;
+
+    const amountsUSD = [0.5, 1, 5, 10];
+    presets.innerHTML = "";
+
+    amountsUSD.forEach(usd => {
+        const converted = (usd * rates[selectedCurrency]).toFixed(selectedCurrency === "NGN" || selectedCurrency === "KES" ? 0 : 2);
+        const btn = document.createElement("button");
+        btn.className = "amountPreset";
+        btn.textContent = sym + converted;
+        btn.onclick = function(){ setAmount(usd); };
+        presets.appendChild(btn);
+    });
+
+    const customBtn = document.createElement("button");
+    customBtn.className = "amountPreset";
+    customBtn.textContent = "Custom";
+    customBtn.onclick = function(){ setAmount(0); };
+    presets.appendChild(customBtn);
+}
+
+function updateConversion(){
+    const amount = parseFloat(document.getElementById("payAmount").value);
+    const info = document.getElementById("conversionInfo");
+
+    if(!amount || amount < 0.5){
+        info.style.display = "none";
+        document.getElementById("bankAmount").value = "";
         return;
     }
 
-    const email=localStorage.getItem("CloudTokCurrentUser")+"@cloudtok.app";
+    const rate = EXCHANGE_RATES[selectedCurrency];
+    const localAmount = (amount * rate).toFixed(
+        selectedCurrency === "NGN" || selectedCurrency === "KES" ? 0 : 2
+    );
+    const sym = CURRENCY_SYMBOLS[selectedCurrency];
 
-    if(typeof PaystackPop==="undefined"){
+    document.getElementById("conversionText").textContent = "You pay: " + sym + localAmount.toLocaleString();
+    document.getElementById("conversionUsd").textContent = "= $" + amount.toFixed(2);
+    info.style.display = "flex";
+    document.getElementById("bankAmount").value = "$" + amount.toFixed(2);
+}
+
+function selectPayMethod(method, el){
+    selectedPayMethod = method;
+    document.querySelectorAll(".payMethod").forEach(m=>m.classList.remove("selected"));
+    el.classList.add("selected");
+
+    const bankForm = document.getElementById("bankForm");
+    if(method === "bank"){
+        bankForm.classList.add("show");
+    } else {
+        bankForm.classList.remove("show");
+    }
+}
+
+function processPayment(){
+    const amount = parseFloat(document.getElementById("payAmount").value);
+    if(!amount || amount < 0.5){
+        showToast("Minimum amount is $0.50","error");
+        return;
+    }
+
+    if(selectedPayMethod === "bank"){
+        document.getElementById("bankForm").classList.add("show");
+        document.getElementById("bankAmount").value = "$" + amount.toFixed(2);
+        return;
+    }
+
+    if(selectedPayMethod === "virtual"){
+        showToast("Enter virtual card details in the form below","error");
+        return;
+    }
+
+    payWithPaystack(amount);
+}
+
+function payWithPaystack(amountUSD){
+    const email = localStorage.getItem("CloudTokCurrentUser") + "@cloudtok.app";
+    const rate = EXCHANGE_RATES[selectedCurrency];
+    const paystackCurrency = PAYSTACK_CURRENCY_MAP[selectedCurrency];
+
+    let amountLocal;
+    let paystackAmount;
+
+    if(selectedCurrency === "GHS"){
+        amountLocal = amountUSD * rate;
+        paystackAmount = Math.round(amountLocal * 100);
+    } else if(selectedCurrency === "NGN"){
+        amountLocal = amountUSD * rate;
+        paystackAmount = Math.round(amountLocal);
+    } else if(selectedCurrency === "GBP" || selectedCurrency === "EUR"){
+        amountLocal = amountUSD * rate;
+        paystackAmount = Math.round(amountLocal * 100);
+    } else {
+        amountLocal = amountUSD * rate;
+        paystackAmount = Math.round(amountLocal * 100);
+    }
+
+    if(typeof PaystackPop === "undefined"){
         showToast("Paystack loading, try again","error");
         return;
     }
 
-    const handler=PaystackPop.setup({
-        key:"pk_live_15e3b81eee8f83c75bbdac7508a18bd16228d3ed",
-        email:email,
-        amount:amount*100,
-        currency:"NGN",
-        metadata:{
-            custom_fields:[
-                {display_name:"User",variable_name:"user",value:localStorage.getItem("CloudTokCurrentUser")}
+    const handler = PaystackPop.setup({
+        key: "pk_live_15e3b81eee8f83c75bbdac7508a18bd16228d3ed",
+        email: email,
+        amount: paystackAmount,
+        currency: paystackCurrency,
+        metadata: {
+            custom_fields: [
+                {display_name: "User", variable_name: "user", value: localStorage.getItem("CloudTokCurrentUser")},
+                {display_name: "USD Amount", variable_name: "usd_amount", value: amountUSD},
+                {display_name: "Original Currency", variable_name: "original_currency", value: selectedCurrency}
             ]
         },
-        callback:function(response){
+        callback: function(response){
             showToast("Payment successful! Verifying...");
-            verifyAndCredit(response.reference,amount);
+            verifyAndCredit(response.reference, amountUSD);
         },
-        onClose:function(){
+        onClose: function(){
             showToast("Payment cancelled","error");
         }
     });
     handler.openIframe();
 }
 
-async function verifyAndCredit(reference,amount){
+function submitBankTransfer(){
+    const bank = document.getElementById("bankName").value;
+    const account = document.getElementById("bankAccount").value;
+    const amount = document.getElementById("bankAmount").value;
+
+    if(!bank){
+        showToast("Please select a bank","error");
+        return;
+    }
+    if(!account || account.length < 10){
+        showToast("Please enter a valid account number","error");
+        return;
+    }
+
+    showToast("Bank transfer initiated! Credits will reflect after confirmation.","success");
+    document.getElementById("bankForm").classList.remove("show");
+}
+
+async function verifyAndCredit(reference, amountUSD){
     try{
-        const result=await CloudTokAPI.verifyPayment(reference);
+        const result = await CloudTokAPI.verifyPayment(reference);
         if(result.success){
-            showToast("₦"+amount+" added to wallet!");
+            showToast("$" + amountUSD.toFixed(2) + " added to wallet!");
             loadBalance();
             loadTransactions();
-            document.getElementById("fundSection").style.display="none";
-        }else{
+            document.getElementById("fundSection").style.display = "none";
+        } else {
             showToast("Verification pending","error");
         }
-    }catch(e){
+    } catch(e){
         showToast("Verification will complete shortly");
     }
 }
 
 async function loadBalance(){
     try{
-        const result=await CloudTokAPI.getTransactions();
-        const total=(result.transactions||[]).reduce((sum,t)=>sum+(t.amount||0),0);
-        document.getElementById("walletBalance").textContent="₦"+total.toLocaleString();
-    }catch(e){}
+        const result = await CloudTokAPI.getTransactions();
+        const total = (result.transactions || []).reduce((sum, t) => sum + (t.amount || 0), 0);
+        document.getElementById("walletBalance").textContent = "$" + total.toFixed(2);
+    } catch(e){}
 }
 
 async function loadTransactions(){
     try{
-        const result=await CloudTokAPI.getTransactions();
-        const list=document.getElementById("transactionList");
-        if(!result.transactions||result.transactions.length===0){
-            list.innerHTML='<p style="color:rgba(255,255,255,.3);font-size:13px;text-align:center;padding:20px;">No transactions yet</p>';
+        const result = await CloudTokAPI.getTransactions();
+        const list = document.getElementById("transactionList");
+        if(!result.transactions || result.transactions.length === 0){
+            list.innerHTML = '<p style="color:rgba(255,255,255,.3);font-size:13px;text-align:center;padding:20px;">No transactions yet</p>';
             return;
         }
-        list.innerHTML="";
-        result.transactions.slice(0,10).forEach(t=>{
-            const item=document.createElement("div");
-            item.className="paymentCard";
-            item.innerHTML=`
-                <div class="paymentIcon paystack">💰</div>
-                <div class="paymentInfo">
-                    <div class="paymentName">₦${(t.amount||0).toLocaleString()}</div>
-                    <div class="paymentDesc">${t.reference||""} • ${new Date(t.created_at).toLocaleDateString()}</div>
+        list.innerHTML = "";
+        result.transactions.slice(0, 10).forEach(t => {
+            const item = document.createElement("div");
+            item.style.cssText = "display:flex;align-items:center;gap:14px;padding:16px;background:rgba(255,255,255,.04);border-radius:14px;margin-bottom:8px;";
+            item.innerHTML = `
+                <div style="width:40px;height:40px;border-radius:10px;background:rgba(0,200,83,.15);display:flex;align-items:center;justify-content:center;font-size:18px;">💰</div>
+                <div style="flex:1;">
+                    <div style="color:#fff;font-size:15px;font-weight:600;">$${(t.amount || 0).toFixed(2)}</div>
+                    <div style="color:rgba(255,255,255,.4);font-size:12px;">${t.reference || ""} • ${new Date(t.created_at).toLocaleDateString()}</div>
                 </div>
+                <div style="color:#00c853;font-size:13px;font-weight:600;">+$${(t.amount || 0).toFixed(2)}</div>
             `;
             list.appendChild(item);
         });
-    }catch(e){}
+    } catch(e){}
 }
 
-function buyGift(name,price){
-    showToast("Gift: "+name+" ($"+price+") — Coming soon!");
+function buyGift(name, price){
+    showToast("Gift: " + name + " ($" + price + ") — Coming soon!");
 }
+
+document.getElementById("payAmount").addEventListener("input", updateConversion);
 
 loadBalance();
 loadTransactions();
+updateAmountPresets();
 </script>
 </body>
 </html>

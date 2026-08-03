@@ -16,9 +16,6 @@ p{color:#aaa;margin:0 0 30px;font-size:14px}
 .live-btn:hover{transform:scale(1.08);box-shadow:0 0 50px rgba(255,45,85,.6)}
 .live-btn:active{transform:scale(.95)}
 .back{position:fixed;top:20px;left:20px;background:rgba(255,255,255,.1);border:none;color:#fff;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;z-index:10}
-.info{margin-top:30px;padding:15px;background:rgba(255,255,255,.05);border-radius:12px;text-align:left}
-.info h3{margin:0 0 10px;font-size:14px;color:#ff2d55}
-.info ul{margin:0;padding:0 0 0 16px;color:#999;font-size:13px;line-height:1.8}
 
 .streamView{display:none;width:100%;max-width:500px;flex-direction:column;align-items:center;gap:16px;}
 .streamView.active{display:flex;}
@@ -32,8 +29,6 @@ p{color:#aaa;margin:0 0 30px;font-size:14px}
 .streamCtrlBtn.mute{background:rgba(255,255,255,.15);color:#fff;}
 .streamCtrlBtn.video{background:rgba(255,255,255,.15);color:#fff;}
 .streamChat{width:100%;max-height:200px;overflow-y:auto;background:rgba(255,255,255,.03);border-radius:12px;padding:10px;margin-top:10px;}
-.streamChatMsg{padding:6px 0;font-size:13px;color:rgba(255,255,255,.7);}
-.streamChatMsg strong{color:#ff2d55;}
 
 .activeStreams{width:100%;max-width:600px;margin-top:30px;}
 .activeStreams h3{color:rgba(255,255,255,.5);font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
@@ -41,6 +36,9 @@ p{color:#aaa;margin:0 0 30px;font-size:14px}
 .streamCard:hover{background:rgba(255,255,255,.06);}
 .liveDot{width:8px;height:8px;border-radius:50%;background:#ff2d55;animation:livePulse 1.5s infinite;}
 @keyframes livePulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;}
+.toast.success{background:#00c853;color:#fff;}
+.toast.error{background:#ff2d55;color:#fff;}
 </style>
 </head>
 <body>
@@ -79,19 +77,29 @@ let viewerPoll = null;
 let isMuted = false;
 let isVideoOff = false;
 
+function showToast(msg, type="success"){
+    const t=document.createElement("div");
+    t.className="toast "+type;
+    t.textContent=msg;
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(),3000);
+}
+
 document.getElementById("goLiveBtn").onclick = async ()=>{
     if(!localStorage.getItem("CloudTokToken")){
-        alert("Please login first");
-        window.location.href="index.html";
+        showToast("Please login first","error");
         return;
     }
 
     const title = document.getElementById("streamTitleInput").value.trim() || "Live Stream";
 
     try {
-        localStream = await navigator.mediaDevices.getUserMedia({audio:true, video:{facingMode:"user",width:{ideal:640},height:{ideal:480}}});
+        localStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }
+        });
     } catch(e) {
-        alert("Camera/microphone access required");
+        showToast("Camera/microphone access required. Please allow permissions.","error");
         return;
     }
 
@@ -109,9 +117,13 @@ document.getElementById("goLiveBtn").onclick = async ()=>{
         document.getElementById("streamTitleDisplay").textContent = title;
 
         startViewerPoll();
+        showToast("You are now live!");
     } else {
-        alert("Failed to start stream");
-        localStream.getTracks().forEach(t=>t.stop());
+        showToast("Failed to start stream. Backend may be updating.","error");
+        if(localStream){
+            localStream.getTracks().forEach(t=>t.stop());
+            localStream = null;
+        }
     }
 };
 
@@ -139,6 +151,7 @@ document.getElementById("streamEndBtn").onclick = async ()=>{
 
     document.getElementById("streamView").classList.remove("active");
     document.getElementById("startScreen").style.display = "block";
+    showToast("Stream ended");
     loadActiveStreams();
 };
 
@@ -191,7 +204,9 @@ async function loadActiveStreams(){
             `;
             container.appendChild(card);
         });
-    } catch(e){}
+    } catch(e){
+        document.getElementById("activeStreams").innerHTML = '<p style="color:rgba(255,255,255,.3);font-size:13px;text-align:center;">Live streams unavailable</p>';
+    }
 }
 
 loadActiveStreams();
