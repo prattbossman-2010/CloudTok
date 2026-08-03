@@ -170,6 +170,8 @@ async function joinStream(stream){
     };
 
     try {
+        viewerPC.addTransceiver("video", { direction: "recvonly" });
+        viewerPC.addTransceiver("audio", { direction: "recvonly" });
         const offer = await viewerPC.createOffer();
         await viewerPC.setLocalDescription(offer);
         console.log("[Viewer] Offer created, SDP length:", viewerPC.localDescription.sdp.length);
