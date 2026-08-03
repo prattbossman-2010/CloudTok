@@ -1,4 +1,8 @@
 (function(){
+    const skipPages = ["conversation.html", "live.html", "liveStreams.html"];
+    const currentPage = window.location.pathname.split("/").pop().split("?")[0];
+    if(skipPages.includes(currentPage)) return;
+
     let lastSignalId = 0;
     let pollInterval = null;
     let activePopup = null;

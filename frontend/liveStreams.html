@@ -189,7 +189,7 @@ function startSignalPoll(){
                         await viewerPC.setRemoteDescription(new RTCSessionDescription(signal.data));
                         document.getElementById("viewerStatus").textContent = "Watching live";
                     }
-                    else if(signal.type === "live-ice-viewer" && viewerPC && signal.data){
+                    else if(signal.type === "live-ice" && viewerPC && signal.data){
                         try {
                             if(viewerPC.remoteDescription){
                                 await viewerPC.addIceCandidate(new RTCIceCandidate(signal.data.candidate));

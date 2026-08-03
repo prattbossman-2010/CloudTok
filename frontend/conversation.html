@@ -348,6 +348,8 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
             webrtc.createPeerConnection();
             await webrtc.pc.setRemoteDescription(new RTCSessionDescription({sdp:data.sdp,type:data.type}));
+            for(const c of webrtc.iceCandidateQueue){try{await webrtc.pc.addIceCandidate(new RTCIceCandidate(c));}catch(e){}}
+            webrtc.iceCandidateQueue = [];
             const answer = await webrtc.pc.createAnswer();
             await webrtc.pc.setLocalDescription(answer);
             await webrtc.sendSignal("call-answer",{sdp:answer.sdp,type:answer.type});
@@ -388,6 +390,8 @@ document.addEventListener("DOMContentLoaded", ()=>{
                         sdp: callData.data.sdp,
                         type: callData.data.type
                     }));
+                    for(const c of webrtc.iceCandidateQueue){try{await webrtc.pc.addIceCandidate(new RTCIceCandidate(c));}catch(e){}}
+                    webrtc.iceCandidateQueue = [];
                     const answer = await webrtc.pc.createAnswer();
                     await webrtc.pc.setLocalDescription(answer);
                     await webrtc.sendSignal("call-answer", {

@@ -146,6 +146,15 @@ function startSignalPoll(){
                         handleViewerJoin(signal.from, signal.data);
                     } else if(signal.type === "live-leave"){
                         handleViewerLeave(signal.from);
+                    } else if(signal.type === "live-ice-viewer"){
+                        const viewer = viewerConnections.find(v => v.username === signal.from);
+                        if(viewer && signal.data && signal.data.candidate){
+                            try {
+                                if(viewer.pc.remoteDescription){
+                                    await viewer.pc.addIceCandidate(new RTCIceCandidate(signal.data.candidate));
+                                }
+                            } catch(e){}
+                        }
                     }
                 }
             }
