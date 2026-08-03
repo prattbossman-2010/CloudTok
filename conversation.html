@@ -183,7 +183,11 @@
 
         const stream = await webrtc.startLocalStream(video);
         if(!stream){
-            showCallError("Camera/microphone access denied. Please allow access and try again.");
+            if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+                showCallError("Camera/mic not supported in this browser. Use HTTPS.");
+            } else {
+                showCallError("Camera/microphone access denied or unavailable. Check browser permissions.");
+            }
             document.getElementById("callStatus").textContent = "Camera access denied";
             return;
         }
