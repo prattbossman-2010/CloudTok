@@ -101,6 +101,11 @@ document.getElementById("goLiveBtn").onclick = async ()=>{
         return;
     }
 
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+        showToast("Camera/mic not supported. Use HTTPS.","error");
+        return;
+    }
+
     const title = document.getElementById("streamTitleInput").value.trim() || "Live Stream";
 
     try {
@@ -109,8 +114,14 @@ document.getElementById("goLiveBtn").onclick = async ()=>{
             video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }
         });
     } catch(e) {
-        showToast("Camera/microphone access required","error");
-        return;
+        console.error("[Live] getUserMedia failed:", e.name, e.message);
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            showToast("Camera unavailable, streaming audio only","error");
+        } catch(e2) {
+            showToast("Camera/microphone access required","error");
+            return;
+        }
     }
 
     document.getElementById("streamLocal").srcObject = localStream;
@@ -258,6 +269,8 @@ function updateViewerCount(){
 document.getElementById("streamEndBtn").onclick = endStream;
 
 async function endStream(){
+    window.removeEventListener("beforeunload", endStream);
+
     if(streamKey){
         try {
             await CloudTokAPI.request("/live/end", {

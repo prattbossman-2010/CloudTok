@@ -25,27 +25,37 @@ class CloudTokWebRTC {
 
     async startLocalStream(video = true) {
         this._log("Requesting media, video=", video);
-        const constraints = {
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            console.error("[WebRTC] getUserMedia NOT supported on this browser/context");
+            return null;
+        }
+
+        const fullConstraints = {
             audio: true,
             video: video ? { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } : false
         };
 
-        for (let attempt = 1; attempt <= 3; attempt++) {
+        const audioOnlyConstraints = { audio: true, video: false };
+
+        const attempts = [fullConstraints, fullConstraints, audioOnlyConstraints];
+
+        for (let i = 0; i < attempts.length; i++) {
             try {
-                this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                this._log("Attempt", i + 1, "constraints:", JSON.stringify(attempts[i]));
+                this.localStream = await navigator.mediaDevices.getUserMedia(attempts[i]);
                 const tracks = this.localStream.getTracks();
-                this._log("Media OK, tracks:", tracks.map(t => t.kind + ":" + t.label));
+                this._log("Media OK, tracks:", tracks.map(t => t.kind + ":" + t.label + " enabled=" + t.enabled));
                 if (tracks.length === 0) {
-                    this._log("WARNING: getUserMedia returned stream with 0 tracks, attempt", attempt);
+                    this._log("WARNING: 0 tracks returned");
                     this.localStream = null;
-                    await new Promise(r => setTimeout(r, 500));
+                    await new Promise(r => setTimeout(r, 1000));
                     continue;
                 }
                 return this.localStream;
             } catch (e) {
-                console.error("[WebRTC] getUserMedia attempt", attempt, "FAILED:", e.name, e.message);
-                if (attempt < 3) {
-                    this._log("Retrying in 1s...");
+                console.error("[WebRTC] getUserMedia attempt", i + 1, "FAILED:", e.name, e.message);
+                if (i < attempts.length - 1) {
                     await new Promise(r => setTimeout(r, 1000));
                 }
             }

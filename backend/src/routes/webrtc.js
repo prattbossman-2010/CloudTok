@@ -83,10 +83,23 @@ export async function createLiveStream(request, env) {
 
 export async function getLiveStreams(request, env) {
     const { results } = await env.DB.prepare(
-        "SELECT ls.*, u.username, u.avatar, u.display_name FROM live_streams ls JOIN users u ON ls.user_id = u.id WHERE ls.status = 'active' AND ls.created_at > datetime('now', '-10 minutes') ORDER BY ls.created_at DESC"
+        "SELECT ls.*, u.username, u.avatar, u.display_name FROM live_streams ls JOIN users u ON ls.user_id = u.id WHERE ls.status = 'active' ORDER BY ls.created_at DESC"
     ).all();
 
-    return Response.json({ streams: results });
+    const cutoff = Date.now() - 5 * 60 * 1000;
+    const active = results.filter(s => {
+        const created = new Date(s.created_at).getTime();
+        return created > cutoff;
+    });
+
+    const seen = new Set();
+    const unique = active.filter(s => {
+        if(seen.has(s.user_id)) return false;
+        seen.add(s.user_id);
+        return true;
+    });
+
+    return Response.json({ streams: unique });
 }
 
 export async function endLiveStream(request, env) {
