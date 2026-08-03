@@ -222,7 +222,7 @@ class CloudTokWebRTC {
     }
 
     async startLiveStream(title) {
-        if (typeof CloudTokAPI === "undefined") return null;
+        if (typeof CloudTokAPI === "undefined") return { error: "API not loaded" };
 
         try {
             const result = await CloudTokAPI.request("/live/create", {
@@ -232,7 +232,7 @@ class CloudTokWebRTC {
             });
             return result;
         } catch (e) {
-            return null;
+            return { error: "Network error" };
         }
     }
 
