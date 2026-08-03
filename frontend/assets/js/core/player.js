@@ -152,13 +152,15 @@ createCard(){
     this.video.playsInline = true;
 
 
-    this.video.preload = "metadata";
+    this.video.preload = "auto";
 
 
     this.video.setAttribute(
         "disablePictureInPicture",
         "true"
     );
+
+    this.video.style.background = "#000";
 
 
 
@@ -920,8 +922,7 @@ localStorage.setItem(
 
                 }
 
-
-                if(this.thumbnail){
+                if(this.thumbnail && this.video.currentTime > 0.1){
 
                     this.thumbnail.style.opacity="0";
 
@@ -946,6 +947,11 @@ localStorage.setItem(
 
                 }
 
+                if(this.thumbnail && this.video.currentTime > 0.1){
+
+                    this.thumbnail.style.opacity="0.5";
+
+                }
 
             }
         );
@@ -962,6 +968,12 @@ localStorage.setItem(
                 if(this.loader){
 
                     this.loader.style.display="none";
+
+                }
+
+                if(this.thumbnail){
+
+                    this.thumbnail.style.opacity="0";
 
                 }
 
@@ -1380,7 +1392,14 @@ showSavedMessage(text){
 
     if(this.video.readyState < 2){
         this.video.load();
+        let timeout=setTimeout(()=>{
+            this.video.oncanplay=null;
+            if(!this.userPaused){
+                this.video.play().catch(()=>{});
+            }
+        },3000);
         this.video.oncanplay=()=>{
+            clearTimeout(timeout);
             this.video.oncanplay=null;
             if(!this.userPaused){
                 this.video.play().catch(()=>{});

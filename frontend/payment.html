@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Wallet & Payments - CloudTok</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/settings.css">
+<style>
+body{background:#000;}
+.walletHeader{
+    width:100%;max-width:600px;display:flex;align-items:center;justify-content:space-between;
+    padding:16px;
+}
+.walletHeader h2{color:#fff;font-size:20px;font-weight:700;}
+.backBtn{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.walletCard{
+    width:100%;max-width:600px;margin:0 auto 20px;padding:24px;
+    background:linear-gradient(135deg,#00b7ff,#7b2ff2);border-radius:20px;
+    display:flex;flex-direction:column;gap:8px;
+}
+.walletLabel{color:rgba(255,255,255,.7);font-size:13px;}
+.walletBalance{color:#fff;font-size:36px;font-weight:800;}
+.walletActions{display:flex;gap:10px;margin-top:12px;}
+.walletActionBtn{
+    flex:1;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.2);
+    background:rgba(255,255,255,.1);color:#fff;font-size:14px;font-weight:600;cursor:pointer;
+}
+.walletActionBtn:hover{background:rgba(255,255,255,.2);}
+.paymentsContent{width:100%;max-width:600px;margin:0 auto;padding:0 16px 40px;display:flex;flex-direction:column;gap:24px;}
+.section{display:flex;flex-direction:column;gap:12px;}
+.section h3{color:rgba(255,255,255,.5);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;}
+.paymentCard{
+    display:flex;align-items:center;gap:14px;padding:16px;
+    background:rgba(255,255,255,.04);border-radius:14px;cursor:pointer;
+    transition:background .2s;
+}
+.paymentCard:hover{background:rgba(255,255,255,.06);}
+.paymentIcon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;}
+.paymentIcon.visa{background:linear-gradient(135deg,#1a1f71,#2557d6);}
+.paymentIcon.bank{background:linear-gradient(135deg,#00a651,#00c853);}
+.paymentIcon.paystack{background:linear-gradient(135deg,#004d4d,#00a69c);}
+.paymentIcon.virtual{background:linear-gradient(135deg,#7b2ff2,#b24bff);}
+.paymentInfo{flex:1;}
+.paymentName{color:#fff;font-size:15px;font-weight:600;}
+.paymentDesc{color:rgba(255,255,255,.4);font-size:12px;}
+.giftGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.giftItem{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    padding:16px 8px;background:rgba(255,255,255,.04);border-radius:14px;cursor:pointer;
+}
+.giftItem:hover{background:rgba(255,255,255,.08);}
+.giftEmoji{font-size:32px;}
+.giftName{color:#fff;font-size:12px;font-weight:500;}
+.giftPrice{color:#00b7ff;font-size:13px;font-weight:700;}
+.addPaymentBtn{
+    width:100%;padding:14px;border-radius:14px;border:2px dashed rgba(255,255,255,.1);
+    background:transparent;color:rgba(255,255,255,.5);font-size:15px;cursor:pointer;
+}
+.addPaymentBtn:hover{border-color:rgba(0,183,255,.4);color:#fff;}
+</style>
+</head>
+<body>
+
+<div class="walletHeader">
+    <button class="backBtn" onclick="history.back()">←</button>
+    <h2>Wallet & Payments</h2>
+    <div></div>
+</div>
+
+<div class="walletCard">
+    <span class="walletLabel">Balance</span>
+    <span class="walletBalance">$0.00</span>
+    <div class="walletActions">
+        <button class="walletActionBtn" onclick="alert('Add funds coming soon')">Add Funds</button>
+        <button class="walletActionBtn" onclick="alert('Withdraw coming soon')">Withdraw</button>
+    </div>
+</div>
+
+<div class="paymentsContent">
+
+<div class="section">
+    <h3>Payment Methods</h3>
+    <div class="paymentCard" onclick="alert('Add Visa/Mastercard coming soon')">
+        <div class="paymentIcon visa">💳</div>
+        <div class="paymentInfo">
+            <div class="paymentName">Visa / Mastercard</div>
+            <div class="paymentDesc">Add a credit or debit card</div>
+        </div>
+    </div>
+    <div class="paymentCard" onclick="alert('Bank transfer coming soon')">
+        <div class="paymentIcon bank">🏦</div>
+        <div class="paymentInfo">
+            <div class="paymentName">Bank Account</div>
+            <div class="paymentDesc">Link your bank account</div>
+        </div>
+    </div>
+    <div class="paymentCard" onclick="alert('Paystack integration coming soon')">
+        <div class="paymentIcon paystack">💰</div>
+        <div class="paymentInfo">
+            <div class="paymentName">Paystack</div>
+            <div class="paymentDesc">Pay with Paystack</div>
+        </div>
+    </div>
+    <div class="paymentCard" onclick="alert('Virtual card coming soon')">
+        <div class="paymentIcon virtual">🪙</div>
+        <div class="paymentInfo">
+            <div class="paymentName">Virtual Card</div>
+            <div class="paymentDesc">Generate a virtual card</div>
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <h3>Virtual Gifts</h3>
+    <p style="color:rgba(255,255,255,.4);font-size:13px;">Send gifts to your favorite creators during live streams</p>
+    <div class="giftGrid">
+        <div class="giftItem" onclick="alert('Rose: $0.99')">
+            <span class="giftEmoji">🌹</span>
+            <span class="giftName">Rose</span>
+            <span class="giftPrice">$0.99</span>
+        </div>
+        <div class="giftItem" onclick="alert('Heart: $1.99')">
+            <span class="giftEmoji">❤️</span>
+            <span class="giftName">Heart</span>
+            <span class="giftPrice">$1.99</span>
+        </div>
+        <div class="giftItem" onclick="alert('Star: $4.99')">
+            <span class="giftEmoji">⭐</span>
+            <span class="giftName">Star</span>
+            <span class="giftPrice">$4.99</span>
+        </div>
+        <div class="giftItem" onclick="alert('Fire: $9.99')">
+            <span class="giftEmoji">🔥</span>
+            <span class="giftName">Fire</span>
+            <span class="giftPrice">$9.99</span>
+        </div>
+        <div class="giftItem" onclick="alert('Diamond: $19.99')">
+            <span class="giftEmoji">💎</span>
+            <span class="giftName">Diamond</span>
+            <span class="giftPrice">$19.99</span>
+        </div>
+        <div class="giftItem" onclick="alert('Crown: $49.99')">
+            <span class="giftEmoji">👑</span>
+            <span class="giftName">Crown</span>
+            <span class="giftPrice">$49.99</span>
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <h3>Recent Transactions</h3>
+    <p style="color:rgba(255,255,255,.3);font-size:13px;text-align:center;padding:20px;">No transactions yet</p>
+</div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,71 @@
+body{background:#000;}
+
+.settingsPage{
+    width:100vw;min-height:100vh;
+    background:#000;display:flex;flex-direction:column;align-items:center;
+}
+.settingsHeader{
+    width:100%;max-width:600px;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 16px 12px;
+}
+.settingsHeader h2{color:#fff;font-size:20px;font-weight:700;}
+.backBtn{
+    background:none;border:none;color:#fff;font-size:22px;cursor:pointer;
+    width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+}
+.backBtn:active{background:rgba(255,255,255,.1);}
+
+.settingsContent{
+    width:100%;max-width:600px;
+    display:flex;flex-direction:column;gap:24px;
+    padding:0 16px 40px;
+}
+
+.settingsSection{
+    display:flex;flex-direction:column;gap:2px;
+    background:rgba(255,255,255,.04);
+    border-radius:16px;overflow:hidden;
+}
+.settingsSection h3{
+    color:rgba(255,255,255,.4);font-size:12px;font-weight:600;
+    text-transform:uppercase;letter-spacing:1px;
+    padding:12px 16px 4px;
+}
+
+.settingItem{
+    display:flex;align-items:center;gap:12px;
+    padding:14px 16px;
+    cursor:pointer;transition:background .2s;
+}
+.settingItem:hover{background:rgba(255,255,255,.04);}
+.settingItem:active{background:rgba(255,255,255,.06);}
+
+.settingIcon{font-size:20px;width:28px;text-align:center;}
+.settingInfo{flex:1;display:flex;flex-direction:column;gap:2px;}
+.settingLabel{color:#fff;font-size:15px;font-weight:500;}
+.settingDesc{color:rgba(255,255,255,.4);font-size:12px;}
+.settingArrow{color:rgba(255,255,255,.25);font-size:20px;}
+
+.toggle{
+    position:relative;width:48px;height:26px;flex-shrink:0;
+}
+.toggle input{display:none;}
+.toggleSlider{
+    position:absolute;inset:0;border-radius:999px;
+    background:rgba(255,255,255,.15);cursor:pointer;
+    transition:background .3s;
+}
+.toggleSlider::before{
+    content:"";position:absolute;top:3px;left:3px;
+    width:20px;height:20px;border-radius:50%;
+    background:#fff;transition:transform .3s;
+}
+.toggle input:checked + .toggleSlider{background:#00b7ff;}
+.toggle input:checked + .toggleSlider::before{transform:translateX(22px);}
+
+.settingItem.danger .settingLabel{color:#ff4444;}
+
+@media(max-width:420px){
+    .settingsContent{padding:0 10px 30px;}
+}

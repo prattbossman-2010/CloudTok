@@ -1283,6 +1283,12 @@ body{
 
 @media(max-width:768px){
 
+    .soundBtn{
+        width:52px;
+        height:52px;
+        font-size:24px;
+    }
+
     .globalSoundButton{
         width:45px;
         height:45px;
@@ -1575,6 +1581,12 @@ body{
 @media(max-width:420px){
 
 
+    .soundBtn{
+        width:55px;
+        height:55px;
+        font-size:26px;
+    }
+
     .topBar{
 
         padding:12px;
@@ -1622,6 +1634,13 @@ body{
     .rightMenu .actionIcon{
         width:26px;
         height:26px;
+    }
+
+    .bottomNav{
+        height:55px;
+    }
+    .bottomNav button{
+        font-size:22px;
     }
 
 }
