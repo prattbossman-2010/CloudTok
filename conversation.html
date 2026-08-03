@@ -92,7 +92,7 @@
 .callActionBtn.mute{background:rgba(255,255,255,.15);color:#fff;}
 .callActionBtn.video-toggle{background:rgba(255,255,255,.15);color:#fff;}
 .callIncoming{
-    display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:999;
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:999;
     flex-direction:column;align-items:center;justify-content:center;gap:20px;
 }
 .callIncoming.active{display:flex;}
@@ -100,6 +100,12 @@
 .callIncoming p{color:rgba(255,255,255,.5);}
 .callIncoming .callActions{margin-top:0;}
 .callActionBtn.accept{background:#00c853;color:#fff;}
+.callStatusBadge{
+    position:fixed;top:10px;right:10px;padding:6px 12px;border-radius:20px;
+    font-size:11px;font-weight:600;z-index:1000;
+}
+.callStatusBadge.connected{background:#00c853;color:#fff;}
+.callStatusBadge.disconnected{background:rgba(255,255,255,.15);color:rgba(255,255,255,.5);}
 </style>
 </head>
 <body>
@@ -148,6 +154,7 @@
 </div>
 
 <div class="callIncoming" id="callIncoming">
+    <div style="font-size:60px;margin-bottom:10px;">📞</div>
     <h2 id="incomingName">Incoming Call</h2>
     <p id="incomingType">Voice call</p>
     <div class="callActions">
@@ -155,6 +162,8 @@
         <button class="callActionBtn end" id="declineCallBtn">✕</button>
     </div>
 </div>
+
+<div class="callStatusBadge disconnected" id="callStatusBadge">Calls unavailable</div>
 
 <script src="assets/js/database/database.js"></script>
 <script src="assets/js/api/api.js"></script>
@@ -227,12 +236,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
     const params = new URLSearchParams(window.location.search);
     const chatUsername = params.get("user");
     const webrtc = window.CloudTokWebRTC;
-
-    document.getElementById("voiceCallBtn").onclick = ()=> startCall(false);
-    document.getElementById("videoCallBtn").onclick = ()=> startCall(true);
-    document.getElementById("endCallBtn").onclick = ()=> webrtc.endCall(true);
-    document.getElementById("muteBtn").onclick = toggleMute;
-    document.getElementById("videoToggleBtn").onclick = toggleVideo;
+    const badge = document.getElementById("callStatusBadge");
 
     let isMuted = false;
     let isVideoOff = false;
@@ -253,6 +257,18 @@ document.addEventListener("DOMContentLoaded", ()=>{
         document.getElementById("videoToggleBtn").textContent = isVideoOff ? "📷" : "📹";
     }
 
+    function showCallOverlay(name, statusText){
+        document.getElementById("callName").textContent = name;
+        document.getElementById("callStatus").textContent = statusText;
+        document.getElementById("callOverlay").classList.add("active");
+    }
+
+    function hideCallOverlay(){
+        document.getElementById("callOverlay").classList.remove("active");
+        document.getElementById("remoteVideo").srcObject = null;
+        document.getElementById("localVideo").srcObject = null;
+    }
+
     async function startCall(video){
         if(!localStorage.getItem("CloudTokToken")){
             alert("Please login first");
@@ -264,16 +280,11 @@ document.addEventListener("DOMContentLoaded", ()=>{
         };
 
         webrtc.onCallEnd = ()=>{
-            document.getElementById("callOverlay").classList.remove("active");
-            document.getElementById("callIncoming").classList.remove("active");
-            document.getElementById("remoteVideo").srcObject = null;
-            document.getElementById("localVideo").srcObject = null;
+            hideCallOverlay();
             document.getElementById("callStatus").textContent = "Call ended";
         };
 
-        document.getElementById("callName").textContent = chatUsername;
-        document.getElementById("callStatus").textContent = "Calling...";
-        document.getElementById("callOverlay").classList.add("active");
+        showCallOverlay(chatUsername, "Calling...");
 
         const stream = await webrtc.startLocalStream(video);
         if(stream){
@@ -288,7 +299,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
     webrtc.onIncomingCall = async (from, data)=>{
         document.getElementById("incomingName").textContent = from;
-        document.getElementById("incomingType").textContent = data.video ? "Video call" : "Voice call";
+        document.getElementById("incomingType").textContent = data.video !== false ? "Video call" : "Voice call";
         document.getElementById("callIncoming").classList.add("active");
 
         document.getElementById("acceptCallBtn").onclick = async ()=>{
@@ -298,12 +309,10 @@ document.addEventListener("DOMContentLoaded", ()=>{
                 document.getElementById("remoteVideo").srcObject = stream;
             };
             webrtc.onCallEnd = ()=>{
-                document.getElementById("callOverlay").classList.remove("active");
-                document.getElementById("remoteVideo").srcObject = null;
-                document.getElementById("localVideo").srcObject = null;
+                hideCallOverlay();
             };
-            document.getElementById("callName").textContent = from;
-            document.getElementById("callOverlay").classList.add("active");
+
+            showCallOverlay(from, "Connecting...");
 
             const stream = await webrtc.startLocalStream(data.video !== false);
             if(stream) document.getElementById("localVideo").srcObject = stream;
@@ -322,6 +331,22 @@ document.addEventListener("DOMContentLoaded", ()=>{
     };
 
     webrtc.startPolling(chatUsername);
+
+    setInterval(()=>{
+        if(webrtc.backendReady){
+            badge.textContent = "Calls active";
+            badge.className = "callStatusBadge connected";
+        } else {
+            badge.textContent = "Calls unavailable";
+            badge.className = "callStatusBadge disconnected";
+        }
+    }, 3000);
+
+    document.getElementById("voiceCallBtn").onclick = ()=> startCall(false);
+    document.getElementById("videoCallBtn").onclick = ()=> startCall(true);
+    document.getElementById("endCallBtn").onclick = ()=> webrtc.endCall(true);
+    document.getElementById("muteBtn").onclick = toggleMute;
+    document.getElementById("videoToggleBtn").onclick = toggleVideo;
 });
 </script>
 </body>
