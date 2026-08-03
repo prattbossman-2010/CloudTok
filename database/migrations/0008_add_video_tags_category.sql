@@ -1,0 +1,2 @@
+ALTER TABLE videos ADD COLUMN tags TEXT DEFAULT '[]';
+ALTER TABLE videos ADD COLUMN category TEXT DEFAULT 'General';

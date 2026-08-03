@@ -122,3 +122,45 @@ export async function toggleLike(request, env, videoId){
 
 
 }
+
+
+export async function getLikedVideos(request, env){
+
+    const auth = await authenticate(request, env);
+    if(auth.error){
+        return auth.error;
+    }
+
+    const { results } = await env.DB
+        .prepare(`
+            SELECT
+                videos.id,
+                videos.video_url,
+                videos.thumbnail_url,
+                videos.caption,
+                videos.views,
+                videos.likes,
+                videos.comments,
+                videos.tags,
+                videos.category,
+                videos.created_at,
+                users.username,
+                users.avatar
+            FROM video_likes
+            JOIN videos ON video_likes.video_id = videos.id
+            JOIN users ON videos.user_id = users.id
+            WHERE video_likes.user_id = ?
+            ORDER BY video_likes.id DESC
+        `)
+        .bind(auth.user.id)
+        .all();
+
+    const likedIds = results.map(v => v.id);
+    const videos = results.map(v => ({
+        ...v,
+        liked: true,
+        saved: false
+    }));
+
+    return Response.json({ videos });
+}

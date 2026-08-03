@@ -113,13 +113,15 @@ window.CloudTokAPI = {
     },
 
 
-    async uploadVideo(file, caption="", thumbnail=""){
+    async uploadVideo(file, caption="", thumbnail="", tags="[]", category="General"){
 
         const token = localStorage.getItem("CloudTokToken");
         const form = new FormData();
 
         form.append("file", file);
         form.append("caption", caption);
+        form.append("tags", tags);
+        form.append("category", category);
 
         if(thumbnail){
             form.append("thumbnail", thumbnail);
@@ -196,6 +198,12 @@ window.CloudTokAPI = {
     async getSavedVideos(){
 
         return await this.request("/videos/saved");
+    },
+
+
+    async getLikedVideos(){
+
+        return await this.request("/videos/liked");
     },
 
 

@@ -1514,6 +1514,8 @@ showSavedMessage(text){
 
             this.updateLike();
 
+            this.syncLikeToDatabase(result.liked);
+
 
         }
 
@@ -1531,6 +1533,25 @@ showSavedMessage(text){
     }
 
 
+}
+
+syncLikeToDatabase(liked){
+    const user=getCurrentCloudTokUser();
+    const video=CloudTokDatabase.videos.find(v=>String(v.id)===String(this.data.id));
+    if(video){
+        video.likes=this.likes;
+        if(!video.likedBy)video.likedBy=[];
+        if(liked){
+            if(!video.likedBy.includes(user)){
+                video.likedBy.push(user);
+            }
+        }else{
+            video.likedBy=video.likedBy.filter(u=>u!==user);
+        }
+        try{
+            localStorage.setItem("CloudTokVideos",JSON.stringify(CloudTokDatabase.videos));
+        }catch(e){}
+    }
 }
 
 toggleSave(){

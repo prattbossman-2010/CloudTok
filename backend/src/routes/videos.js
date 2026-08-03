@@ -15,6 +15,8 @@ export async function getVideos(request, env) {
         videos.views,
         videos.likes,
         videos.comments,
+        videos.tags,
+        videos.category,
         videos.created_at,
 
         users.id AS user_id,
@@ -84,6 +86,14 @@ form.get("file");
 const caption =
 
 form.get("caption") || "";
+
+const tags =
+
+form.get("tags") || "[]";
+
+const category =
+
+form.get("category") || "General";
 
 
 const thumbnail =
@@ -171,17 +181,21 @@ if(thumbnail){
           user_id,
           video_url,
           thumbnail_url,
-          caption
+          caption,
+          tags,
+          category
         )
 
-        VALUES (?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?)
         `
       )
       .bind(
         auth.user.id,
         video_url,
         thumbnail_url,
-        caption || ""
+        caption || "",
+        tags,
+        category
       )
       .run();
 

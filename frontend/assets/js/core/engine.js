@@ -143,9 +143,9 @@ async loadVideos(){
         thumbnail:
         video.thumbnail_url || "",
 
-        tags:[],
+        tags: video.tags ? (typeof video.tags === 'string' ? JSON.parse(video.tags) : video.tags) : [],
 
-        category:"General",
+        category: video.category || "General",
 
         likes:
         video.likes || 0,
@@ -680,6 +680,31 @@ async reloadFeed(){
 
 }
 
+setupRouter(){
+    const handleRoute=()=>{
+        const hash=window.location.hash;
+        if(!hash)return;
+
+        const parts=hash.replace("#/","").split("/");
+        if(parts[0]==="profile"&&parts[1]){
+            window.location.href="profile.html?user="+encodeURIComponent(parts[1]);
+        } else if(parts[0]==="video"&&parts[1]){
+            window.location.href="watch.html?id="+encodeURIComponent(parts[1]);
+        }
+    };
+
+    window.addEventListener("hashchange",handleRoute);
+    handleRoute();
+}
+
+generateShareURL(type,id){
+    if(type==="profile"){
+        return window.location.origin+window.location.pathname+"#/profile/"+id;
+    } else if(type==="video"){
+        return window.location.origin+window.location.pathname+"#/video/"+id;
+    }
+    return window.location.href;
+}
 
 
 }

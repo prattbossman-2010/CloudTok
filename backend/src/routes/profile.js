@@ -222,6 +222,8 @@ export async function getUserVideos(request, env, username){
       videos.views,
       videos.likes,
       videos.comments,
+      videos.tags,
+      videos.category,
       videos.created_at,
       users.id AS user_id,
       users.username,
@@ -235,9 +237,30 @@ export async function getUserVideos(request, env, username){
   .bind(user.id)
   .all();
 
+  const auth = await authenticate(request, env);
+  let likedIds = [];
+  let savedIds = [];
+  if(!auth.error && auth.user){
+    const { results: likes } = await env.DB
+      .prepare("SELECT video_id FROM video_likes WHERE user_id = ?")
+      .bind(auth.user.id)
+      .all();
+    likedIds = likes.map(l => l.video_id);
+    const { results: saves } = await env.DB
+      .prepare("SELECT video_id FROM video_saves WHERE user_id = ?")
+      .bind(auth.user.id)
+      .all();
+    savedIds = saves.map(s => s.video_id);
+  }
+
+  const videos = results.map(v => ({
+    ...v,
+    liked: likedIds.includes(v.id),
+    saved: savedIds.includes(v.id)
+  }));
 
   return Response.json({
-    videos: results
+    videos
   });
 
 }

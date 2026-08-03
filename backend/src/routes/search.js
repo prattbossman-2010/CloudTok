@@ -25,6 +25,8 @@ export async function search(request, env){
       videos.video_url,
       videos.thumbnail_url,
       videos.caption,
+      videos.tags,
+      videos.category,
       videos.views,
       videos.likes,
       videos.comments,
@@ -35,11 +37,13 @@ export async function search(request, env){
     FROM videos
     JOIN users ON videos.user_id = users.id
     WHERE videos.caption LIKE ?
-    ORDER BY videos.created_at DESC
+       OR videos.tags LIKE ?
+       OR videos.category LIKE ?
+    ORDER BY videos.likes DESC, videos.views DESC, videos.created_at DESC
     LIMIT 20
     `
   )
-  .bind(searchPattern)
+  .bind(searchPattern, searchPattern, searchPattern)
   .all();
 
 

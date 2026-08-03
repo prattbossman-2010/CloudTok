@@ -292,7 +292,9 @@ if(typeof CloudTokAPI!=="undefined"){
                 video:v.video_url||"",
                 likes:v.likes||0,
                 views:v.views||0,
-                comments:v.comments||0
+                comments:v.comments||0,
+                liked:v.liked||false,
+                likedBy:v.liked?[this.currentUsername]:[]
             }));
 
         }
@@ -532,26 +534,62 @@ break;
 
 
 
-showLikedVideos(){
+async showLikedVideos(){
 
-const all=[
-...(CloudTokDatabase.videos || []),
-...JSON.parse(localStorage.getItem("CloudTokVideos") || "[]")
-];
+let videos=[];
 
-const currentUser=localStorage.getItem("CloudTokCurrentUser")||"";
-const normalizedCurrentUser=currentUser.replace(/^@+/,"").trim().toLowerCase();
+if(typeof CloudTokAPI!=="undefined"){
 
-const liked=all.filter(video=>{
-    if(video.liked===true) return true;
-    const likedBy=video.likedBy||[];
-    return likedBy.some(u=>{
-        const nu=String(u).replace(/^@+/,"").trim().toLowerCase();
-        return nu===normalizedCurrentUser;
+    try{
+
+        const result=await CloudTokAPI.getLikedVideos();
+
+        if(result.videos){
+
+            videos=result.videos.map(v=>({
+                id:v.id,
+                username:v.username,
+                caption:v.caption||"",
+                thumbnail:v.thumbnail_url||
+                "assets/images/video-placeholder.png",
+                video:v.video_url||"",
+                likes:v.likes||0,
+                views:v.views||0,
+                liked:true,
+                likedBy:[this.currentUsername]
+            }));
+
+        }
+
+    }
+    catch(e){
+        console.log("Liked videos API failed");
+    }
+
+}
+
+if(videos.length===0){
+
+    const all=[
+        ...(CloudTokDatabase.videos || []),
+        ...JSON.parse(localStorage.getItem("CloudTokVideos") || "[]")
+    ];
+
+    const currentUser=localStorage.getItem("CloudTokCurrentUser")||"";
+    const normalizedCurrentUser=currentUser.replace(/^@+/,"").trim().toLowerCase();
+
+    videos=all.filter(video=>{
+        if(video.liked===true) return true;
+        const likedBy=video.likedBy||[];
+        return likedBy.some(u=>{
+            const nu=String(u).replace(/^@+/,"").trim().toLowerCase();
+            return nu===normalizedCurrentUser;
+        });
     });
-});
 
-this.renderGrid(liked);
+}
+
+this.renderGrid(videos);
 
 }
 

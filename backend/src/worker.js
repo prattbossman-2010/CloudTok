@@ -9,7 +9,7 @@ import {
   updateAvatar,
   getUserVideos
 } from "./routes/profile.js";
-import { toggleLike } from "./routes/interactions.js";
+import { toggleLike, getLikedVideos } from "./routes/interactions.js";
 import { getVideos, createVideo, incrementViews } from "./routes/videos.js";
 import { followUser, getFollowers, getFollowing } from "./routes/follows.js";
 import {
@@ -145,6 +145,14 @@ export default {
       method === "GET"
     ){
       return withCORS(getSavedVideos(request, env));
+    }
+
+
+    if(
+      path === "/api/videos/liked" &&
+      method === "GET"
+    ){
+      return withCORS(getLikedVideos(request, env));
     }
 
 
