@@ -23,6 +23,20 @@ class CloudTokWebRTC {
         console.log("[WebRTC]", ...args);
     }
 
+    async checkDevices() {
+        try {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return { audio: false, video: false };
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const hasAudio = devices.some(d => d.kind === "audioinput" && d.deviceId !== "");
+            const hasVideo = devices.some(d => d.kind === "videoinput" && d.deviceId !== "");
+            this._log("Devices found:", devices.length, "audio:", hasAudio, "video:", hasVideo);
+            return { audio: hasAudio, video: hasVideo };
+        } catch (e) {
+            this._log("enumerateDevices failed:", e.message);
+            return { audio: true, video: true };
+        }
+    }
+
     async startLocalStream(video = true) {
         this._log("Requesting media, video=", video);
 
@@ -31,14 +45,24 @@ class CloudTokWebRTC {
             return null;
         }
 
-        const fullConstraints = {
-            audio: true,
-            video: video ? { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } : false
-        };
+        const devices = await this.checkDevices();
+        if (!devices.audio && !devices.video) {
+            this._log("No audio or video devices found");
+            return null;
+        }
 
-        const audioOnlyConstraints = { audio: true, video: false };
+        const attempts = [];
 
-        const attempts = [fullConstraints, fullConstraints, audioOnlyConstraints];
+        if (video && devices.video && devices.audio) {
+            attempts.push({ audio: true, video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } });
+        }
+        if (devices.audio) {
+            attempts.push({ audio: true, video: false });
+        }
+        if (attempts.length === 0) {
+            this._log("No usable device constraints");
+            return null;
+        }
 
         for (let i = 0; i < attempts.length; i++) {
             try {
@@ -55,6 +79,13 @@ class CloudTokWebRTC {
                 return this.localStream;
             } catch (e) {
                 console.error("[WebRTC] getUserMedia attempt", i + 1, "FAILED:", e.name, e.message);
+                if (e.name === "NotReadableError") {
+                    this._log("Device is claimed by another app or hardware issue");
+                } else if (e.name === "NotAllowedError") {
+                    this._log("Permission denied by user");
+                } else if (e.name === "NotFoundError") {
+                    this._log("Device not found");
+                }
                 if (i < attempts.length - 1) {
                     await new Promise(r => setTimeout(r, 1000));
                 }
@@ -128,7 +159,13 @@ class CloudTokWebRTC {
                 this.pc.addTrack(track, this.localStream);
             });
         } else {
-            this._log("WARNING: no localStream when creating PC");
+            this._log("No localStream - call will proceed without local media (recvonly)");
+            try {
+                this.pc.addTransceiver("audio", { direction: "recvonly" });
+            } catch (e) {}
+            try {
+                this.pc.addTransceiver("video", { direction: "recvonly" });
+            } catch (e) {}
         }
 
         return this.pc;
@@ -142,11 +179,7 @@ class CloudTokWebRTC {
         this._targetUsername = toUsername;
 
         if (!this.localStream) {
-            const stream = await this.startLocalStream(video);
-            if (!stream) {
-                this._log("FAILED to get media");
-                return false;
-            }
+            await this.startLocalStream(video);
         }
 
         this.createPeerConnection();
