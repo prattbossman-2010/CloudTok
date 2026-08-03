@@ -6,6 +6,7 @@
 <title>Wallet & Payments - CloudTok</title>
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/settings.css">
+<script src="https://js.paystack.co/v1/inline.js"></script>
 <style>
 body{background:#000;}
 .walletHeader{
@@ -27,6 +28,26 @@ body{background:#000;}
     background:rgba(255,255,255,.1);color:#fff;font-size:14px;font-weight:600;cursor:pointer;
 }
 .walletActionBtn:hover{background:rgba(255,255,255,.2);}
+.paystackBtn{
+    background:linear-gradient(135deg,#004d4d,#00a69c);color:#fff;border:none;
+    padding:14px 28px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;
+    width:100%;margin-top:10px;transition:all .3s;
+}
+.paystackBtn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,166,156,.3);}
+.payAmountInput{
+    width:100%;padding:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);
+    border-radius:12px;color:#fff;font-size:18px;font-weight:700;outline:none;text-align:center;
+    margin-top:10px;
+}
+.payAmountInput::placeholder{color:rgba(255,255,255,.3);}
+.payAmountInput:focus{border-color:rgba(0,166,156,.5);}
+.amountPresets{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+.amountPreset{
+    padding:8px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.15);
+    background:rgba(255,255,255,.05);color:#fff;font-size:13px;cursor:pointer;
+}
+.amountPreset:hover{background:rgba(255,255,255,.1);}
+.amountPreset.active{background:rgba(0,166,156,.2);border-color:#00a69c;color:#fff;}
 .paymentsContent{width:100%;max-width:600px;margin:0 auto;padding:0 16px 40px;display:flex;flex-direction:column;gap:24px;}
 .section{display:flex;flex-direction:column;gap:12px;}
 .section h3{color:rgba(255,255,255,.5);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;}
@@ -53,11 +74,14 @@ body{background:#000;}
 .giftEmoji{font-size:32px;}
 .giftName{color:#fff;font-size:12px;font-weight:500;}
 .giftPrice{color:#00b7ff;font-size:13px;font-weight:700;}
-.addPaymentBtn{
-    width:100%;padding:14px;border-radius:14px;border:2px dashed rgba(255,255,255,.1);
-    background:transparent;color:rgba(255,255,255,.5);font-size:15px;cursor:pointer;
+.toast{
+    position:fixed;top:20px;left:50%;transform:translateX(-50%);
+    padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600;
+    z-index:9999;animation:toastIn .3s ease;
 }
-.addPaymentBtn:hover{border-color:rgba(0,183,255,.4);color:#fff;}
+.toast.success{background:#00c853;color:#fff;}
+.toast.error{background:#ff2d55;color:#fff;}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-20px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
 </style>
 </head>
 <body>
@@ -70,77 +94,60 @@ body{background:#000;}
 
 <div class="walletCard">
     <span class="walletLabel">Balance</span>
-    <span class="walletBalance">$0.00</span>
+    <span class="walletBalance" id="walletBalance">$0.00</span>
     <div class="walletActions">
-        <button class="walletActionBtn" onclick="alert('Add funds coming soon')">Add Funds</button>
-        <button class="walletActionBtn" onclick="alert('Withdraw coming soon')">Withdraw</button>
+        <button class="walletActionBtn" onclick="document.getElementById('fundSection').style.display='block'">Add Funds</button>
+        <button class="walletActionBtn" onclick="showToast('Withdraw coming soon','error')">Withdraw</button>
+    </div>
+</div>
+
+<div class="paymentsContent" id="fundSection" style="display:none;">
+    <div class="section">
+        <h3>Fund Wallet via Paystack</h3>
+        <input type="number" class="payAmountInput" id="payAmount" placeholder="Enter amount (₦)" min="100">
+        <div class="amountPresets">
+            <button class="amountPreset" onclick="setAmount(500)">₦500</button>
+            <button class="amountPreset" onclick="setAmount(1000)">₦1,000</button>
+            <button class="amountPreset" onclick="setAmount(2000)">₦2,000</button>
+            <button class="amountPreset" onclick="setAmount(5000)">₦5,000</button>
+            <button class="amountPreset" onclick="setAmount(10000)">₦10,000</button>
+        </div>
+        <button class="paystackBtn" onclick="payWithPaystack()">Fund Wallet</button>
     </div>
 </div>
 
 <div class="paymentsContent">
 
 <div class="section">
-    <h3>Payment Methods</h3>
-    <div class="paymentCard" onclick="alert('Add Visa/Mastercard coming soon')">
-        <div class="paymentIcon visa">💳</div>
-        <div class="paymentInfo">
-            <div class="paymentName">Visa / Mastercard</div>
-            <div class="paymentDesc">Add a credit or debit card</div>
-        </div>
-    </div>
-    <div class="paymentCard" onclick="alert('Bank transfer coming soon')">
-        <div class="paymentIcon bank">🏦</div>
-        <div class="paymentInfo">
-            <div class="paymentName">Bank Account</div>
-            <div class="paymentDesc">Link your bank account</div>
-        </div>
-    </div>
-    <div class="paymentCard" onclick="alert('Paystack integration coming soon')">
-        <div class="paymentIcon paystack">💰</div>
-        <div class="paymentInfo">
-            <div class="paymentName">Paystack</div>
-            <div class="paymentDesc">Pay with Paystack</div>
-        </div>
-    </div>
-    <div class="paymentCard" onclick="alert('Virtual card coming soon')">
-        <div class="paymentIcon virtual">🪙</div>
-        <div class="paymentInfo">
-            <div class="paymentName">Virtual Card</div>
-            <div class="paymentDesc">Generate a virtual card</div>
-        </div>
-    </div>
-</div>
-
-<div class="section">
     <h3>Virtual Gifts</h3>
     <p style="color:rgba(255,255,255,.4);font-size:13px;">Send gifts to your favorite creators during live streams</p>
     <div class="giftGrid">
-        <div class="giftItem" onclick="alert('Rose: $0.99')">
+        <div class="giftItem" onclick="buyGift('Rose',0.99)">
             <span class="giftEmoji">🌹</span>
             <span class="giftName">Rose</span>
             <span class="giftPrice">$0.99</span>
         </div>
-        <div class="giftItem" onclick="alert('Heart: $1.99')">
+        <div class="giftItem" onclick="buyGift('Heart',1.99)">
             <span class="giftEmoji">❤️</span>
             <span class="giftName">Heart</span>
             <span class="giftPrice">$1.99</span>
         </div>
-        <div class="giftItem" onclick="alert('Star: $4.99')">
+        <div class="giftItem" onclick="buyGift('Star',4.99)">
             <span class="giftEmoji">⭐</span>
             <span class="giftName">Star</span>
             <span class="giftPrice">$4.99</span>
         </div>
-        <div class="giftItem" onclick="alert('Fire: $9.99')">
+        <div class="giftItem" onclick="buyGift('Fire',9.99)">
             <span class="giftEmoji">🔥</span>
             <span class="giftName">Fire</span>
             <span class="giftPrice">$9.99</span>
         </div>
-        <div class="giftItem" onclick="alert('Diamond: $19.99')">
+        <div class="giftItem" onclick="buyGift('Diamond',19.99)">
             <span class="giftEmoji">💎</span>
             <span class="giftName">Diamond</span>
             <span class="giftPrice">$19.99</span>
         </div>
-        <div class="giftItem" onclick="alert('Crown: $49.99')">
+        <div class="giftItem" onclick="buyGift('Crown',49.99)">
             <span class="giftEmoji">👑</span>
             <span class="giftName">Crown</span>
             <span class="giftPrice">$49.99</span>
@@ -150,10 +157,118 @@ body{background:#000;}
 
 <div class="section">
     <h3>Recent Transactions</h3>
-    <p style="color:rgba(255,255,255,.3);font-size:13px;text-align:center;padding:20px;">No transactions yet</p>
+    <div id="transactionList">
+        <p style="color:rgba(255,255,255,.3);font-size:13px;text-align:center;padding:20px;">Loading...</p>
+    </div>
 </div>
 
 </div>
 
+<script src="assets/js/api/api.js"></script>
+<script>
+function showToast(msg, type="success"){
+    const t=document.createElement("div");
+    t.className="toast "+type;
+    t.textContent=msg;
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(),3000);
+}
+
+function setAmount(val){
+    document.getElementById("payAmount").value=val;
+    document.querySelectorAll(".amountPreset").forEach(b=>b.classList.remove("active"));
+    event.target.classList.add("active");
+}
+
+function payWithPaystack(){
+    const amount=parseFloat(document.getElementById("payAmount").value);
+    if(!amount||amount<100){
+        showToast("Minimum amount is ₦100","error");
+        return;
+    }
+
+    const email=localStorage.getItem("CloudTokCurrentUser")+"@cloudtok.app";
+
+    if(typeof PaystackPop==="undefined"){
+        showToast("Paystack loading, try again","error");
+        return;
+    }
+
+    const handler=PaystackPop.setup({
+        key:"pk_live_15e3b81eee8f83c75bbdac7508a18bd16228d3ed",
+        email:email,
+        amount:amount*100,
+        currency:"NGN",
+        metadata:{
+            custom_fields:[
+                {display_name:"User",variable_name:"user",value:localStorage.getItem("CloudTokCurrentUser")}
+            ]
+        },
+        callback:function(response){
+            showToast("Payment successful! Verifying...");
+            verifyAndCredit(response.reference,amount);
+        },
+        onClose:function(){
+            showToast("Payment cancelled","error");
+        }
+    });
+    handler.openIframe();
+}
+
+async function verifyAndCredit(reference,amount){
+    try{
+        const result=await CloudTokAPI.verifyPayment(reference);
+        if(result.success){
+            showToast("₦"+amount+" added to wallet!");
+            loadBalance();
+            loadTransactions();
+            document.getElementById("fundSection").style.display="none";
+        }else{
+            showToast("Verification pending","error");
+        }
+    }catch(e){
+        showToast("Verification will complete shortly");
+    }
+}
+
+async function loadBalance(){
+    try{
+        const result=await CloudTokAPI.getTransactions();
+        const total=(result.transactions||[]).reduce((sum,t)=>sum+(t.amount||0),0);
+        document.getElementById("walletBalance").textContent="₦"+total.toLocaleString();
+    }catch(e){}
+}
+
+async function loadTransactions(){
+    try{
+        const result=await CloudTokAPI.getTransactions();
+        const list=document.getElementById("transactionList");
+        if(!result.transactions||result.transactions.length===0){
+            list.innerHTML='<p style="color:rgba(255,255,255,.3);font-size:13px;text-align:center;padding:20px;">No transactions yet</p>';
+            return;
+        }
+        list.innerHTML="";
+        result.transactions.slice(0,10).forEach(t=>{
+            const item=document.createElement("div");
+            item.className="paymentCard";
+            item.innerHTML=`
+                <div class="paymentIcon paystack">💰</div>
+                <div class="paymentInfo">
+                    <div class="paymentName">₦${(t.amount||0).toLocaleString()}</div>
+                    <div class="paymentDesc">${t.reference||""} • ${new Date(t.created_at).toLocaleDateString()}</div>
+                </div>
+            `;
+            list.appendChild(item);
+        });
+    }catch(e){}
+}
+
+function buyGift(name,price){
+    showToast("Gift: "+name+" ($"+price+") — Coming soon!");
+}
+
+loadBalance();
+loadTransactions();
+</script>
 </body>
 </html>

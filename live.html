@@ -19,34 +19,182 @@ p{color:#aaa;margin:0 0 30px;font-size:14px}
 .info{margin-top:30px;padding:15px;background:rgba(255,255,255,.05);border-radius:12px;text-align:left}
 .info h3{margin:0 0 10px;font-size:14px;color:#ff2d55}
 .info ul{margin:0;padding:0 0 0 16px;color:#999;font-size:13px;line-height:1.8}
+
+.streamView{display:none;width:100%;max-width:500px;flex-direction:column;align-items:center;gap:16px;}
+.streamView.active{display:flex;}
+.streamVideo{width:100%;aspect-ratio:9/16;background:#111;border-radius:16px;object-fit:cover;max-height:60vh;}
+.streamLocal{width:120px;height:160px;border-radius:12px;border:2px solid #ff2d55;object-fit:cover;position:fixed;top:20px;right:20px;z-index:5;}
+.streamTitle{font-size:18px;font-weight:700;}
+.streamViewers{color:rgba(255,255,255,.5);font-size:14px;}
+.streamControls{display:flex;gap:12px;}
+.streamCtrlBtn{width:50px;height:50px;border-radius:50%;border:none;font-size:20px;cursor:pointer;}
+.streamCtrlBtn.end{background:#ff2d55;color:#fff;}
+.streamCtrlBtn.mute{background:rgba(255,255,255,.15);color:#fff;}
+.streamCtrlBtn.video{background:rgba(255,255,255,.15);color:#fff;}
+.streamChat{width:100%;max-height:200px;overflow-y:auto;background:rgba(255,255,255,.03);border-radius:12px;padding:10px;margin-top:10px;}
+.streamChatMsg{padding:6px 0;font-size:13px;color:rgba(255,255,255,.7);}
+.streamChatMsg strong{color:#ff2d55;}
+
+.activeStreams{width:100%;max-width:600px;margin-top:30px;}
+.activeStreams h3{color:rgba(255,255,255,.5);font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+.streamCard{display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,.04);border-radius:12px;margin-bottom:8px;cursor:pointer;}
+.streamCard:hover{background:rgba(255,255,255,.06);}
+.liveDot{width:8px;height:8px;border-radius:50%;background:#ff2d55;animation:livePulse 1.5s infinite;}
+@keyframes livePulse{0%,100%{opacity:1;}50%{opacity:.4;}}
 </style>
 </head>
 <body>
 <button class="back" onclick="history.back()">&#8592;</button>
-<div class="live-container">
-<div class="live-icon">&#128248;</div>
-<h1>Go Live</h1>
-<p>Start a live stream and connect with your audience in real-time</p>
-<button class="live-btn" id="goLiveBtn">GO LIVE</button>
-<div class="info">
-<h3>How it works</h3>
-<ul>
-<li>Click GO LIVE to start broadcasting</li>
-<li>Your stream will be visible to all followers</li>
-<li>Interact with viewers through live chat</li>
-<li>End stream anytime by pressing stop</li>
-</ul>
+
+<div class="live-container" id="startScreen">
+    <div class="live-icon">&#128248;</div>
+    <h1>Go Live</h1>
+    <p>Start a live stream and connect with your audience in real-time</p>
+    <input id="streamTitleInput" type="text" placeholder="Stream title..." style="width:100%;padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:#fff;font-size:15px;outline:none;margin-bottom:16px;text-align:center;">
+    <button class="live-btn" id="goLiveBtn">GO LIVE</button>
+    <div class="activeStreams" id="activeStreams"></div>
 </div>
+
+<div class="streamView" id="streamView">
+    <video class="streamLocal" id="streamLocal" autoplay playsinline muted></video>
+    <video class="streamVideo" id="streamRemote" autoplay playsinline></video>
+    <div class="streamTitle" id="streamTitleDisplay">Live Stream</div>
+    <div class="streamViewers" id="streamViewers">0 viewers</div>
+    <div class="streamControls">
+        <button class="streamCtrlBtn mute" id="streamMuteBtn">🎤</button>
+        <button class="streamCtrlBtn video" id="streamVideoBtn">📹</button>
+        <button class="streamCtrlBtn end" id="streamEndBtn">⏹</button>
+    </div>
+    <div class="streamChat" id="streamChat"></div>
 </div>
+
+<script src="assets/js/database/database.js"></script>
+<script src="assets/js/api/api.js"></script>
+<script src="assets/js/core/webrtc.js"></script>
 <script>
-document.getElementById("goLiveBtn").onclick=()=>{
-if(!localStorage.getItem("CloudTokToken")){
-alert("Please login first");
-window.location.href="index.html";
-return;
-}
-alert("Live streaming will be available soon!");
+let localStream = null;
+let isStreaming = false;
+let streamKey = null;
+let viewerPoll = null;
+let isMuted = false;
+let isVideoOff = false;
+
+document.getElementById("goLiveBtn").onclick = async ()=>{
+    if(!localStorage.getItem("CloudTokToken")){
+        alert("Please login first");
+        window.location.href="index.html";
+        return;
+    }
+
+    const title = document.getElementById("streamTitleInput").value.trim() || "Live Stream";
+
+    try {
+        localStream = await navigator.mediaDevices.getUserMedia({audio:true, video:{facingMode:"user",width:{ideal:640},height:{ideal:480}}});
+    } catch(e) {
+        alert("Camera/microphone access required");
+        return;
+    }
+
+    document.getElementById("streamLocal").srcObject = localStream;
+
+    const webrtc = window.CloudTokWebRTC;
+    const result = await webrtc.startLiveStream(title);
+
+    if(result && result.success){
+        streamKey = result.stream_key;
+        isStreaming = true;
+
+        document.getElementById("startScreen").style.display = "none";
+        document.getElementById("streamView").classList.add("active");
+        document.getElementById("streamTitleDisplay").textContent = title;
+
+        startViewerPoll();
+    } else {
+        alert("Failed to start stream");
+        localStream.getTracks().forEach(t=>t.stop());
+    }
 };
+
+document.getElementById("streamEndBtn").onclick = async ()=>{
+    if(streamKey){
+        try {
+            await CloudTokAPI.request("/live/end", {
+                method: "POST",
+                headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({stream_key: streamKey})
+            });
+        } catch(e){}
+    }
+
+    if(localStream){
+        localStream.getTracks().forEach(t=>t.stop());
+        localStream = null;
+    }
+    if(viewerPoll){
+        clearInterval(viewerPoll);
+        viewerPoll = null;
+    }
+    isStreaming = false;
+    streamKey = null;
+
+    document.getElementById("streamView").classList.remove("active");
+    document.getElementById("startScreen").style.display = "block";
+    loadActiveStreams();
+};
+
+document.getElementById("streamMuteBtn").onclick = ()=>{
+    isMuted = !isMuted;
+    if(localStream) localStream.getAudioTracks().forEach(t=>t.enabled=!isMuted);
+    document.getElementById("streamMuteBtn").textContent = isMuted ? "🔇" : "🎤";
+};
+
+document.getElementById("streamVideoBtn").onclick = ()=>{
+    isVideoOff = !isVideoOff;
+    if(localStream) localStream.getVideoTracks().forEach(t=>t.enabled=!isVideoOff);
+    document.getElementById("streamVideoBtn").textContent = isVideoOff ? "📷" : "📹";
+};
+
+function startViewerPoll(){
+    viewerPoll = setInterval(async ()=>{
+        try {
+            const result = await CloudTokAPI.request("/live/streams");
+            const streams = result.streams || [];
+            const myStream = streams.find(s=>s.stream_key === streamKey);
+            if(myStream){
+                document.getElementById("streamViewers").textContent = (myStream.viewers || 0) + " viewers";
+            }
+        } catch(e){}
+    }, 5000);
+}
+
+async function loadActiveStreams(){
+    try {
+        const webrtc = window.CloudTokWebRTC;
+        const streams = await webrtc.getLiveStreams();
+        const container = document.getElementById("activeStreams");
+
+        if(streams.length === 0){
+            container.innerHTML = '<p style="color:rgba(255,255,255,.3);font-size:13px;text-align:center;">No live streams right now</p>';
+            return;
+        }
+
+        container.innerHTML = '<h3>Live Now</h3>';
+        streams.forEach(s=>{
+            const card = document.createElement("div");
+            card.className = "streamCard";
+            card.innerHTML = `
+                <div class="liveDot"></div>
+                <div style="flex:1;">
+                    <div style="font-weight:600;font-size:14px;">${s.display_name||s.username}</div>
+                    <div style="color:rgba(255,255,255,.4);font-size:12px;">${s.title||"Live"}</div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    } catch(e){}
+}
+
+loadActiveStreams();
 </script>
 </body>
 </html>
