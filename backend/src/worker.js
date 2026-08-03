@@ -29,6 +29,8 @@ import { toggleSave, getSavedVideos } from "./routes/saves.js";
 import { deleteVideo } from "./routes/videoDelete.js";
 import { handleCORS, withCORS } from "./middleware/cors.js";
 import { adminLogin, adminGetStats, adminGetUsers, adminUpdateUser, adminDeleteVideo, adminGetVideos, adminRunMigration } from "./routes/admin.js";
+import { initializePayment, verifyPayment, getTransactions } from "./routes/payments.js";
+import { sendSignal, pollSignals, createLiveStream, getLiveStreams, endLiveStream } from "./routes/webrtc.js";
 
 
 export default {
@@ -388,6 +390,38 @@ export default {
 
     if(path === "/api/admin/migrate" && method === "POST"){
       return withCORS(adminRunMigration(request, env));
+    }
+
+    if(path === "/api/payments/initialize" && method === "POST"){
+      return withCORS(initializePayment(request, env));
+    }
+
+    if(path === "/api/payments/verify" && method === "POST"){
+      return withCORS(verifyPayment(request, env));
+    }
+
+    if(path === "/api/payments/transactions" && method === "GET"){
+      return withCORS(getTransactions(request, env));
+    }
+
+    if(path === "/api/webrtc/signal" && method === "POST"){
+      return withCORS(sendSignal(request, env));
+    }
+
+    if(path === "/api/webrtc/poll" && method === "GET"){
+      return withCORS(pollSignals(request, env));
+    }
+
+    if(path === "/api/live/create" && method === "POST"){
+      return withCORS(createLiveStream(request, env));
+    }
+
+    if(path === "/api/live/streams" && method === "GET"){
+      return withCORS(getLiveStreams(request, env));
+    }
+
+    if(path === "/api/live/end" && method === "POST"){
+      return withCORS(endLiveStream(request, env));
     }
 
 

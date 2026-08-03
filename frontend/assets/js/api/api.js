@@ -330,6 +330,35 @@ window.CloudTokAPI = {
             method: "POST"
         });
 
+    },
+
+
+    async initializePayment(email, amount, description){
+
+        return await this.request("/payments/initialize", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, amount, description })
+        });
+
+    },
+
+
+    async verifyPayment(reference){
+
+        return await this.request("/payments/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reference })
+        });
+
+    },
+
+
+    async getTransactions(){
+
+        return await this.request("/payments/transactions");
+
     }
 
 };

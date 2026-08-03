@@ -1,26 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-
 <title>Conversation</title>
-
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/chat.css">
 <style>
-.emojiBar{display:flex;gap:6px;padding:8px 12px;overflow-x:auto;border-top:1px solid rgba(255,255,255,.06);}
+.emojiBar{
+    display:none;flex-direction:column;gap:4px;padding:8px 12px;
+    position:absolute;bottom:60px;left:0;right:0;
+    max-height:200px;overflow-y:auto;
+    background:#111;border-top:1px solid rgba(255,255,255,.08);
+    z-index:50;
+}
+.emojiBar.show{display:flex;}
+.emojiBar .emojiRow{display:flex;gap:4px;flex-wrap:wrap;}
 .emojiBar button{
     background:none;border:none;font-size:24px;cursor:pointer;
-    padding:4px 6px;border-radius:8px;transition:background .2s;flex-shrink:0;
+    padding:6px;border-radius:8px;transition:background .2s;flex-shrink:0;
 }
 .emojiBar button:hover{background:rgba(255,255,255,.08);}
+.emojiToggleBtn{
+    background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;
+    cursor:pointer;padding:8px;
+}
+.emojiToggleBtn:hover{color:#fff;}
 .gifPanel{
     display:none;position:absolute;bottom:60px;left:0;right:0;
     background:#111;border-top:1px solid rgba(255,255,255,.08);
-    max-height:250px;overflow-y:auto;padding:10px;
+    max-height:250px;overflow-y:auto;padding:10px;z-index:50;
 }
 .gifPanel.show{display:block;}
 .gifGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
@@ -45,35 +54,65 @@
     padding:6px 8px;border-radius:8px;
 }
 .callBtn:hover{background:rgba(255,255,255,.08);}
+
+.callOverlay{
+    display:none;position:fixed;inset:0;background:#000;z-index:999;
+    flex-direction:column;align-items:center;justify-content:center;
+}
+.callOverlay.active{display:flex;}
+.callVideoContainer{
+    width:100%;max-width:500px;aspect-ratio:3/4;
+    background:#111;border-radius:20px;overflow:hidden;
+    position:relative;
+}
+.callVideoContainer video{
+    width:100%;height:100%;object-fit:cover;
+}
+.callVideoContainer .remoteVideo{
+    position:absolute;inset:0;
+}
+.callVideoContainer .localVideo{
+    position:absolute;bottom:16px;right:16px;
+    width:120px;height:160px;border-radius:12px;
+    border:2px solid #fff;z-index:2;
+}
+.callInfo{
+    margin-top:20px;text-align:center;
+}
+.callInfo h3{color:#fff;font-size:18px;margin:0;}
+.callInfo p{color:rgba(255,255,255,.5);font-size:14px;margin:6px 0 0;}
+.callActions{
+    display:flex;gap:16px;margin-top:24px;
+}
+.callActionBtn{
+    width:60px;height:60px;border-radius:50%;border:none;
+    font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.callActionBtn.end{background:#ff2d55;color:#fff;}
+.callActionBtn.mute{background:rgba(255,255,255,.15);color:#fff;}
+.callActionBtn.video-toggle{background:rgba(255,255,255,.15);color:#fff;}
+.callIncoming{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:999;
+    flex-direction:column;align-items:center;justify-content:center;gap:20px;
+}
+.callIncoming.active{display:flex;}
+.callIncoming h2{color:#fff;font-size:22px;}
+.callIncoming p{color:rgba(255,255,255,.5);}
+.callIncoming .callActions{margin-top:0;}
+.callActionBtn.accept{background:#00c853;color:#fff;}
 </style>
-
 </head>
-
 <body>
-
 <div class="conversationPage">
-
     <div class="conversationHeader">
-
-    <button id="conversationBackBtn">
-        ←
-    </button>
-
-    <img
-    id="conversationAvatar"
-    class="conversationAvatar"
-    src="assets/images/default-avatar.png">
-
-    <h2 id="conversationName">
-        Loading...
-    </h2>
-
-    <div class="callBtns">
-        <button class="callBtn" onclick="alert('Voice calling coming soon! Requires WebRTC infrastructure.')">📞</button>
-        <button class="callBtn" onclick="alert('Video calling coming soon! Requires WebRTC infrastructure.')">📹</button>
+        <button id="conversationBackBtn">←</button>
+        <img id="conversationAvatar" class="conversationAvatar" src="assets/images/default-avatar.png">
+        <h2 id="conversationName">Loading...</h2>
+        <div class="callBtns">
+            <button class="callBtn" id="voiceCallBtn">📞</button>
+            <button class="callBtn" id="videoCallBtn">📹</button>
+        </div>
     </div>
-
-</div>
 
     <div id="messageList" class="messageList"></div>
 
@@ -83,44 +122,79 @@
     </div>
 
     <div class="messageBar">
+        <button class="emojiToggleBtn" id="emojiToggleBtn">😊</button>
         <button class="gifToggleBtn" id="gifToggleBtn">GIF</button>
         <input id="messageInput" type="text" placeholder="Type a message...">
         <button id="sendMessageBtn">Send</button>
     </div>
 
     <div class="emojiBar" id="emojiBar"></div>
+</div>
 
+<div class="callOverlay" id="callOverlay">
+    <div class="callVideoContainer">
+        <video class="remoteVideo" id="remoteVideo" autoplay playsinline></video>
+        <video class="localVideo" id="localVideo" autoplay playsinline muted></video>
+    </div>
+    <div class="callInfo">
+        <h3 id="callName">Calling...</h3>
+        <p id="callStatus">Connecting...</p>
+    </div>
+    <div class="callActions">
+        <button class="callActionBtn mute" id="muteBtn">🎤</button>
+        <button class="callActionBtn video-toggle" id="videoToggleBtn">📷</button>
+        <button class="callActionBtn end" id="endCallBtn">📞</button>
+    </div>
+</div>
+
+<div class="callIncoming" id="callIncoming">
+    <h2 id="incomingName">Incoming Call</h2>
+    <p id="incomingType">Voice call</p>
+    <div class="callActions">
+        <button class="callActionBtn accept" id="acceptCallBtn">📞</button>
+        <button class="callActionBtn end" id="declineCallBtn">✕</button>
+    </div>
 </div>
 
 <script src="assets/js/database/database.js"></script>
-<script src="assets/js/chat/conversation.js"></script>
 <script src="assets/js/api/api.js"></script>
-
+<script src="assets/js/core/webrtc.js"></script>
+<script src="assets/js/chat/conversation.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", ()=>{
-    const emojis = ["😀","😂","😍","🥰","😎","🤩","🥳","😢","😭","😡","🥺","😏","🤔","👍","👎","❤️","🔥","💯","🎉","👏","🙌","💪","🙏","✨","🌟","💖","🎵","🎶","🎬","📸"];
-    const gifEmojis = ["😀😂😍🥰","😎🤩🥳","😢😭😡","👍❤️🔥","💯🎉👏","💪🙏✨","🎵🎶🎬","💖🌟📸","🥳🎉","😍❤️","😂🤣","😎🔥","👏💯✨","🙏💪","💖🎵","🌟🎶"];
+    const emojis = ["😀","😂","😍","🥰","😎","🤩","🥳","😢","😭","😡","🥺","😏","🤔","👍","👎","❤️","🔥","💯","🎉","👏","🙌","💪","🙏","✨","🌟","💖","🎵","🎶","📸","🎬"];
     const emojiBar = document.getElementById("emojiBar");
     const input = document.getElementById("messageInput");
+    const emojiToggle = document.getElementById("emojiToggleBtn");
+
+    function renderEmojiGrid(){
+        emojiBar.innerHTML="";
+        const row=document.createElement("div");
+        row.className="emojiRow";
+        emojis.forEach(e=>{
+            const btn = document.createElement("button");
+            btn.textContent = e;
+            btn.onclick = ()=>{ input.value += e; input.focus(); };
+            row.appendChild(btn);
+        });
+        emojiBar.appendChild(row);
+    }
+    renderEmojiGrid();
+
+    emojiToggle.onclick = ()=>{
+        emojiBar.classList.toggle("show");
+        document.getElementById("gifPanel").classList.remove("show");
+    };
+
     const gifToggle = document.getElementById("gifToggleBtn");
     const gifPanel = document.getElementById("gifPanel");
     const gifGrid = document.getElementById("gifGrid");
-
-    emojis.forEach(e=>{
-        const btn = document.createElement("button");
-        btn.textContent = e;
-        btn.onclick = ()=>{
-            input.value += e;
-            input.focus();
-        };
-        emojiBar.appendChild(btn);
-    });
+    const gifEmojis = ["😀😂😍🥰","😎🤩🥳","😢😭😡","👍❤️🔥","💯🎉👏","💪🙏✨","🎵🎶🎬","💖🌟📸"];
 
     gifToggle.onclick = ()=>{
         gifPanel.classList.toggle("show");
-        if(gifPanel.classList.contains("show")){
-            renderGIFs("");
-        }
+        emojiBar.classList.remove("show");
+        if(gifPanel.classList.contains("show")) renderGIFs("");
     };
 
     function renderGIFs(query){
@@ -143,9 +217,112 @@ document.addEventListener("DOMContentLoaded", ()=>{
     document.getElementById("gifSearch").addEventListener("input", (e)=>{
         renderGIFs(e.target.value);
     });
+
+    document.addEventListener("click",(e)=>{
+        if(!e.target.closest(".emojiBar")&&!e.target.closest(".emojiToggleBtn")){
+            emojiBar.classList.remove("show");
+        }
+    });
+
+    const params = new URLSearchParams(window.location.search);
+    const chatUsername = params.get("user");
+    const webrtc = window.CloudTokWebRTC;
+
+    document.getElementById("voiceCallBtn").onclick = ()=> startCall(false);
+    document.getElementById("videoCallBtn").onclick = ()=> startCall(true);
+    document.getElementById("endCallBtn").onclick = ()=> webrtc.endCall(true);
+    document.getElementById("muteBtn").onclick = toggleMute;
+    document.getElementById("videoToggleBtn").onclick = toggleVideo;
+
+    let isMuted = false;
+    let isVideoOff = false;
+
+    function toggleMute(){
+        isMuted = !isMuted;
+        if(webrtc.localStream){
+            webrtc.localStream.getAudioTracks().forEach(t=>t.enabled=!isMuted);
+        }
+        document.getElementById("muteBtn").textContent = isMuted ? "🔇" : "🎤";
+    }
+
+    function toggleVideo(){
+        isVideoOff = !isVideoOff;
+        if(webrtc.localStream){
+            webrtc.localStream.getVideoTracks().forEach(t=>t.enabled=!isVideoOff);
+        }
+        document.getElementById("videoToggleBtn").textContent = isVideoOff ? "📷" : "📹";
+    }
+
+    async function startCall(video){
+        if(!localStorage.getItem("CloudTokToken")){
+            alert("Please login first");
+            return;
+        }
+
+        webrtc.onRemoteStream = (stream)=>{
+            document.getElementById("remoteVideo").srcObject = stream;
+        };
+
+        webrtc.onCallEnd = ()=>{
+            document.getElementById("callOverlay").classList.remove("active");
+            document.getElementById("callIncoming").classList.remove("active");
+            document.getElementById("remoteVideo").srcObject = null;
+            document.getElementById("localVideo").srcObject = null;
+            document.getElementById("callStatus").textContent = "Call ended";
+        };
+
+        document.getElementById("callName").textContent = chatUsername;
+        document.getElementById("callStatus").textContent = "Calling...";
+        document.getElementById("callOverlay").classList.add("active");
+
+        const stream = await webrtc.startLocalStream(video);
+        if(stream){
+            document.getElementById("localVideo").srcObject = stream;
+        }
+
+        await webrtc.initiateCall(chatUsername, video);
+        document.getElementById("callStatus").textContent = "Ringing...";
+    }
+
+    webrtc._targetUsername = chatUsername;
+
+    webrtc.onIncomingCall = async (from, data)=>{
+        document.getElementById("incomingName").textContent = from;
+        document.getElementById("incomingType").textContent = data.video ? "Video call" : "Voice call";
+        document.getElementById("callIncoming").classList.add("active");
+
+        document.getElementById("acceptCallBtn").onclick = async ()=>{
+            document.getElementById("callIncoming").classList.remove("active");
+            webrtc._targetUsername = from;
+            webrtc.onRemoteStream = (stream)=>{
+                document.getElementById("remoteVideo").srcObject = stream;
+            };
+            webrtc.onCallEnd = ()=>{
+                document.getElementById("callOverlay").classList.remove("active");
+                document.getElementById("remoteVideo").srcObject = null;
+                document.getElementById("localVideo").srcObject = null;
+            };
+            document.getElementById("callName").textContent = from;
+            document.getElementById("callOverlay").classList.add("active");
+
+            const stream = await webrtc.startLocalStream(data.video !== false);
+            if(stream) document.getElementById("localVideo").srcObject = stream;
+
+            webrtc.createPeerConnection();
+            await webrtc.pc.setRemoteDescription(new RTCSessionDescription({sdp:data.sdp,type:data.type}));
+            const answer = await webrtc.pc.createAnswer();
+            await webrtc.pc.setLocalDescription(answer);
+            await webrtc.sendSignal("call-answer",{sdp:answer.sdp,type:answer.type});
+            document.getElementById("callStatus").textContent = "Connected";
+        };
+
+        document.getElementById("declineCallBtn").onclick = ()=>{
+            document.getElementById("callIncoming").classList.remove("active");
+        };
+    };
+
+    webrtc.startPolling(chatUsername);
 });
 </script>
-
 </body>
-
 </html>

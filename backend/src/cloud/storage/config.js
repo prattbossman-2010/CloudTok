@@ -51,7 +51,7 @@ const StorageConfig = {
 
             enabled: true,
 
-            apiConfigured: false,
+            apiConfigured: true,
 
             roles: ["video"],
 
@@ -93,7 +93,7 @@ const StorageConfig = {
 
             enabled: true,
 
-            apiConfigured: false,
+            apiConfigured: true,
 
             roles: ["video"],
 
@@ -180,7 +180,7 @@ const StorageConfig = {
 
             enabled: true,
 
-            apiConfigured: false,
+            apiConfigured: true,
 
             roles: ["video"],
 
