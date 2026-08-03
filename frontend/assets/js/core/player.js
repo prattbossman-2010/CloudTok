@@ -809,11 +809,6 @@ localStorage.setItem(
 
         window.CloudTokActiveComments.open();
 
-        this.commentCountValue =
-        (this.commentCountValue || 0) + 1;
-
-        this.updateCommentCount();
-
     }
     else{
 

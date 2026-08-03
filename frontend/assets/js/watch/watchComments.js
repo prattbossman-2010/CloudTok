@@ -81,7 +81,12 @@ if(typeof CloudTokAPI!=="undefined"){
 
         if(result.comments && result.comments.length>0){
 
-            comments=result.comments.map(c=>({
+            const seen = new Set();
+            comments=result.comments.filter(c=>{
+                if(seen.has(c.id)) return false;
+                seen.add(c.id);
+                return true;
+            }).map(c=>({
                 id:c.id,
                 username:c.username,
                 text:c.comment,

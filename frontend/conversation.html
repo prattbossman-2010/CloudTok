@@ -198,34 +198,59 @@ document.addEventListener("DOMContentLoaded", ()=>{
     const gifToggle = document.getElementById("gifToggleBtn");
     const gifPanel = document.getElementById("gifPanel");
     const gifGrid = document.getElementById("gifGrid");
-    const gifEmojis = ["😀😂😍🥰","😎🤩🥳","😢😭😡","👍❤️🔥","💯🎉👏","💪🙏✨","🎵🎶🎬","💖🌟📸"];
+
+    let gifDebounce = null;
+    let currentGifQuery = "";
 
     gifToggle.onclick = ()=>{
         gifPanel.classList.toggle("show");
         emojiBar.classList.remove("show");
-        if(gifPanel.classList.contains("show")) renderGIFs("");
+        if(gifPanel.classList.contains("show") && !currentGifQuery) renderGIFs("trending");
     };
 
-    function renderGIFs(query){
-        gifGrid.innerHTML = "";
-        const allGIFs = gifEmojis.map((g,i)=>({id:i,emoji:g}));
-        const filtered = query ? allGIFs.filter(g=>g.emoji.includes(query)) : allGIFs;
-        filtered.forEach(gif=>{
-            const item = document.createElement("div");
-            item.className = "gifItem";
-            item.textContent = gif.emoji;
-            item.onclick = ()=>{
-                input.value += gif.emoji;
-                gifPanel.classList.remove("show");
-                input.focus();
-            };
-            gifGrid.appendChild(item);
-        });
+    const gifSearch = document.getElementById("gifSearch");
+    if(gifSearch){
+        gifSearch.oninput = ()=>{
+            clearTimeout(gifDebounce);
+            gifDebounce = setTimeout(()=>{
+                const q = gifSearch.value.trim();
+                if(q) renderGIFs(q);
+                else renderGIFs("trending");
+            }, 400);
+        };
     }
 
-    document.getElementById("gifSearch").addEventListener("input", (e)=>{
-        renderGIFs(e.target.value);
-    });
+    async function renderGIFs(query){
+        gifGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.3);padding:20px;">Loading GIFs...</div>';
+        currentGifQuery = query;
+
+        try {
+            const apiKey = "AIzaSyBBJFS7BYOhPz2G0JnZpjfHfVWnKg1mFNI";
+            const resp = await fetch("https://tenor.googleapis.com/v2/search?key=" + apiKey + "&q=" + encodeURIComponent(query) + "&limit=20&media_filter=gif,tinygif&contentfilter=medium");
+            const data = await resp.json();
+            const results = data.results || [];
+
+            gifGrid.innerHTML = "";
+            if(results.length === 0){
+                gifGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.3);padding:20px;">No GIFs found</div>';
+                return;
+            }
+
+            results.forEach(gif => {
+                const item = document.createElement("div");
+                item.className = "gifItem";
+                item.innerHTML = '<img src="' + (gif.media_formats?.tinygif?.url || gif.media_formats?.gif?.url || '') + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">';
+                item.onclick = ()=>{
+                    input.value += (gif.media_formats?.gif?.url || "");
+                    gifPanel.classList.remove("show");
+                    input.focus();
+                };
+                gifGrid.appendChild(item);
+            });
+        } catch(e){
+            gifGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.3);padding:20px;">GIFs unavailable</div>';
+        }
+    }
 
     document.addEventListener("click",(e)=>{
         if(!e.target.closest(".emojiBar")&&!e.target.closest(".emojiToggleBtn")){
@@ -331,6 +356,45 @@ document.addEventListener("DOMContentLoaded", ()=>{
     };
 
     webrtc.startPolling(chatUsername);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.get("call") === "accept"){
+        const pending = localStorage.getItem("CloudTokPendingCall");
+        if(pending){
+            const callData = JSON.parse(pending);
+            localStorage.removeItem("CloudTokPendingCall");
+
+            if(callData.from === chatUsername && callData.data){
+                setTimeout(async ()=>{
+                    webrtc._targetUsername = chatUsername;
+                    webrtc.onRemoteStream = (stream)=>{
+                        document.getElementById("remoteVideo").srcObject = stream;
+                    };
+                    webrtc.onCallEnd = ()=>{
+                        hideCallOverlay();
+                    };
+
+                    showCallOverlay(chatUsername, "Connecting...");
+
+                    const stream = await webrtc.startLocalStream(callData.data.video !== false);
+                    if(stream) document.getElementById("localVideo").srcObject = stream;
+
+                    webrtc.createPeerConnection();
+                    await webrtc.pc.setRemoteDescription(new RTCSessionDescription({
+                        sdp: callData.data.sdp,
+                        type: callData.data.type
+                    }));
+                    const answer = await webrtc.pc.createAnswer();
+                    await webrtc.pc.setLocalDescription(answer);
+                    await webrtc.sendSignal("call-answer", {
+                        sdp: answer.sdp,
+                        type: answer.type
+                    });
+                    document.getElementById("callStatus").textContent = "Connected";
+                }, 500);
+            }
+        }
+    }
 
     setInterval(()=>{
         if(webrtc.backendReady){
