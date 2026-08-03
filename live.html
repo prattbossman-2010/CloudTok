@@ -15,10 +15,9 @@ p{color:#aaa;margin:0 0 30px;font-size:14px}
 .live-btn:hover{transform:scale(1.08);box-shadow:0 0 50px rgba(255,45,85,.6)}
 .live-btn:active{transform:scale(.95)}
 .back{position:fixed;top:20px;left:20px;background:rgba(255,255,255,.1);border:none;color:#fff;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;z-index:10}
-
-.streamView{display:none;width:100%;max-width:500px;flex-direction:column;align-items:center;gap:0;position:relative;height:100vh;}
+.streamView{display:none;width:100%;height:100vh;flex-direction:column;position:relative;}
 .streamView.active{display:flex;}
-.streamVideo{width:100%;height:100vh;object-fit:cover;background:#000;}
+.streamVideo{width:100%;height:100%;object-fit:cover;background:#000;}
 .streamLocal{width:100px;height:130px;border-radius:12px;border:2px solid #ff2d55;object-fit:cover;position:fixed;top:80px;right:12px;z-index:5;}
 .streamOverlay{position:absolute;top:0;left:0;right:0;padding:12px 16px;display:flex;align-items:center;gap:10px;background:linear-gradient(rgba(0,0,0,.7),transparent);z-index:6;}
 .streamOverlay .back{position:static;width:36px;height:36px;}
@@ -31,7 +30,6 @@ p{color:#aaa;margin:0 0 30px;font-size:14px}
 .streamCtrlBtn.end{background:rgba(255,45,85,.9);color:#fff;}
 .streamCtrlBtn.mute{background:rgba(255,255,255,.2);color:#fff;}
 .streamCtrlBtn.video{background:rgba(255,255,255,.2);color:#fff;}
-
 .activeStreams{width:100%;max-width:600px;margin-top:30px;}
 .activeStreams h3{color:rgba(255,255,255,.5);font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
 .streamCard{display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,.04);border-radius:12px;margin-bottom:8px;cursor:pointer;}
@@ -72,16 +70,22 @@ p{color:#aaa;margin:0 0 30px;font-size:14px}
 <script src="assets/js/database/database.js"></script>
 <script src="assets/js/api/api.js"></script>
 <script src="assets/js/core/webrtc.js"></script>
-<script src="assets/js/core/callPoller.js"></script>
 <script>
 let localStream = null;
 let isStreaming = false;
 let streamKey = null;
-let viewerPoll = null;
-let signalPoll = null;
+let signalPollInterval = null;
 let isMuted = false;
 let isVideoOff = false;
 let viewerConnections = [];
+
+const ICE_SERVERS = [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+    { urls: "stun:stun2.l.google.com:19302" },
+    { urls: "turn:openrelay.metered.ca:80", username: "openrelayproject", credential: "openrelayproject" },
+    { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" }
+];
 
 function showToast(msg, type="success"){
     const t=document.createElement("div");
@@ -112,8 +116,11 @@ document.getElementById("goLiveBtn").onclick = async ()=>{
     document.getElementById("streamLocal").srcObject = localStream;
     document.getElementById("streamMainVideo").srcObject = localStream;
 
-    const webrtc = window.CloudTokWebRTC;
-    const result = await webrtc.startLiveStream(title);
+    const result = await CloudTokAPI.request("/live/create", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({title})
+    });
 
     if(result && result.success){
         streamKey = result.stream_key;
@@ -123,24 +130,24 @@ document.getElementById("goLiveBtn").onclick = async ()=>{
         document.getElementById("streamView").classList.add("active");
         document.getElementById("streamTitleDisplay").textContent = title;
 
-        startViewerPoll();
         startSignalPoll();
         showToast("You are now live!");
     } else {
-        const errMsg = (result && result.error) ? result.error : "Failed to start stream";
-        showToast(errMsg, "error");
+        showToast((result && result.error) || "Failed to start stream","error");
     }
 };
 
 function startSignalPoll(){
     let lastSignalId = 0;
-    signalPoll = setInterval(async ()=>{
+
+    async function poll(){
         if(!isStreaming || !streamKey) return;
         try {
             const result = await CloudTokAPI.request("/webrtc/poll?after=" + lastSignalId);
-            if(result.signals){
+            if(result && result.signals){
                 for(const signal of result.signals){
                     if(signal.id > lastSignalId) lastSignalId = signal.id;
+                    console.log("[Live] Signal:", signal.type, "from:", signal.from);
 
                     if(signal.type === "live-join"){
                         handleViewerJoin(signal.from, signal.data);
@@ -152,25 +159,27 @@ function startSignalPoll(){
                             try {
                                 if(viewer.pc.remoteDescription){
                                     await viewer.pc.addIceCandidate(new RTCIceCandidate(signal.data.candidate));
+                                    console.log("[Live] Added viewer ICE candidate");
                                 }
-                            } catch(e){}
+                            } catch(e){console.error("[Live] ICE error:",e);}
                         }
                     }
                 }
             }
-        } catch(e){}
-    }, 1000);
+        } catch(e){console.error("[Live] Poll error:",e);}
+
+        if(isStreaming){
+            signalPollInterval = setTimeout(poll, 800);
+        }
+    }
+    poll();
 }
 
 async function handleViewerJoin(viewerUsername, data){
     if(!localStream) return;
+    console.log("[Live] Viewer joining:", viewerUsername);
 
-    const pc = new RTCPeerConnection({
-        iceServers: [
-            { urls: "stun:stun.l.google.com:19302" },
-            { urls: "stun:stun1.l.google.com:19302" }
-        ]
-    });
+    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
 
     localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
@@ -182,45 +191,53 @@ async function handleViewerJoin(viewerUsername, data){
                 body: JSON.stringify({
                     to_username: viewerUsername,
                     signal_type: "live-ice",
-                    signal_data: { candidate: e.candidate.toJSON(), viewer: viewerUsername }
+                    signal_data: { candidate: e.candidate.toJSON() }
                 })
             });
         }
     };
 
     pc.onconnectionstatechange = () => {
+        console.log("[Live] Viewer", viewerUsername, "connection:", pc.connectionState);
         if(pc.connectionState === "disconnected" || pc.connectionState === "failed"){
-            pc.close();
-            viewerConnections = viewerConnections.filter(v => v.username !== viewerUsername);
-            updateViewerCount();
+            handleViewerLeave(viewerUsername);
         }
+    };
+
+    pc.oniceconnectionstatechange = () => {
+        console.log("[Live] Viewer", viewerUsername, "ICE:", pc.iceConnectionState);
     };
 
     viewerConnections.push({ username: viewerUsername, pc: pc });
     updateViewerCount();
 
     if(data && data.offer){
-        await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
+        try {
+            await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
 
-        await CloudTokAPI.request("/webrtc/signal", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                to_username: viewerUsername,
-                signal_type: "live-answer",
-                signal_data: { sdp: pc.localDescription.sdp, type: pc.localDescription.type }
-            })
-        });
+            await CloudTokAPI.request("/webrtc/signal", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    to_username: viewerUsername,
+                    signal_type: "live-answer",
+                    signal_data: { sdp: pc.localDescription.sdp, type: pc.localDescription.type }
+                })
+            });
+            console.log("[Live] Sent answer to", viewerUsername);
+        } catch(e) {
+            console.error("[Live] Failed to answer viewer:", e);
+        }
     }
 }
 
 function handleViewerLeave(viewerUsername){
-    const viewer = viewerConnections.find(v => v.username === viewerUsername);
-    if(viewer){
-        viewer.pc.close();
-        viewerConnections = viewerConnections.filter(v => v.username !== viewerUsername);
+    const idx = viewerConnections.findIndex(v => v.username === viewerUsername);
+    if(idx !== -1){
+        try { viewerConnections[idx].pc.close(); } catch(e){}
+        viewerConnections.splice(idx, 1);
         updateViewerCount();
     }
 }
@@ -242,15 +259,14 @@ async function endStream(){
         } catch(e){}
     }
 
-    viewerConnections.forEach(v => v.pc.close());
+    viewerConnections.forEach(v => { try { v.pc.close(); } catch(e){} });
     viewerConnections = [];
 
     if(localStream){
         localStream.getTracks().forEach(t=>t.stop());
         localStream = null;
     }
-    if(viewerPoll){ clearInterval(viewerPoll); viewerPoll = null; }
-    if(signalPoll){ clearInterval(signalPoll); signalPoll = null; }
+    if(signalPollInterval){ clearTimeout(signalPollInterval); signalPollInterval = null; }
     isStreaming = false;
     streamKey = null;
 
@@ -258,7 +274,7 @@ async function endStream(){
     document.getElementById("startScreen").style.display = "block";
     showToast("Stream ended");
     loadActiveStreams();
-};
+}
 
 document.getElementById("streamMuteBtn").onclick = ()=>{
     isMuted = !isMuted;
@@ -272,23 +288,10 @@ document.getElementById("streamVideoBtn").onclick = ()=>{
     document.getElementById("streamVideoBtn").textContent = isVideoOff ? "📷" : "📹";
 };
 
-function startViewerPoll(){
-    viewerPoll = setInterval(async ()=>{
-        try {
-            const result = await CloudTokAPI.request("/live/streams");
-            const streams = result.streams || [];
-            const myStream = streams.find(s=>s.stream_key === streamKey);
-            if(myStream){
-                document.getElementById("streamViewers").textContent = viewerConnections.length + " viewers";
-            }
-        } catch(e){}
-    }, 5000);
-}
-
 async function loadActiveStreams(){
     try {
-        const webrtc = window.CloudTokWebRTC;
-        const streams = await webrtc.getLiveStreams();
+        const result = await CloudTokAPI.request("/live/streams");
+        const streams = result.streams || [];
         const container = document.getElementById("activeStreams");
         if(streams.length === 0){
             container.innerHTML = '<p style="color:rgba(255,255,255,.3);font-size:13px;text-align:center;">No live streams right now</p>';
