@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Streams - CloudTok</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<style>
+body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;margin:0;padding:0;}
+.header{display:flex;align-items:center;gap:12px;padding:16px;position:sticky;top:0;background:#000;z-index:10;}
+.back{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.header h1{font-size:20px;font-weight:700;flex:1;}
+.liveDot{width:8px;height:8px;border-radius:50%;background:#ff2d55;display:inline-block;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.streams{padding:0 16px 80px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.streamCard{border-radius:16px;overflow:hidden;background:#111;cursor:pointer;position:relative;}
+.streamCard:hover{opacity:.9;}
+.streamThumb{width:100%;aspect-ratio:9/16;object-fit:cover;background:#111;}
+.streamInfo{position:absolute;bottom:0;left:0;right:0;padding:12px;background:linear-gradient(transparent,rgba(0,0,0,.9));}
+.streamTitle{font-size:14px;font-weight:600;margin-bottom:4px;}
+.streamHost{font-size:12px;color:rgba(255,255,255,.6);}
+.streamLive{position:absolute;top:10px;left:10px;display:flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(255,45,85,.9);border-radius:20px;font-size:11px;font-weight:700;}
+.empty{text-align:center;padding:60px 20px;color:rgba(255,255,255,.3);}
+.empty .icon{font-size:60px;margin-bottom:16px;}
+.empty p{font-size:14px;}
+
+.viewer{display:none;position:fixed;inset:0;background:#000;z-index:999;flex-direction:column;}
+.viewer.active{display:flex;}
+.viewerVideo{width:100%;flex:1;object-fit:contain;background:#000;}
+.viewerHeader{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:12px;padding:12px 16px;background:linear-gradient(rgba(0,0,0,.8),transparent);z-index:2;}
+.viewerHeader .back{width:36px;height:36px;}
+.viewerTitle{flex:1;font-size:16px;font-weight:600;}
+.viewerHost{font-size:13px;color:rgba(255,255,255,.6);}
+.viewerViewers{display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(255,45,85,.9);border-radius:20px;font-size:12px;font-weight:600;}
+.viewerBottom{position:absolute;bottom:0;left:0;right:0;padding:16px;background:linear-gradient(transparent,rgba(0,0,0,.8));z-index:2;}
+.viewerChat{max-height:150px;overflow-y:auto;margin-bottom:10px;}
+.viewerChatMsg{padding:4px 0;font-size:13px;color:rgba(255,255,255,.7);}
+.viewerChatMsg strong{color:#ff2d55;}
+.viewerInput{display:flex;gap:8px;}
+.viewerInput input{flex:1;padding:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:20px;color:#fff;font-size:14px;outline:none;}
+.viewerInput button{padding:10px 16px;background:#ff2d55;color:#fff;border:none;border-radius:20px;font-size:14px;font-weight:600;cursor:pointer;}
+</style>
+</head>
+<body>
+<div class="header">
+    <button class="back" onclick="history.back()">←</button>
+    <h1>🔴 Live Streams</h1>
+</div>
+<div class="streams" id="streamsGrid"></div>
+
+<div class="viewer" id="viewer">
+    <video class="viewerVideo" id="viewerVideo" autoplay playsinline></video>
+    <div class="viewerHeader">
+        <button class="back" onclick="closeViewer()">←</button>
+        <div>
+            <div class="viewerTitle" id="viewerTitle"></div>
+            <div class="viewerHost" id="viewerHost"></div>
+        </div>
+        <div class="viewerViewers"><span class="liveDot"></span> LIVE</div>
+    </div>
+    <div class="viewerBottom">
+        <div class="viewerChat" id="viewerChat"></div>
+    </div>
+</div>
+
+<script src="assets/js/database/database.js"></script>
+<script src="assets/js/api/api.js"></script>
+<script src="assets/js/core/webrtc.js"></script>
+<script src="assets/js/core/callPoller.js"></script>
+<script>
+let currentStream = null;
+
+async function loadStreams(){
+    const grid = document.getElementById("streamsGrid");
+    try {
+        const result = await CloudTokAPI.request("/live/streams");
+        const streams = result.streams || [];
+
+        if(streams.length === 0){
+            grid.innerHTML = '<div class="empty"><div class="icon">📡</div><p>No live streams right now</p></div>';
+            return;
+        }
+
+        grid.innerHTML = "";
+        streams.forEach(s => {
+            const card = document.createElement("div");
+            card.className = "streamCard";
+            card.innerHTML = `
+                <div class="streamThumb" style="background:linear-gradient(135deg,#${Math.floor(Math.random()*16777215).toString(16).padStart(6,'0')},#${Math.floor(Math.random()*16777215).toString(16).padStart(6,'0')});display:flex;align-items:center;justify-content:center;font-size:48px;">🎥</div>
+                <div class="streamLive"><span class="liveDot"></span> LIVE</div>
+                <div class="streamInfo">
+                    <div class="streamTitle">${s.title || "Live Stream"}</div>
+                    <div class="streamHost">@${s.username}</div>
+                </div>
+            `;
+            card.onclick = () => openViewer(s);
+            grid.appendChild(card);
+        });
+    } catch(e){
+        grid.innerHTML = '<div class="empty"><div class="icon">📡</div><p>Unable to load streams</p></div>';
+    }
+}
+
+function openViewer(stream){
+    currentStream = stream;
+    document.getElementById("viewerTitle").textContent = stream.title || "Live Stream";
+    document.getElementById("viewerHost").textContent = "@" + stream.username;
+    document.getElementById("viewer").classList.add("active");
+}
+
+function closeViewer(){
+    document.getElementById("viewer").classList.remove("active");
+    currentStream = null;
+}
+
+loadStreams();
+setInterval(loadStreams, 10000);
+</script>
+</body>
+</html>

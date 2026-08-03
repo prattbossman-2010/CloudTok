@@ -32,6 +32,7 @@
                     }
                     else if(signal.type === "call-end"){
                         dismissPopup();
+                        localStorage.removeItem("CloudTokPendingCall");
                     }
                 }
             }
@@ -73,8 +74,13 @@
         };
 
         document.getElementById("globalCallAccept").onclick = ()=>{
+            localStorage.setItem("CloudTokPendingCall", JSON.stringify({
+                from: from,
+                data: data,
+                timestamp: Date.now()
+            }));
             dismissPopup();
-            window.location.href = "conversation.html?user=" + encodeURIComponent(from);
+            window.location.href = "conversation.html?user=" + encodeURIComponent(from) + "&call=accept";
         };
 
         if(navigator.vibrate) navigator.vibrate([500, 300, 500, 300, 500]);
@@ -90,7 +96,7 @@
     function startGlobalCallPolling(){
         if(pollInterval) return;
         pollForCalls();
-        pollInterval = setInterval(pollForCalls, 3000);
+        pollInterval = setInterval(pollForCalls, 2000);
     }
 
     function stopGlobalCallPolling(){
