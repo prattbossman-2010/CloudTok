@@ -7,26 +7,36 @@
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/chat.css">
 <style>
-.emojiBar{display:none;flex-direction:column;gap:4px;padding:8px 12px;position:absolute;bottom:60px;left:0;right:0;max-height:200px;overflow-y:auto;background:#111;border-top:1px solid rgba(255,255,255,.08);z-index:50;}
+.conversationPage{position:relative;}
+
+.messageBar{position:relative;}
+
+.emojiBar{display:none;flex-direction:column;gap:4px;padding:8px 12px;position:absolute;bottom:100%;left:0;right:0;max-height:200px;overflow-y:auto;background:#111;border-top:1px solid rgba(255,255,255,.08);z-index:50;}
 .emojiBar.show{display:flex;}
 .emojiBar .emojiRow{display:flex;gap:4px;flex-wrap:wrap;}
-.emojiBar button{background:none;border:none;font-size:24px;cursor:pointer;padding:6px;border-radius:8px;transition:background .2s;flex-shrink:0;}
-.emojiBar button:hover{background:rgba(255,255,255,.08);}
-.emojiToggleBtn{background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;cursor:pointer;padding:8px;}
-.emojiToggleBtn:hover{color:#fff;}
-.gifPanel{display:none;position:absolute;bottom:60px;left:0;right:0;background:#111;border-top:1px solid rgba(255,255,255,.08);max-height:250px;overflow-y:auto;padding:10px;z-index:50;}
+.emojiBar .emojiRow button{background:none;border:none;font-size:24px;cursor:pointer;padding:6px;border-radius:8px;transition:background .2s;flex-shrink:0;color:#fff;}
+.emojiBar .emojiRow button:hover{background:rgba(255,255,255,.08);}
+
+.emojiToggleBtn{background:none !important;border:none !important;color:rgba(255,255,255,.5) !important;font-size:20px !important;cursor:pointer !important;padding:8px !important;border-radius:8px !important;font-weight:normal !important;}
+.emojiToggleBtn:hover{color:#fff !important;}
+
+.gifToggleBtn{background:none !important;border:none !important;color:rgba(255,255,255,.5) !important;font-size:14px !important;font-weight:600 !important;cursor:pointer !important;padding:8px !important;border-radius:8px !important;}
+.gifToggleBtn:hover{color:#fff !important;}
+
+.gifPanel{display:none;position:absolute;bottom:100%;left:0;right:0;background:#111;border-top:1px solid rgba(255,255,255,.08);max-height:300px;overflow-y:auto;padding:10px;z-index:50;}
 .gifPanel.show{display:block;}
 .gifGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
 .gifItem{border-radius:10px;overflow:hidden;cursor:pointer;aspect-ratio:1;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:40px;transition:transform .2s;}
 .gifItem:hover{transform:scale(1.05);}
+.gifItem img{width:100%;height:100%;object-fit:cover;border-radius:10px;}
 .gifSearch{width:100%;padding:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;font-size:14px;margin-bottom:10px;outline:none;}
 .gifSearch::placeholder{color:rgba(255,255,255,.3);}
-.messageBar{position:relative;}
-.gifToggleBtn{background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;cursor:pointer;padding:8px;}
-.gifToggleBtn:hover{color:#fff;}
+.createGifBtn{width:100%;padding:10px;background:rgba(255,45,85,.15);border:1px dashed rgba(255,45,85,.4);border-radius:10px;color:#ff2d55;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:10px;text-align:center;transition:background .2s;}
+.createGifBtn:hover{background:rgba(255,45,85,.25);}
+
 .callBtns{display:flex;gap:4px;}
-.callBtn{background:none;border:none;font-size:18px;cursor:pointer;padding:6px 8px;border-radius:8px;}
-.callBtn:hover{background:rgba(255,255,255,.08);}
+.callBtn{background:none !important;border:none !important;font-size:18px !important;cursor:pointer !important;padding:6px 8px !important;border-radius:8px !important;color:#fff !important;}
+.callBtn:hover{background:rgba(255,255,255,.08) !important;}
 
 .callOverlay{display:none;position:fixed;inset:0;background:#000;z-index:999;flex-direction:column;align-items:center;justify-content:center;}
 .callOverlay.active{display:flex;}
@@ -47,6 +57,10 @@
 .callStatusBadge.connected{background:#00c853;color:#fff;}
 .callStatusBadge.disconnected{background:rgba(255,255,255,.15);color:rgba(255,255,255,.5);}
 .callError{color:#ff2d55;font-size:14px;margin-top:10px;text-align:center;}
+.mediaFallback{display:none;flex-direction:column;align-items:center;gap:8px;padding:16px;background:rgba(255,255,255,.05);border-radius:12px;margin-top:12px;}
+.mediaFallback.show{display:flex;}
+.mediaFallback p{color:rgba(255,255,255,.6);font-size:13px;margin:0;text-align:center;}
+.mediaFallback button{background:#fe2c55;color:#fff;border:none;padding:10px 20px;border-radius:20px;font-weight:600;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -63,19 +77,23 @@
 
     <div id="messageList" class="messageList"></div>
 
-    <div class="gifPanel" id="gifPanel">
-        <input class="gifSearch" id="gifSearch" placeholder="Search GIFs...">
-        <div class="gifGrid" id="gifGrid"></div>
-    </div>
-
     <div class="messageBar">
         <button class="emojiToggleBtn" id="emojiToggleBtn">😊</button>
         <button class="gifToggleBtn" id="gifToggleBtn">GIF</button>
         <input id="messageInput" type="text" placeholder="Type a message...">
         <button id="sendMessageBtn">Send</button>
-    </div>
 
-    <div class="emojiBar" id="emojiBar"></div>
+        <div class="emojiBar" id="emojiBar">
+            <div class="emojiRow" id="emojiRow"></div>
+        </div>
+
+        <div class="gifPanel" id="gifPanel">
+            <button class="createGifBtn" id="createGifBtn">+ Create GIF</button>
+            <input class="gifSearch" id="gifSearch" placeholder="Search GIFs...">
+            <div class="gifGrid" id="gifGrid"></div>
+            <input type="file" id="gifFileInput" accept="image/gif" style="display:none;">
+        </div>
+    </div>
 </div>
 
 <div class="callOverlay" id="callOverlay">
@@ -87,6 +105,10 @@
         <h3 id="callName">Calling...</h3>
         <p id="callStatus">Connecting...</p>
         <div class="callError" id="callError"></div>
+        <div class="mediaFallback" id="mediaFallback">
+            <p id="mediaFallbackMsg">Microphone unavailable. Your call will connect but without audio.</p>
+            <button id="mediaFallbackBtn">Call Without Audio</button>
+        </div>
     </div>
     <div class="callActions">
         <button class="callActionBtn mute" id="muteBtn">🎤</button>
@@ -111,11 +133,169 @@
     const badge = document.getElementById("callStatusBadge");
     let isMuted = false;
     let isVideoOff = false;
+    let pendingCallData = null;
+
+    const emojis = ["😀","😂","😍","🥰","😎","🤩","🥳","😢","😭","😡","🥺","😏","🤔","👍","👎","❤️","🔥","💯","🎉","👏","🙌","💪","🙏","✨","🌟","💖","🎵","🎶","📸","🎬"];
+    const emojiBar = document.getElementById("emojiBar");
+    const emojiRow = document.getElementById("emojiRow");
+    const input = document.getElementById("messageInput");
+    const gifPanel = document.getElementById("gifPanel");
+    const gifGrid = document.getElementById("gifGrid");
+
+    function renderEmojiGrid(){
+        emojiRow.innerHTML="";
+        emojis.forEach(function(e){
+            var btn = document.createElement("button");
+            btn.textContent = e;
+            btn.addEventListener("click", function(ev){
+                ev.stopPropagation();
+                input.value += e;
+                input.focus();
+            });
+            emojiRow.appendChild(btn);
+        });
+    }
+    renderEmojiGrid();
+
+    var emojiToggleBtn = document.getElementById("emojiToggleBtn");
+    var gifToggleBtn = document.getElementById("gifToggleBtn");
+
+    emojiToggleBtn.addEventListener("click", function(ev){
+        ev.stopPropagation();
+        var isOpen = emojiBar.classList.toggle("show");
+        gifPanel.classList.remove("show");
+        console.log("[Conv] Emoji bar toggled:", isOpen);
+    });
+
+    gifToggleBtn.addEventListener("click", function(ev){
+        ev.stopPropagation();
+        var isOpen = gifPanel.classList.toggle("show");
+        emojiBar.classList.remove("show");
+        console.log("[Conv] GIF panel toggled:", isOpen);
+        if(isOpen) loadCommunityGIFs();
+    });
+
+    emojiBar.addEventListener("click", function(ev){ ev.stopPropagation(); });
+    gifPanel.addEventListener("click", function(ev){ ev.stopPropagation(); });
+
+    document.addEventListener("click", function(){
+        emojiBar.classList.remove("show");
+        gifPanel.classList.remove("show");
+    });
+
+    var gifDebounce = null;
+    document.getElementById("gifSearch").addEventListener("input", function(){
+        clearTimeout(gifDebounce);
+        gifDebounce = setTimeout(function(){
+            var q = document.getElementById("gifSearch").value.trim();
+            if(q) searchTenorGIFs(q);
+            else loadCommunityGIFs();
+        }, 400);
+    });
+
+    function searchTenorGIFs(query){
+        gifGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.3);padding:20px;">Loading...</div>';
+        var apiKey = "AIzaSyBBJFS7BYOhPz2G0JnZpjfHfVWnKg1mFNI";
+        fetch("https://tenor.googleapis.com/v2/search?key=" + apiKey + "&q=" + encodeURIComponent(query) + "&limit=20&media_filter=gif,tinygif&contentfilter=medium")
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+            var results = data.results || [];
+            gifGrid.innerHTML = "";
+            if(results.length === 0){
+                gifGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.3);padding:20px;">No GIFs found</div>';
+                return;
+            }
+            results.forEach(function(gif){
+                var url = (gif.media_formats && gif.media_formats.gif) ? gif.media_formats.gif.url : "";
+                if(!url) return;
+                var item = document.createElement("div");
+                item.className = "gifItem";
+                var img = document.createElement("img");
+                img.src = url;
+                item.appendChild(img);
+                item.addEventListener("click", function(){
+                    input.value = url;
+                    gifPanel.classList.remove("show");
+                    input.focus();
+                });
+                gifGrid.appendChild(item);
+            });
+        })
+        .catch(function(){
+            gifGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.3);padding:20px;">GIFs unavailable</div>';
+        });
+    }
+
+    function loadCommunityGIFs(){
+        gifGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.3);padding:20px;">Loading...</div>';
+        if(typeof CloudTokAPI === "undefined"){
+            searchTenorGIFs("trending");
+            return;
+        }
+        CloudTokAPI.request("/gifs").then(function(result){
+            var gifs = (result && result.gifs) ? result.gifs : [];
+            gifGrid.innerHTML = "";
+            if(gifs.length === 0){
+                searchTenorGIFs("trending");
+                return;
+            }
+            gifs.forEach(function(gif){
+                var item = document.createElement("div");
+                item.className = "gifItem";
+                var img = document.createElement("img");
+                img.src = gif.url;
+                item.appendChild(img);
+                item.addEventListener("click", function(){
+                    input.value = gif.url;
+                    gifPanel.classList.remove("show");
+                    input.focus();
+                });
+                gifGrid.appendChild(item);
+            });
+        }).catch(function(){
+            searchTenorGIFs("trending");
+        });
+    }
+
+    document.getElementById("createGifBtn").addEventListener("click", function(ev){
+        ev.stopPropagation();
+        document.getElementById("gifFileInput").click();
+    });
+
+    document.getElementById("gifFileInput").addEventListener("change", function(e){
+        var file = e.target.files[0];
+        if(!file) return;
+        if(file.size > 5 * 1024 * 1024){
+            alert("GIF must be under 5MB");
+            return;
+        }
+        var btn = document.getElementById("createGifBtn");
+        btn.textContent = "Uploading...";
+        btn.disabled = true;
+        var form = new FormData();
+        form.append("gif", file);
+        CloudTokAPI.request("/gifs/upload", { method: "POST", body: form }).then(function(result){
+            if(result && result.url){
+                input.value = result.url;
+                gifPanel.classList.remove("show");
+                loadCommunityGIFs();
+            } else {
+                alert((result && result.error) || "Upload failed");
+            }
+        }).catch(function(){
+            alert("Upload failed");
+        }).finally(function(){
+            btn.textContent = "+ Create GIF";
+            btn.disabled = false;
+            e.target.value = "";
+        });
+    });
 
     function showCallOverlay(name, statusText){
         document.getElementById("callName").textContent = name;
         document.getElementById("callStatus").textContent = statusText;
         document.getElementById("callError").textContent = "";
+        document.getElementById("mediaFallback").classList.remove("show");
         document.getElementById("callOverlay").classList.add("active");
     }
 
@@ -124,152 +304,191 @@
         document.getElementById("remoteVideo").srcObject = null;
         document.getElementById("localVideo").srcObject = null;
         document.getElementById("callError").textContent = "";
+        document.getElementById("mediaFallback").classList.remove("show");
     }
 
     function showCallError(msg){
         document.getElementById("callError").textContent = msg;
     }
 
-    webrtc.onRemoteStream = (stream) => {
+    webrtc.onRemoteStream = function(stream) {
         console.log("[Conv] onRemoteStream, tracks:", stream.getTracks().length);
-        const remoteVideo = document.getElementById("remoteVideo");
-        remoteVideo.srcObject = stream;
+        document.getElementById("remoteVideo").srcObject = stream;
     };
 
-    webrtc.onCallEnd = () => {
-        hideCallOverlay();
-    };
+    webrtc.onCallEnd = function(){ hideCallOverlay(); };
 
-    webrtc.onAnswerReceived = () => {
+    webrtc.onAnswerReceived = function(){
         document.getElementById("callStatus").textContent = "Connected";
     };
 
-    webrtc.onConnectionStateChange = (state) => {
-        const statusEl = document.getElementById("callStatus");
-        if(state === "connected" || state === "completed"){
-            statusEl.textContent = "Connected";
-        } else if(state === "connecting"){
-            statusEl.textContent = "Connecting...";
-        } else if(state === "failed"){
-            statusEl.textContent = "Call failed";
-            showCallError("Connection failed. Try again.");
-        } else if(state === "disconnected"){
-            statusEl.textContent = "Reconnecting...";
-        }
+    webrtc.onConnectionStateChange = function(state){
+        var el = document.getElementById("callStatus");
+        if(state === "connected" || state === "completed") el.textContent = "Connected";
+        else if(state === "connecting") el.textContent = "Connecting...";
+        else if(state === "failed"){ el.textContent = "Call failed"; showCallError("Connection failed. Try again."); }
+        else if(state === "disconnected") el.textContent = "Reconnecting...";
     };
 
-    document.getElementById("voiceCallBtn").onclick = () => startCall(false);
-    document.getElementById("videoCallBtn").onclick = () => startCall(true);
-    document.getElementById("endCallBtn").onclick = () => webrtc.endCall(true);
-    document.getElementById("muteBtn").onclick = () => {
+    document.getElementById("voiceCallBtn").addEventListener("click", function(){ startCall(false); });
+    document.getElementById("videoCallBtn").addEventListener("click", function(){ startCall(true); });
+    document.getElementById("endCallBtn").addEventListener("click", function(){ webrtc.endCall(true); });
+    document.getElementById("muteBtn").addEventListener("click", function(){
         isMuted = !isMuted;
-        if(webrtc.localStream) webrtc.localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+        if(webrtc.localStream) webrtc.localStream.getAudioTracks().forEach(function(t){ t.enabled = !isMuted; });
         document.getElementById("muteBtn").textContent = isMuted ? "🔇" : "🎤";
-    };
-    document.getElementById("videoToggleBtn").onclick = () => {
+    });
+    document.getElementById("videoToggleBtn").addEventListener("click", function(){
         isVideoOff = !isVideoOff;
-        if(webrtc.localStream) webrtc.localStream.getVideoTracks().forEach(t => t.enabled = !isVideoOff);
+        if(webrtc.localStream) webrtc.localStream.getVideoTracks().forEach(function(t){ t.enabled = !isVideoOff; });
         document.getElementById("videoToggleBtn").textContent = isVideoOff ? "📷" : "📹";
-    };
+    });
+
+    async function checkDevices(){
+        try {
+            if(!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return {audio:false, video:false};
+            var devices = await navigator.mediaDevices.enumerateDevices();
+            var hasAudio = devices.some(function(d){ return d.kind === "audioinput" && d.deviceId !== ""; });
+            var hasVideo = devices.some(function(d){ return d.kind === "videoinput" && d.deviceId !== ""; });
+            console.log("[Conv] Devices: audio=", hasAudio, "video=", hasVideo, "total:", devices.length);
+            return {audio: hasAudio, video: hasVideo};
+        } catch(e){
+            console.log("[Conv] enumerateDevices failed:", e);
+            return {audio: true, video: true};
+        }
+    }
 
     async function startCall(video){
-        if(!localStorage.getItem("CloudTokToken")){
-            alert("Please login first");
+        if(!localStorage.getItem("CloudTokToken")){ alert("Please login first"); return; }
+
+        console.log("[Conv] Starting call, video=", video);
+        showCallOverlay(chatUsername, "Checking devices...");
+
+        var devices = await checkDevices();
+        if(!devices.audio && !devices.video){
+            showCallError("No microphone or camera found on this device.");
+            document.getElementById("callStatus").textContent = "No devices";
             return;
         }
 
-        console.log("[Conv] Starting call, video=", video);
-        showCallOverlay(chatUsername, "Requesting camera...");
+        document.getElementById("callStatus").textContent = "Requesting access...";
+        var stream = await webrtc.startLocalStream(video);
 
-        const stream = await webrtc.startLocalStream(video);
         if(!stream){
-            if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-                showCallError("Camera/mic not supported in this browser. Use HTTPS.");
+            console.log("[Conv] Media failed, offering fallback");
+            document.getElementById("callStatus").textContent = "Media unavailable";
+            showCallError("Could not access microphone/camera.");
+
+            var fallbackEl = document.getElementById("mediaFallback");
+            var fallbackMsg = document.getElementById("mediaFallbackMsg");
+            fallbackEl.classList.add("show");
+
+            if(!devices.audio){
+                fallbackMsg.textContent = "No microphone detected. You can still make a call, but the other person won't hear you.";
             } else {
-                showCallError("Camera/microphone access denied or unavailable. Check browser permissions.");
+                fallbackMsg.textContent = "Microphone is busy or blocked. Close other apps using the mic and try again, or call without audio.";
             }
-            document.getElementById("callStatus").textContent = "Camera access denied";
+
+            document.getElementById("mediaFallbackBtn").onclick = function(){
+                fallbackEl.classList.remove("show");
+                proceedCallWithoutMedia(video);
+            };
             return;
         }
 
         document.getElementById("localVideo").srcObject = stream;
         document.getElementById("callStatus").textContent = "Calling...";
 
-        const ok = await webrtc.initiateCall(chatUsername, video);
+        var ok = await webrtc.initiateCall(chatUsername, video);
         if(!ok){
-            showCallError("Failed to start call. Check your connection.");
+            showCallError("Failed to start call.");
             document.getElementById("callStatus").textContent = "Call failed";
             return;
         }
-
         document.getElementById("callStatus").textContent = "Ringing...";
+    }
+
+    async function proceedCallWithoutMedia(video){
+        document.getElementById("callStatus").textContent = "Calling (no audio)...";
+
+        webrtc.isInCall = true;
+        webrtc._targetUsername = chatUsername;
+        webrtc.isInitiator = true;
+        webrtc.iceCandidateQueue = [];
+
+        webrtc.createPeerConnection();
+
+        try {
+            var offer = await webrtc.pc.createOffer();
+            await webrtc.pc.setLocalDescription(offer);
+            await webrtc.sendSignal("call-offer", {
+                sdp: webrtc.pc.localDescription.sdp,
+                type: webrtc.pc.localDescription.type,
+                video: false
+            });
+            document.getElementById("callStatus").textContent = "Ringing...";
+            webrtc.startPolling(chatUsername);
+        } catch(e){
+            console.error("[Conv] No-media call failed:", e);
+            showCallError("Failed to start call.");
+            document.getElementById("callStatus").textContent = "Call failed";
+        }
     }
 
     async function answerCall(from, callData){
         console.log("[Conv] Answering call from", from);
         showCallOverlay(from, "Connecting...");
 
-        const video = callData.video !== false;
-        const stream = await webrtc.startLocalStream(video);
+        var video = callData.video !== false;
+        var stream = await webrtc.startLocalStream(video);
         if(!stream){
-            showCallError("Camera/microphone access denied.");
-            document.getElementById("callStatus").textContent = "Camera access denied";
-            return;
+            console.log("[Conv] Answer media failed, answering without");
+            document.getElementById("localVideo").srcObject = null;
+        } else {
+            document.getElementById("localVideo").srcObject = stream;
         }
-
-        document.getElementById("localVideo").srcObject = stream;
 
         webrtc.isInCall = true;
         webrtc._targetUsername = from;
         webrtc.createPeerConnection();
 
         try {
-            await webrtc.pc.setRemoteDescription(new RTCSessionDescription({
-                sdp: callData.sdp,
-                type: callData.type
-            }));
-
-            for(const c of webrtc.iceCandidateQueue){
-                try { await webrtc.pc.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
+            await webrtc.pc.setRemoteDescription(new RTCSessionDescription({ sdp: callData.sdp, type: callData.type }));
+            for(var i = 0; i < webrtc.iceCandidateQueue.length; i++){
+                try { await webrtc.pc.addIceCandidate(new RTCIceCandidate(webrtc.iceCandidateQueue[i])); } catch(e) {}
             }
             webrtc.iceCandidateQueue = [];
-
-            const answer = await webrtc.pc.createAnswer();
+            var answer = await webrtc.pc.createAnswer();
             await webrtc.pc.setLocalDescription(answer);
             await webrtc.sendSignal("call-answer", { sdp: answer.sdp, type: answer.type });
-
             document.getElementById("callStatus").textContent = "Connected";
         } catch(e) {
             console.error("[Conv] Answer failed:", e);
-            showCallError("Failed to connect. Try again.");
+            showCallError("Failed to connect.");
         }
     }
 
     webrtc.startPolling(chatUsername);
 
-    webrtc.onIncomingCall = async (from, data) => {
+    webrtc.onIncomingCall = function(from, data){
         console.log("[Conv] Incoming call from", from);
-        if(webrtc.isInCall){
-            webrtc.sendSignal("call-end", {});
-            return;
-        }
+        if(webrtc.isInCall){ webrtc.sendSignal("call-end", {}); return; }
         answerCall(from, data);
     };
 
-    const urlParams = new URLSearchParams(window.location.search);
-    if(urlParams.get("call") === "accept"){
-        const pending = localStorage.getItem("CloudTokPendingCall");
+    var urlParams2 = new URLSearchParams(window.location.search);
+    if(urlParams2.get("call") === "accept"){
+        var pending = localStorage.getItem("CloudTokPendingCall");
         if(pending){
-            const callData = JSON.parse(pending);
+            var callData = JSON.parse(pending);
             localStorage.removeItem("CloudTokPendingCall");
-
             if(callData.from === chatUsername && callData.data){
-                setTimeout(() => answerCall(chatUsername, callData.data), 300);
+                setTimeout(function(){ answerCall(chatUsername, callData.data); }, 300);
             }
         }
     }
 
-    setInterval(() => {
+    setInterval(function(){
         if(webrtc.backendReady){
             badge.textContent = "Calls active";
             badge.className = "callStatusBadge connected";
