@@ -1,242 +1,184 @@
-/*
-========================
- CLOUDTOK UPLOAD PAGE
-========================
-*/
-
-body{
-    background-color: #000;
-}
-
-body.uploadPageBody{
-
-    overflow-y:auto;
-
-}
-
-
-
+body{background:#000;}
+body.uploadPageBody{overflow-y:auto;}
 
 .uploadPage{
-
     width:100vw;
-
     min-height:100vh;
-
     background:#000;
-
     display:flex;
-
-    justify-content:center;
-
-    align-items:flex-start;
-
-    padding:25px;
-
-    overflow-y:auto;
-
+    flex-direction:column;
+    align-items:center;
+    padding:0 16px 30px;
 }
 
-
-
-
+.uploadHeader{
+    width:100%;
+    max-width:600px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:16px 0;
+}
+.uploadHeader h2{color:#fff;font-size:20px;font-weight:700;}
+.uploadBackBtn{
+    background:none;border:none;color:#fff;font-size:22px;cursor:pointer;
+    width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+}
+.uploadBackBtn:active{background:rgba(255,255,255,.1);}
 
 .uploadCard{
+    width:100%;max-width:600px;
+    display:flex;flex-direction:column;gap:20px;
+}
 
+/* UPLOAD AREA */
+.uploadArea{
     width:100%;
-
-    max-width:500px;
-
-    background:#111;
-
+    min-height:340px;
+    border:2px dashed rgba(255,255,255,.15);
     border-radius:20px;
-
-    padding:20px;
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:15px;
-
-    margin-bottom:30px;
-
-}
-
-
-
-
-
-.uploadCard h2{
-
-    color:white;
-
-    text-align:center;
-
-    font-size:28px;
-
-    margin-bottom:10px;
-
-}
-
-
-
-
-
-.uploadCard input,
-.uploadCard select,
-.uploadCard textarea{
-
-    width:100%;
-
-    padding:14px;
-
-    background:#1c1c1c;
-
-    border:none;
-
-    border-radius:12px;
-
-    color:white;
-
-    font-size:16px;
-
-    outline:none;
-
-}
-
-
-
-
-
-.uploadCard input::placeholder,
-.uploadCard textarea::placeholder{
-
-    color:#999;
-
-}
-
-
-
-
-
-.uploadCard button{
-
-    height:52px;
-
-    border:none;
-
-    border-radius:14px;
-
-    background:#00b7ff;
-
-    color:white;
-
-    font-size:18px;
-
-    font-weight:bold;
-
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    gap:12px;
+    background:rgba(255,255,255,.03);
+    transition:all .3s ease;
     cursor:pointer;
-
+    position:relative;
+    overflow:hidden;
 }
-
-
-
-
-
-.uploadCard progress{
-
-    width:100%;
-
-    height:18px;
-
+.uploadArea::before{
+    content:"";
+    position:absolute;inset:0;
+    background:radial-gradient(circle at 50% 0%,rgba(0,183,255,.08) 0%,transparent 60%);
+    pointer-events:none;
 }
-
-
-
-
-
-#progressText{
-
-    color:white;
-
-    text-align:center;
-
-    font-size:15px;
-
+.uploadArea.dragOver{
+    border-color:#00b7ff;
+    background:rgba(0,183,255,.06);
+    transform:scale(1.01);
 }
+.uploadIcon{
+    width:70px;height:70px;border-radius:50%;
+    background:linear-gradient(135deg,#00b7ff,#7b2ff2);
+    display:flex;align-items:center;justify-content:center;
+    font-size:36px;color:#fff;font-weight:300;
+    box-shadow:0 8px 30px rgba(0,183,255,.3);
+    transition:transform .3s ease;
+}
+.uploadArea:hover .uploadIcon{transform:scale(1.08) rotate(90deg);}
+.uploadArea h2{color:#fff;font-size:20px;font-weight:600;margin:0;}
+.uploadArea p{color:rgba(255,255,255,.5);font-size:14px;margin:0;}
+.uploadHint{font-size:12px!important;color:rgba(255,255,255,.35)!important;margin-top:4px!important;}
+.fileInput{display:none;}
+.selectFileBtn{
+    margin-top:8px;
+    padding:10px 28px;
+    border-radius:999px;
+    border:none;
+    background:linear-gradient(135deg,#00b7ff,#7b2ff2);
+    color:#fff;font-size:14px;font-weight:600;
+    cursor:pointer;
+    transition:all .3s ease;
+    box-shadow:0 4px 20px rgba(0,183,255,.25);
+}
+.selectFileBtn:hover{transform:translateY(-1px);box-shadow:0 6px 25px rgba(0,183,255,.35);}
 
-
-
-
-
+/* PREVIEW */
 #preview{
-
-    display:none;
-
-    width:100%;
-
-    max-height:65vh;
-
-    border-radius:18px;
-
-    background:#000;
-
-    object-fit:contain;
-
+    display:none;width:100%;max-height:60vh;
+    border-radius:18px;background:#111;object-fit:contain;
+    border:1px solid rgba(255,255,255,.08);
 }
 
+/* FORM */
+.uploadForm{
+    display:none;flex-direction:column;gap:18px;
+    animation:slideUp .4s ease;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
 
+.formGroup{display:flex;flex-direction:column;gap:6px;}
+.formGroup label{color:rgba(255,255,255,.7);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+.formGroup textarea,
+.formGroup input{
+    width:100%;padding:14px 16px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:14px;
+    color:#fff;font-size:15px;
+    outline:none;
+    transition:border-color .3s;
+    resize:none;
+    font-family:inherit;
+}
+.formGroup textarea:focus,
+.formGroup input:focus{border-color:rgba(0,183,255,.5);}
+.formGroup textarea::placeholder,
+.formGroup input::placeholder{color:rgba(255,255,255,.3);}
+.charCount{color:rgba(255,255,255,.3);font-size:12px;text-align:right;}
 
+/* CATEGORY PILLS */
+.categoryPills{
+    display:flex;flex-wrap:wrap;gap:8px;
+}
+.pill{
+    padding:8px 18px;border-radius:999px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.04);
+    color:rgba(255,255,255,.6);font-size:13px;font-weight:500;
+    cursor:pointer;transition:all .3s ease;
+}
+.pill:hover{border-color:rgba(0,183,255,.4);color:rgba(255,255,255,.8);}
+.pill.active{
+    background:linear-gradient(135deg,rgba(0,183,255,.2),rgba(123,47,242,.2));
+    border-color:#00b7ff;color:#fff;
+}
 
+/* PROGRESS */
+.uploadProgress{display:none;flex-direction:column;gap:8px;}
+.progressBar{
+    width:100%;height:6px;border-radius:999px;
+    background:rgba(255,255,255,.08);overflow:hidden;
+}
+.progressFill{
+    height:100%;width:0%;border-radius:999px;
+    background:linear-gradient(90deg,#00b7ff,#7b2ff2);
+    transition:width .3s ease;
+}
+.progressText{color:rgba(255,255,255,.5);font-size:13px;text-align:center;}
+
+/* SUBMIT BUTTON */
+.submitBtn{
+    width:100%;height:54px;border:none;border-radius:14px;
+    background:linear-gradient(135deg,#00b7ff,#7b2ff2);
+    color:#fff;font-size:17px;font-weight:700;
+    cursor:pointer;transition:all .3s ease;
+    box-shadow:0 6px 25px rgba(0,183,255,.25);
+    position:relative;overflow:hidden;
+}
+.submitBtn::before{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);
+    opacity:0;transition:opacity .3s;
+}
+.submitBtn:hover::before{opacity:1;}
+.submitBtn:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(0,183,255,.35);}
+.submitBtn:active{transform:translateY(0);}
+.submitBtn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btnLoader{
+    width:20px;height:20px;border:2px solid rgba(255,255,255,.3);
+    border-top-color:#fff;border-radius:50%;
+    animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
 
 @media(max-width:768px){
-
-.uploadPage{
-padding:15px;
+    .uploadPage{padding:0 12px 24px;}
+    .uploadArea{min-height:280px;}
+    .uploadIcon{width:60px;height:60px;font-size:30px;}
 }
-
-.uploadCard{
-padding:16px;
-border-radius:16px;
-}
-
-#preview{
-max-height:55vh;
-}
-
-.uploadArea{
-padding:20px;
-border-radius:12px;
-}
-
-.uploadArea h2{
-font-size:18px;
-}
-
-.uploadArea p{
-font-size:13px;
-}
-
-.uploadForm input,
-.uploadForm textarea,
-.uploadForm select{
-font-size:15px;
-padding:12px;
-}
-
-}
-
 @media(max-width:420px){
-.uploadPage{
-padding:10px;
-}
-
-.uploadCard{
-padding:12px;
-}
-
-#preview{
-max-height:45vh;
-}
+    .uploadArea{min-height:240px;border-radius:16px;}
+    .uploadIcon{width:54px;height:54px;font-size:26px;}
+    .uploadArea h2{font-size:17px;}
 }

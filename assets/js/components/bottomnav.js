@@ -27,6 +27,8 @@ nav.innerHTML = `
 
 <button id="messageBtn">💬</button>
 
+<button id="settingsBtn">⚙️</button>
+
 <button id="profileBtn">👤</button>
 
 
@@ -82,7 +84,7 @@ id:Date.now(),
 
 username:"PrattBossman",
 
-caption:file.name.replace(/\.[^/.]+$/,""),
+caption:"",
 
 video:videoURL,
 
@@ -149,6 +151,14 @@ window.location.href="chat.html";
 nav.querySelector("#profileBtn").onclick=()=>{
 
 window.location.href="profile.html";
+
+};
+
+
+
+nav.querySelector("#settingsBtn").onclick=()=>{
+
+window.location.href="settings.html";
 
 };
 

@@ -1,88 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
-
-<meta name="viewport"
-content="width=device-width,initial-scale=1.0">
-
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Upload • CloudTok</title>
-
 <meta name="description" content="Upload your videos to CloudTok. Share your content with the world.">
-
 <meta property="og:title" content="Upload • CloudTok">
-
 <meta property="og:description" content="Upload your videos to CloudTok. Share your content with the world.">
-
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/upload.css">
-
 </head>
-
 <body class="uploadPageBody">
 
 <div class="uploadPage">
 
+<div class="uploadHeader">
+    <button class="uploadBackBtn" onclick="history.back()">←</button>
+    <h2>Create</h2>
+    <div></div>
+</div>
+
 <div class="uploadCard">
 
-<h2>Upload Video</h2>
+<div class="uploadArea" id="uploadArea">
+    <div class="uploadIcon">+</div>
+    <h2>Select video to upload</h2>
+    <p>Or drag and drop a file</p>
+    <p class="uploadHint">MP4 or WebM • Max 100MB • Up to 3 minutes</p>
+    <input type="file" id="videoInput" accept="video/mp4,video/webm,video/quicktime" class="fileInput">
+    <button class="selectFileBtn" onclick="document.getElementById('videoInput').click()">Select file</button>
+</div>
 
-<video
-id="preview"
-controls
-playsinline>
-</video>
+<video id="preview" controls playsinline></video>
 
-<input
-type="file"
-id="videoInput"
-accept="video/*">
+<div class="uploadForm" id="uploadForm" style="display:none;">
 
-<input
-type="text"
-id="caption"
-placeholder="Caption (optional)">
+<div class="formGroup">
+    <label>Caption</label>
+    <textarea id="caption" placeholder="Write a caption..." maxlength="2200" rows="3"></textarea>
+    <span class="charCount" id="charCount">0/2200</span>
+</div>
 
-<input
-type="text"
-id="tags"
-placeholder="Tags (optional)">
+<div class="formGroup">
+    <label>Tags</label>
+    <input type="text" id="tags" placeholder="Add tags separated by commas">
+</div>
 
-<select id="category">
+<div class="formGroup">
+    <label>Category</label>
+    <div class="categoryPills" id="categoryPills">
+        <button class="pill active" data-value="General">General</button>
+        <button class="pill" data-value="Comedy">Comedy</button>
+        <button class="pill" data-value="Gaming">Gaming</button>
+        <button class="pill" data-value="Sports">Sports</button>
+        <button class="pill" data-value="Music">Music</button>
+        <button class="pill" data-value="Education">Education</button>
+        <button class="pill" data-value="Technology">Technology</button>
+        <button class="pill" data-value="Travel">Travel</button>
+        <button class="pill" data-value="Food">Food</button>
+        <button class="pill" data-value="Pets">Pets</button>
+    </div>
+</div>
 
-<option>Auto Detect</option>
-<option>Comedy</option>
-<option>Gaming</option>
-<option>Sports</option>
-<option>Music</option>
-<option>Education</option>
-<option>Technology</option>
-<option>Travel</option>
-<option>Food</option>
-<option>Pets</option>
+<div class="uploadProgress" id="uploadProgress" style="display:none;">
+    <div class="progressBar">
+        <div class="progressFill" id="progressFill"></div>
+    </div>
+    <p class="progressText" id="progressText">Uploading...</p>
+</div>
 
-</select>
-
-<progress
-id="progress"
-value="0"
-max="100"
-style="width:100%;height:18px;">
-</progress>
-
-<p id="progressText">
-
-Waiting...
-
-</p>
-
-<button id="uploadBtn">
-
-Upload
-
+<button class="submitBtn" id="uploadBtn">
+    <span class="btnText">Post</span>
+    <span class="btnLoader" style="display:none;"></span>
 </button>
+
+</div>
 
 </div>
 
@@ -91,215 +83,103 @@ Upload
 <script src="assets/js/database/database.js"></script>
 <script src="assets/js/database/users.js"></script>
 <script src="assets/js/database/userManager.js"></script>
-
 <script src="assets/js/ai/cloudtok-ai.js"></script>
 <script src="assets/js/ai/thumbnail-ai.js"></script>
-
 <script src="assets/js/database/authGuard.js"></script>
 <script src="assets/js/api/api.js"></script>
-
-<script>
-console.log("API TEST:", typeof CloudTokAPI);
-console.log("WINDOW TEST:", typeof window.CloudTokAPI);
-</script>
-
 <script src="assets/js/upload/upload.js"></script>
-<script>
-
-console.log(
-"CloudTokUploader:",
-typeof CloudTokUploader
-);
-
-</script>
 
 <script>
-
 window.onload = function(){
-
-
-const uploadButton =
-document.getElementById("uploadBtn");
-
-
-const videoInput =
-document.getElementById("videoInput");
-
-
-const preview =
-document.getElementById("preview");
-
-
-const captionInput =
-document.getElementById("caption");
-
-
-const tagsInput =
-document.getElementById("tags");
-
-
-const categoryInput =
-document.getElementById("category");
-
-
-const progress =
-document.getElementById("progress");
-
-
-const progressText =
-document.getElementById("progressText");
-
-
-
-let selectedFile = null;
-
-
-videoInput.addEventListener(
-"change",
-(e)=>{
-
-
-selectedFile =
-e.target.files[0];
-
-
-if(!selectedFile)
-return;
-
-
-
-preview.src =
-URL.createObjectURL(selectedFile);
-
-
-preview.style.display="block";
-
-
-
-if(captionInput.value.trim()===""){
-
-captionInput.value =
-selectedFile.name.replace(/\.[^/.]+$/,"");
-
-}
-
-
-
-});
-
-
-
-
-
-
-uploadButton.addEventListener(
-"click",
-()=>{
-
-
-if(
-!CloudTokAuthGuard.requireLogin()
-){
-
-return;
-
-}
-
-
-
-if(!selectedFile){
-
-alert(
-"NO VIDEO"
-);
-
-return;
-
-}
-
-console.log(
-"CloudTokUsers:",
-CloudTokUsers
-);
-
-console.log(
-"find function:",
-typeof CloudTokUsers.find
-);
-
-console.log(
-"Current user:",
-localStorage.getItem("CloudTokCurrentUser")
-);
-
-const uploader =
-new CloudTokUploader();
-
-
-
-uploader.uploadVideo(
-
-selectedFile,
-
-{
-
-
-caption:
-captionInput.value,
-
-
-tags:
-tagsInput.value,
-
-
-category:
-categoryInput.value,
-
-
-
-onProgress:(value)=>{
-
-
-progress.value=value;
-
-
-progressText.innerText =
-"Uploading "+value+"%";
-
-
-},
-
-
-
-onComplete:(video)=>{
-
-
-alert(
-"UPLOAD COMPLETE"
-);
-
-
-window.location.href =
-"index.html";
-
-
-}
-
-
-}
-
-);
-
-
-
-});
-
-
+    const videoInput = document.getElementById("videoInput");
+    const preview = document.getElementById("preview");
+    const uploadArea = document.getElementById("uploadArea");
+    const uploadForm = document.getElementById("uploadForm");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const captionInput = document.getElementById("caption");
+    const tagsInput = document.getElementById("tags");
+    const charCount = document.getElementById("charCount");
+    const uploadProgress = document.getElementById("uploadProgress");
+    const progressFill = document.getElementById("progressFill");
+    const progressText = document.getElementById("progressText");
+    const categoryPills = document.querySelectorAll(".pill");
+
+    let selectedFile = null;
+    let selectedCategory = "General";
+
+    captionInput.addEventListener("input", ()=>{
+        charCount.textContent = captionInput.value.length + "/2200";
+    });
+
+    categoryPills.forEach(pill => {
+        pill.addEventListener("click", ()=>{
+            categoryPills.forEach(p => p.classList.remove("active"));
+            pill.classList.add("active");
+            selectedCategory = pill.dataset.value;
+        });
+    });
+
+    ["dragover","dragenter"].forEach(evt => {
+        uploadArea.addEventListener(evt, (e)=>{
+            e.preventDefault();
+            uploadArea.classList.add("dragOver");
+        });
+    });
+
+    ["dragleave","drop"].forEach(evt => {
+        uploadArea.addEventListener(evt, (e)=>{
+            e.preventDefault();
+            uploadArea.classList.remove("dragOver");
+        });
+    });
+
+    uploadArea.addEventListener("drop", (e)=>{
+        const file = e.dataTransfer.files[0];
+        if(file && file.type.startsWith("video/")){
+            handleFile(file);
+        }
+    });
+
+    videoInput.addEventListener("change", (e)=>{
+        if(e.target.files[0]) handleFile(e.target.files[0]);
+    });
+
+    function handleFile(file){
+        selectedFile = file;
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = "block";
+        uploadArea.style.display = "none";
+        uploadForm.style.display = "flex";
+    }
+
+    uploadBtn.addEventListener("click", ()=>{
+        if(!CloudTokAuthGuard.requireLogin()) return;
+        if(!selectedFile){ alert("Please select a video"); return; }
+
+        const btnText = uploadBtn.querySelector(".btnText");
+        const btnLoader = uploadBtn.querySelector(".btnLoader");
+        btnText.style.display = "none";
+        btnLoader.style.display = "inline-block";
+        uploadBtn.disabled = true;
+        uploadProgress.style.display = "block";
+
+        const uploader = new CloudTokUploader();
+        uploader.uploadVideo(selectedFile, {
+            caption: captionInput.value,
+            tags: tagsInput.value,
+            category: selectedCategory,
+            onProgress: (value)=>{
+                progressFill.style.width = value + "%";
+                progressText.textContent = "Uploading " + value + "%";
+            },
+            onComplete: (video)=>{
+                progressText.textContent = "Upload complete!";
+                setTimeout(()=>{ window.location.href = "index.html"; }, 800);
+            }
+        });
+    });
 };
-
-
 </script>
-		
-</body>
 
+</body>
 </html>

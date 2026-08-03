@@ -10,6 +10,42 @@
 
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/chat.css">
+<style>
+.emojiBar{display:flex;gap:6px;padding:8px 12px;overflow-x:auto;border-top:1px solid rgba(255,255,255,.06);}
+.emojiBar button{
+    background:none;border:none;font-size:24px;cursor:pointer;
+    padding:4px 6px;border-radius:8px;transition:background .2s;flex-shrink:0;
+}
+.emojiBar button:hover{background:rgba(255,255,255,.08);}
+.gifPanel{
+    display:none;position:absolute;bottom:60px;left:0;right:0;
+    background:#111;border-top:1px solid rgba(255,255,255,.08);
+    max-height:250px;overflow-y:auto;padding:10px;
+}
+.gifPanel.show{display:block;}
+.gifGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.gifItem{
+    border-radius:10px;overflow:hidden;cursor:pointer;
+    aspect-ratio:1;background:rgba(255,255,255,.05);
+    display:flex;align-items:center;justify-content:center;
+    font-size:40px;transition:transform .2s;
+}
+.gifItem:hover{transform:scale(1.05);}
+.gifSearch{width:100%;padding:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;font-size:14px;margin-bottom:10px;outline:none;}
+.gifSearch::placeholder{color:rgba(255,255,255,.3);}
+.messageBar{position:relative;}
+.gifToggleBtn{
+    background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;
+    cursor:pointer;padding:8px;
+}
+.gifToggleBtn:hover{color:#fff;}
+.callBtns{display:flex;gap:4px;}
+.callBtn{
+    background:none;border:none;font-size:18px;cursor:pointer;
+    padding:6px 8px;border-radius:8px;
+}
+.callBtn:hover{background:rgba(255,255,255,.08);}
+</style>
 
 </head>
 
@@ -23,47 +59,92 @@
         ←
     </button>
 
-
     <img
     id="conversationAvatar"
     class="conversationAvatar"
     src="assets/images/default-avatar.png">
 
-
     <h2 id="conversationName">
         Loading...
     </h2>
 
+    <div class="callBtns">
+        <button class="callBtn" onclick="alert('Voice calling coming soon! Requires WebRTC infrastructure.')">📞</button>
+        <button class="callBtn" onclick="alert('Video calling coming soon! Requires WebRTC infrastructure.')">📹</button>
+    </div>
 
 </div>
 
-    <div
-        id="messageList"
-        class="messageList">
+    <div id="messageList" class="messageList"></div>
 
+    <div class="gifPanel" id="gifPanel">
+        <input class="gifSearch" id="gifSearch" placeholder="Search GIFs...">
+        <div class="gifGrid" id="gifGrid"></div>
     </div>
 
     <div class="messageBar">
-
-        <input
-            id="messageInput"
-            type="text"
-            placeholder="Type a message...">
-
-        <button
-            id="sendMessageBtn">
-
-            Send
-
-        </button>
-
+        <button class="gifToggleBtn" id="gifToggleBtn">GIF</button>
+        <input id="messageInput" type="text" placeholder="Type a message...">
+        <button id="sendMessageBtn">Send</button>
     </div>
+
+    <div class="emojiBar" id="emojiBar"></div>
 
 </div>
 
 <script src="assets/js/database/database.js"></script>
 <script src="assets/js/chat/conversation.js"></script>
 <script src="assets/js/api/api.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", ()=>{
+    const emojis = ["😀","😂","😍","🥰","😎","🤩","🥳","😢","😭","😡","🥺","😏","🤔","👍","👎","❤️","🔥","💯","🎉","👏","🙌","💪","🙏","✨","🌟","💖","🎵","🎶","🎬","📸"];
+    const gifEmojis = ["😀😂😍🥰","😎🤩🥳","😢😭😡","👍❤️🔥","💯🎉👏","💪🙏✨","🎵🎶🎬","💖🌟📸","🥳🎉","😍❤️","😂🤣","😎🔥","👏💯✨","🙏💪","💖🎵","🌟🎶"];
+    const emojiBar = document.getElementById("emojiBar");
+    const input = document.getElementById("messageInput");
+    const gifToggle = document.getElementById("gifToggleBtn");
+    const gifPanel = document.getElementById("gifPanel");
+    const gifGrid = document.getElementById("gifGrid");
+
+    emojis.forEach(e=>{
+        const btn = document.createElement("button");
+        btn.textContent = e;
+        btn.onclick = ()=>{
+            input.value += e;
+            input.focus();
+        };
+        emojiBar.appendChild(btn);
+    });
+
+    gifToggle.onclick = ()=>{
+        gifPanel.classList.toggle("show");
+        if(gifPanel.classList.contains("show")){
+            renderGIFs("");
+        }
+    };
+
+    function renderGIFs(query){
+        gifGrid.innerHTML = "";
+        const allGIFs = gifEmojis.map((g,i)=>({id:i,emoji:g}));
+        const filtered = query ? allGIFs.filter(g=>g.emoji.includes(query)) : allGIFs;
+        filtered.forEach(gif=>{
+            const item = document.createElement("div");
+            item.className = "gifItem";
+            item.textContent = gif.emoji;
+            item.onclick = ()=>{
+                input.value += gif.emoji;
+                gifPanel.classList.remove("show");
+                input.focus();
+            };
+            gifGrid.appendChild(item);
+        });
+    }
+
+    document.getElementById("gifSearch").addEventListener("input", (e)=>{
+        renderGIFs(e.target.value);
+    });
+});
+</script>
 
 </body>
 

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Settings - CloudTok</title>
+<meta name="description" content="Manage your CloudTok account settings.">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/settings.css">
+</head>
+<body>
+
+<div class="settingsPage">
+
+<div class="settingsHeader">
+    <button class="backBtn" onclick="history.back()">←</button>
+    <h2>Settings</h2>
+    <div></div>
+</div>
+
+<div class="settingsContent">
+
+<div class="settingsSection">
+    <h3>Account</h3>
+    <div class="settingItem" id="editProfileBtn">
+        <span class="settingIcon">👤</span>
+        <div class="settingInfo">
+            <span class="settingLabel">Edit Profile</span>
+            <span class="settingDesc">Change your name, bio, avatar</span>
+        </div>
+        <span class="settingArrow">›</span>
+    </div>
+    <div class="settingItem" id="changeEmailBtn">
+        <span class="settingIcon">📧</span>
+        <div class="settingInfo">
+            <span class="settingLabel">Email</span>
+            <span class="settingDesc" id="currentEmail">Not set</span>
+        </div>
+        <span class="settingArrow">›</span>
+    </div>
+    <div class="settingItem" id="changePasswordBtn">
+        <span class="settingIcon">🔒</span>
+        <div class="settingInfo">
+            <span class="settingLabel">Change Password</span>
+            <span class="settingDesc">Update your password</span>
+        </div>
+        <span class="settingArrow">›</span>
+    </div>
+</div>
+
+<div class="settingsSection">
+    <h3>Privacy</h3>
+    <div class="settingItem">
+        <span class="settingIcon">👁</span>
+        <div class="settingInfo">
+            <span class="settingLabel">Private Account</span>
+            <span class="settingDesc">Only followers can see your videos</span>
+        </div>
+        <label class="toggle">
+            <input type="checkbox" id="privateToggle">
+            <span class="toggleSlider"></span>
+        </label>
+    </div>
+    <div class="settingItem">
+        <span class="settingIcon">💬</span>
+        <div class="settingInfo">
+            <span class="settingLabel">Allow Messages</span>
+            <span class="settingDesc">Who can send you messages</span>
+        </div>
+        <span class="settingArrow">›</span>
+    </div>
+</div>
+
+<div class="settingsSection">
+    <h3>Notifications</h3>
+    <div class="settingItem">
+        <span class="settingIcon">🔔</span>
+        <div class="settingInfo">
+            <span class="settingLabel">Push Notifications</span>
+            <span class="settingDesc">Likes, comments, follows</span>
+        </div>
+        <label class="toggle">
+            <input type="checkbox" id="notifToggle" checked>
+            <span class="toggleSlider"></span>
+        </label>
+    </div>
+    <div class="settingItem">
+        <span class="settingIcon">📩</span>
+        <div class="settingInfo">
+            <span class="settingLabel">Email Notifications</span>
+            <span class="settingDesc">Updates about your account</span>
+        </div>
+        <label class="toggle">
+            <input type="checkbox" id="emailNotifToggle">
+            <span class="toggleSlider"></span>
+        </label>
+    </div>
+</div>
+
+<div class="settingsSection">
+    <h3>Wallet & Payments</h3>
+    <div class="settingItem" onclick="location.href='payment.html'">
+        <span class="settingIcon">💰</span>
+        <div class="settingInfo">
+            <span class="settingLabel">Wallet Balance</span>
+            <span class="settingDesc" id="walletBalance">$0.00</span>
+        </div>
+        <span class="settingArrow">›</span>
+    </div>
+    <div class="settingItem" onclick="location.href='payment.html'">
+        <span class="settingIcon">💳</span>
+        <div class="settingInfo">
+            <span class="settingLabel">Payment Methods</span>
+            <span class="settingDesc">Manage cards and bank accounts</span>
+        </div>
+        <span class="settingArrow">›</span>
+    </div>
+    <div class="settingItem" onclick="location.href='payment.html'">
+        <span class="settingIcon">🎁</span>
+        <div class="settingInfo">
+            <span class="settingLabel">Virtual Gifts</span>
+            <span class="settingDesc">Send and receive gifts</span>
+        </div>
+        <span class="settingArrow">›</span>
+    </div>
+</div>
+
+<div class="settingsSection">
+    <h3>Support</h3>
+    <div class="settingItem">
+        <span class="settingIcon">❓</span>
+        <div class="settingInfo">
+            <span class="settingLabel">Help Center</span>
+            <span class="settingDesc">FAQ and support</span>
+        </div>
+        <span class="settingArrow">›</span>
+    </div>
+    <div class="settingItem">
+        <span class="settingIcon">📋</span>
+        <div class="settingInfo">
+            <span class="settingLabel">Terms of Service</span>
+        </div>
+        <span class="settingArrow">›</span>
+    </div>
+    <div class="settingItem">
+        <span class="settingIcon">🛡</span>
+        <div class="settingInfo">
+            <span class="settingLabel">Privacy Policy</span>
+        </div>
+        <span class="settingArrow">›</span>
+    </div>
+</div>
+
+<div class="settingsSection">
+    <div class="settingItem danger" id="logoutBtn">
+        <span class="settingIcon">🚪</span>
+        <div class="settingInfo">
+            <span class="settingLabel">Log Out</span>
+        </div>
+    </div>
+    <div class="settingItem danger" id="deleteAccountBtn">
+        <span class="settingIcon">⚠️</span>
+        <div class="settingInfo">
+            <span class="settingLabel">Delete Account</span>
+            <span class="settingDesc">This action cannot be undone</span>
+        </div>
+    </div>
+</div>
+
+</div>
+
+</div>
+
+<script src="assets/js/database/database.js"></script>
+<script src="assets/js/database/users.js"></script>
+<script src="assets/js/database/authGuard.js"></script>
+<script src="assets/js/api/api.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", async ()=>{
+    const emailEl = document.getElementById("currentEmail");
+
+    const user = CloudTokUsers.getCurrentUser();
+    if(user && user.email){
+        emailEl.textContent = user.email;
+    }
+
+    document.getElementById("logoutBtn").addEventListener("click", ()=>{
+        if(confirm("Are you sure you want to log out?")){
+            localStorage.removeItem("CloudTokToken");
+            localStorage.removeItem("CloudTokCurrentUser");
+            window.location.href = "login.html";
+        }
+    });
+
+    document.getElementById("deleteAccountBtn").addEventListener("click", async ()=>{
+        if(confirm("Are you sure? This cannot be undone.")){
+            if(confirm("This will permanently delete your account. Continue?")){
+                localStorage.clear();
+                window.location.href = "login.html";
+            }
+        }
+    });
+
+    document.getElementById("changePasswordBtn").addEventListener("click", ()=>{
+        window.location.href = "forgot-password.html";
+    });
+
+    document.getElementById("editProfileBtn").addEventListener("click", ()=>{
+        window.location.href = "profile.html?user=" + (user?.username || "");
+    });
+});
+</script>
+
+</body>
+</html>
