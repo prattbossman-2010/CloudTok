@@ -30,10 +30,6 @@ this.setup();
 
 setup(){
 
-if(!this.video.comments){
-this.video.comments=[];
-}
-
 if(this.sendBtn){
     this.sendBtn.onclick = ()=>{
         this.addComment();
@@ -74,6 +70,7 @@ this.list.innerHTML="";
 
 
 let comments=[];
+let count=0;
 
 if(typeof CloudTokAPI!=="undefined"){
 
@@ -92,6 +89,8 @@ if(typeof CloudTokAPI!=="undefined"){
                 avatar:c.avatar
             }));
 
+            count=comments.length;
+
         }
 
     }
@@ -102,18 +101,14 @@ if(typeof CloudTokAPI!=="undefined"){
 }
 
 if(comments.length===0){
-    comments=this.video.comments||[];
-}
-
-if(comments.length===0){
 
     this.list.innerHTML = `
     <p class="noComments">No comments yet</p>
     `;
+    this.updateCountDirect(0);
     return;
 
 }
-
 
 comments.forEach(comment=>{
 
@@ -153,6 +148,8 @@ comments.forEach(comment=>{
 
 });
 
+this.updateCountDirect(count);
+
 }
 
 
@@ -177,16 +174,10 @@ if(typeof CloudTokAPI!=="undefined"){
 
         if(result.success){
             this.input.value="";
-            this.video.comments=(this.video.comments||[]);
-            this.video.comments.push({
-                id:Date.now(),
-                username:this.currentUser,
-                text:text,
-                time:Date.now()
-            });
             this.render();
-            this.updateCount();
-            this.save();
+            if(window.CloudTokActiveVideoCard){
+                window.CloudTokActiveVideoCard.updateCommentCount();
+            }
             return;
         }
 
@@ -198,19 +189,7 @@ if(typeof CloudTokAPI!=="undefined"){
 }
 
 
-const comment = {
-    id:Date.now(),
-    username:this.currentUser,
-    text:text,
-    time:Date.now()
-};
-
-this.video.comments.push(comment);
-this.save();
-this.input.value="";
 this.render();
-this.updateCount();
-
 if(window.CloudTokActiveVideoCard){
     window.CloudTokActiveVideoCard.updateCommentCount();
 }
@@ -218,23 +197,11 @@ if(window.CloudTokActiveVideoCard){
 }
 
 
+updateCountDirect(count){
 
-save(){
-
-const index = CloudTokDatabase.videos.findIndex(
-    video=>video.id===this.video.id
-);
-
-if(index !== -1){
-    CloudTokDatabase.videos[index] = this.video;
-}
-
-try{
-    localStorage.setItem("CloudTokVideos",
-    JSON.stringify(CloudTokDatabase.videos));
-}
-catch(error){
-    console.log("COMMENT SAVE ERROR:",error);
+const watchCount = document.getElementById("watchCommentCount");
+if(watchCount){
+    watchCount.textContent = count;
 }
 
 }
@@ -242,14 +209,7 @@ catch(error){
 
 updateCount(){
 
-const watchCount = document.getElementById("watchCommentCount");
-if(watchCount){
-    watchCount.textContent = this.video.comments.length;
-}
-
-if(window.CloudTokActiveVideoCard){
-    window.CloudTokActiveVideoCard.updateCommentCount();
-}
+this.render();
 
 }
 

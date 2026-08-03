@@ -211,10 +211,13 @@ return localStorage.getItem("CloudTokCurrentUser")||"";
 function hasLikedVideo(videoId){
 const user=getCurrentCloudTokUser();
 const video=
-CloudTokDatabase.videos.find(v=>v.id===videoId);
+CloudTokDatabase.videos.find(v=>Number(v.id)===Number(videoId));
 if(!video)return false;
 if(!video.likedBy)video.likedBy=[];
-return video.likedBy.includes(user);
+return video.likedBy.some(u=>{
+    const nu=String(u).replace(/^@+/,"").trim().toLowerCase();
+    return nu===user.replace(/^@+/,"").trim().toLowerCase();
+});
 }
 
 
@@ -225,7 +228,7 @@ function toggleVideoLike(videoId){
         .then(result=>{
             if(result.success){
                 const video=
-                CloudTokDatabase.videos.find(v=>v.id===videoId);
+                CloudTokDatabase.videos.find(v=>Number(v.id)===Number(videoId));
                 if(video){
                     if(result.liked){
                         video.likes++;
@@ -242,7 +245,7 @@ function toggleVideoLike(videoId){
 
     const user=getCurrentCloudTokUser();
     const video=
-    CloudTokDatabase.videos.find(v=>v.id===videoId);
+    CloudTokDatabase.videos.find(v=>Number(v.id)===Number(videoId));
     if(!video)return;
     if(!video.likedBy)video.likedBy=[];
     const index=video.likedBy.indexOf(user);

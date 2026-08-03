@@ -106,7 +106,9 @@ options.category
 await CloudTokAPI.uploadVideo(
     file,
     caption,
-    thumbnail
+    thumbnail,
+    JSON.stringify(tags),
+    category
 );
 
 
