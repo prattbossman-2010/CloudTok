@@ -9,8 +9,11 @@ class CloudTokWebRTC {
         this.onRemoteStream = null;
         this.onCallEnd = null;
         this.onIncomingCall = null;
+        this.onAnswerReceived = null;
         this.isInitiator = false;
         this.backendReady = false;
+        this.iceCandidateQueue = [];
+        this.isInCall = false;
     }
 
     async startLocalStream(video = true) {
@@ -27,11 +30,18 @@ class CloudTokWebRTC {
     }
 
     createPeerConnection() {
+        if (this.pc) {
+            this.pc.close();
+            this.pc = null;
+        }
+
         const config = {
             iceServers: [
                 { urls: "stun:stun.l.google.com:19302" },
                 { urls: "stun:stun1.l.google.com:19302" },
-                { urls: "stun:stun2.l.google.com:19302" }
+                { urls: "stun:stun2.l.google.com:19302" },
+                { urls: "stun:stun3.l.google.com:19302" },
+                { urls: "stun:stun4.l.google.com:19302" }
             ]
         };
 
@@ -39,7 +49,7 @@ class CloudTokWebRTC {
 
         this.pc.onicecandidate = (e) => {
             if (e.candidate) {
-                this.sendSignal("ice-candidate", e.candidate);
+                this.sendSignal("ice-candidate", e.candidate.toJSON());
             }
         };
 
@@ -51,8 +61,16 @@ class CloudTokWebRTC {
         };
 
         this.pc.onconnectionstatechange = () => {
-            if (this.pc.connectionState === "disconnected" || this.pc.connectionState === "failed") {
-                this.endCall();
+            const state = this.pc ? this.pc.connectionState : "closed";
+            if (state === "failed" || state === "closed") {
+                this.endCall(false);
+            }
+        };
+
+        this.pc.oniceconnectionstatechange = () => {
+            const state = this.pc ? this.pc.iceConnectionState : "closed";
+            if (state === "failed") {
+                this.endCall(false);
             }
         };
 
@@ -67,6 +85,9 @@ class CloudTokWebRTC {
 
     async initiateCall(toUsername, video = true) {
         this.isInitiator = true;
+        this.isInCall = true;
+        this.iceCandidateQueue = [];
+
         await this.startLocalStream(video);
         this.createPeerConnection();
 
@@ -74,48 +95,46 @@ class CloudTokWebRTC {
         await this.pc.setLocalDescription(offer);
 
         await this.sendSignal("call-offer", {
-            sdp: offer.sdp,
-            type: offer.type,
+            sdp: this.pc.localDescription.sdp,
+            type: this.pc.localDescription.type,
             video: video
         });
 
         this.startPolling(toUsername);
     }
 
-    async handleOffer(fromUsername, signalData) {
-        this.isInitiator = false;
-        await this.startLocalStream(signalData.video !== false);
-        this.createPeerConnection();
-
-        await this.pc.setRemoteDescription(new RTCSessionDescription({
-            sdp: signalData.sdp,
-            type: signalData.type
-        }));
-
-        const answer = await this.pc.createAnswer();
-        await this.pc.setLocalDescription(answer);
-
-        await this.sendSignal("call-answer", {
-            sdp: answer.sdp,
-            type: answer.type
-        });
-
-        this.startPolling(fromUsername);
-    }
-
     async handleAnswer(signalData) {
-        if (this.pc) {
-            await this.pc.setRemoteDescription(new RTCSessionDescription({
-                sdp: signalData.sdp,
-                type: signalData.type
-            }));
+        if (this.pc && signalData) {
+            try {
+                await this.pc.setRemoteDescription(new RTCSessionDescription({
+                    sdp: signalData.sdp,
+                    type: signalData.type
+                }));
+
+                for (const candidate of this.iceCandidateQueue) {
+                    try {
+                        await this.pc.addIceCandidate(new RTCIceCandidate(candidate));
+                    } catch (e) {}
+                }
+                this.iceCandidateQueue = [];
+
+                if (this.onAnswerReceived) {
+                    this.onAnswerReceived();
+                }
+            } catch (e) {
+                console.error("handleAnswer error:", e);
+            }
         }
     }
 
     async handleIceCandidate(signalData) {
         if (this.pc && signalData) {
             try {
-                await this.pc.addIceCandidate(new RTCIceCandidate(signalData));
+                if (this.pc.remoteDescription) {
+                    await this.pc.addIceCandidate(new RTCIceCandidate(signalData));
+                } else {
+                    this.iceCandidateQueue.push(signalData);
+                }
             } catch (e) {
                 console.error("ICE candidate error:", e);
             }
@@ -151,6 +170,8 @@ class CloudTokWebRTC {
             clearInterval(this.pollInterval);
         }
 
+        const pollMs = this.isInCall ? 500 : 2000;
+
         this.pollInterval = setInterval(async () => {
             if (typeof CloudTokAPI === "undefined") return;
 
@@ -159,20 +180,20 @@ class CloudTokWebRTC {
                     "/webrtc/poll?after=" + this.lastSignalId
                 );
 
-                if (result.error === "Not authenticated") return;
+                if (result.error) return;
 
                 this.backendReady = true;
 
                 if (result.signals) {
                     for (const signal of result.signals) {
-                        this.lastSignalId = signal.id;
+                        if (signal.id > this.lastSignalId) {
+                            this.lastSignalId = signal.id;
+                        }
 
                         switch (signal.type) {
                             case "call-offer":
                                 if (this.onIncomingCall) {
                                     this.onIncomingCall(signal.from, signal.data);
-                                } else {
-                                    this.handleOffer(signal.from, signal.data);
                                 }
                                 break;
                             case "call-answer":
@@ -190,10 +211,12 @@ class CloudTokWebRTC {
             } catch (e) {
                 this.backendReady = false;
             }
-        }, 2000);
+        }, pollMs);
     }
 
     endCall(notify = true) {
+        this.isInCall = false;
+
         if (notify && this._targetUsername) {
             this.sendSignal("call-end", {}).catch(() => {});
         }
@@ -215,6 +238,7 @@ class CloudTokWebRTC {
 
         this.remoteStream = null;
         this._targetUsername = null;
+        this.iceCandidateQueue = [];
 
         if (this.onCallEnd) {
             this.onCallEnd();

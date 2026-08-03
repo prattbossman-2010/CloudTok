@@ -15,7 +15,7 @@ body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Seg
 .streams{padding:0 16px 80px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
 .streamCard{border-radius:16px;overflow:hidden;background:#111;cursor:pointer;position:relative;}
 .streamCard:hover{opacity:.9;}
-.streamThumb{width:100%;aspect-ratio:9/16;object-fit:cover;background:#111;}
+.streamThumb{width:100%;aspect-ratio:9/16;display:flex;align-items:center;justify-content:center;font-size:48px;}
 .streamInfo{position:absolute;bottom:0;left:0;right:0;padding:12px;background:linear-gradient(transparent,rgba(0,0,0,.9));}
 .streamTitle{font-size:14px;font-weight:600;margin-bottom:4px;}
 .streamHost{font-size:12px;color:rgba(255,255,255,.6);}
@@ -26,19 +26,16 @@ body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Seg
 
 .viewer{display:none;position:fixed;inset:0;background:#000;z-index:999;flex-direction:column;}
 .viewer.active{display:flex;}
-.viewerVideo{width:100%;flex:1;object-fit:contain;background:#000;}
-.viewerHeader{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:12px;padding:12px 16px;background:linear-gradient(rgba(0,0,0,.8),transparent);z-index:2;}
-.viewerHeader .back{width:36px;height:36px;}
+.viewerVideo{width:100%;height:100vh;object-fit:contain;background:#000;}
+.viewerOverlay{position:absolute;top:0;left:0;right:0;padding:12px 16px;display:flex;align-items:center;gap:10px;background:linear-gradient(rgba(0,0,0,.7),transparent);z-index:2;}
+.viewerOverlay .back{width:36px;height:36px;}
 .viewerTitle{flex:1;font-size:16px;font-weight:600;}
 .viewerHost{font-size:13px;color:rgba(255,255,255,.6);}
-.viewerViewers{display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(255,45,85,.9);border-radius:20px;font-size:12px;font-weight:600;}
-.viewerBottom{position:absolute;bottom:0;left:0;right:0;padding:16px;background:linear-gradient(transparent,rgba(0,0,0,.8));z-index:2;}
-.viewerChat{max-height:150px;overflow-y:auto;margin-bottom:10px;}
-.viewerChatMsg{padding:4px 0;font-size:13px;color:rgba(255,255,255,.7);}
-.viewerChatMsg strong{color:#ff2d55;}
-.viewerInput{display:flex;gap:8px;}
-.viewerInput input{flex:1;padding:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:20px;color:#fff;font-size:14px;outline:none;}
-.viewerInput button{padding:10px 16px;background:#ff2d55;color:#fff;border:none;border-radius:20px;font-size:14px;font-weight:600;cursor:pointer;}
+.viewerLive{display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(255,45,85,.9);border-radius:20px;font-size:12px;font-weight:600;}
+.viewerStatus{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);padding:8px 16px;background:rgba(0,0,0,.6);border-radius:20px;font-size:13px;z-index:2;}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;}
+.toast.success{background:#00c853;color:#fff;}
+.toast.error{background:#ff2d55;color:#fff;}
 </style>
 </head>
 <body>
@@ -50,17 +47,15 @@ body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Seg
 
 <div class="viewer" id="viewer">
     <video class="viewerVideo" id="viewerVideo" autoplay playsinline></video>
-    <div class="viewerHeader">
+    <div class="viewerOverlay">
         <button class="back" onclick="closeViewer()">←</button>
         <div>
             <div class="viewerTitle" id="viewerTitle"></div>
             <div class="viewerHost" id="viewerHost"></div>
         </div>
-        <div class="viewerViewers"><span class="liveDot"></span> LIVE</div>
+        <div class="viewerLive"><span class="liveDot"></span> LIVE</div>
     </div>
-    <div class="viewerBottom">
-        <div class="viewerChat" id="viewerChat"></div>
-    </div>
+    <div class="viewerStatus" id="viewerStatus">Connecting...</div>
 </div>
 
 <script src="assets/js/database/database.js"></script>
@@ -69,31 +64,43 @@ body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Seg
 <script src="assets/js/core/callPoller.js"></script>
 <script>
 let currentStream = null;
+let viewerPC = null;
+let signalPoll = null;
+let lastSignalId = 0;
+
+function showToast(msg, type="success"){
+    const t=document.createElement("div");
+    t.className="toast "+type;
+    t.textContent=msg;
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(),3000);
+}
 
 async function loadStreams(){
     const grid = document.getElementById("streamsGrid");
     try {
         const result = await CloudTokAPI.request("/live/streams");
         const streams = result.streams || [];
-
         if(streams.length === 0){
             grid.innerHTML = '<div class="empty"><div class="icon">📡</div><p>No live streams right now</p></div>';
             return;
         }
-
         grid.innerHTML = "";
-        streams.forEach(s => {
+        const colors = ["#ff2d55","#7b2ff2","#00b7ff","#00c853","#ff9500","#ff3b30"];
+        streams.forEach((s, i) => {
             const card = document.createElement("div");
             card.className = "streamCard";
+            const c1 = colors[i % colors.length];
+            const c2 = colors[(i+3) % colors.length];
             card.innerHTML = `
-                <div class="streamThumb" style="background:linear-gradient(135deg,#${Math.floor(Math.random()*16777215).toString(16).padStart(6,'0')},#${Math.floor(Math.random()*16777215).toString(16).padStart(6,'0')});display:flex;align-items:center;justify-content:center;font-size:48px;">🎥</div>
+                <div class="streamThumb" style="background:linear-gradient(135deg,${c1},${c2});">🎥</div>
                 <div class="streamLive"><span class="liveDot"></span> LIVE</div>
                 <div class="streamInfo">
                     <div class="streamTitle">${s.title || "Live Stream"}</div>
                     <div class="streamHost">@${s.username}</div>
                 </div>
             `;
-            card.onclick = () => openViewer(s);
+            card.onclick = () => joinStream(s);
             grid.appendChild(card);
         });
     } catch(e){
@@ -101,16 +108,131 @@ async function loadStreams(){
     }
 }
 
-function openViewer(stream){
+async function joinStream(stream){
     currentStream = stream;
     document.getElementById("viewerTitle").textContent = stream.title || "Live Stream";
     document.getElementById("viewerHost").textContent = "@" + stream.username;
     document.getElementById("viewer").classList.add("active");
+    document.getElementById("viewerStatus").textContent = "Connecting...";
+
+    viewerPC = new RTCPeerConnection({
+        iceServers: [
+            { urls: "stun:stun.l.google.com:19302" },
+            { urls: "stun:stun1.l.google.com:19302" }
+        ]
+    });
+
+    viewerPC.ontrack = (e) => {
+        document.getElementById("viewerVideo").srcObject = e.streams[0];
+        document.getElementById("viewerStatus").textContent = "Watching live";
+    };
+
+    viewerPC.onicecandidate = (e) => {
+        if(e.candidate){
+            CloudTokAPI.request("/webrtc/signal", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    to_username: stream.username,
+                    signal_type: "live-ice-viewer",
+                    signal_data: { candidate: e.candidate.toJSON(), stream_key: stream.stream_key }
+                })
+            });
+        }
+    };
+
+    viewerPC.onconnectionstatechange = () => {
+        const state = viewerPC ? viewerPC.connectionState : "closed";
+        if(state === "disconnected" || state === "failed"){
+            document.getElementById("viewerStatus").textContent = "Stream ended";
+            setTimeout(closeViewer, 2000);
+        }
+    };
+
+    try {
+        const offer = await viewerPC.createOffer();
+        await viewerPC.setLocalDescription(offer);
+
+        await CloudTokAPI.request("/webrtc/signal", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                to_username: stream.username,
+                signal_type: "live-join",
+                signal_data: {
+                    offer: { sdp: viewerPC.localDescription.sdp, type: viewerPC.localDescription.type },
+                    stream_key: stream.stream_key
+                }
+            })
+        });
+
+        startSignalPoll();
+    } catch(e){
+        document.getElementById("viewerStatus").textContent = "Failed to connect";
+        showToast("Could not connect to stream", "error");
+    }
+}
+
+function startSignalPoll(){
+    if(signalPoll) clearInterval(signalPoll);
+    lastSignalId = 0;
+
+    signalPoll = setInterval(async ()=>{
+        if(!currentStream) return;
+        try {
+            const result = await CloudTokAPI.request("/webrtc/poll?after=" + lastSignalId);
+            if(result.signals){
+                for(const signal of result.signals){
+                    if(signal.id > lastSignalId) lastSignalId = signal.id;
+
+                    if(signal.type === "live-answer" && viewerPC){
+                        await viewerPC.setRemoteDescription(new RTCSessionDescription(signal.data));
+                        document.getElementById("viewerStatus").textContent = "Watching live";
+                    }
+                    else if(signal.type === "live-ice-viewer" && viewerPC && signal.data){
+                        try {
+                            if(viewerPC.remoteDescription){
+                                await viewerPC.addIceCandidate(new RTCIceCandidate(signal.data.candidate));
+                            }
+                        } catch(e){}
+                    }
+                    else if(signal.type === "live-end"){
+                        document.getElementById("viewerStatus").textContent = "Stream ended";
+                        setTimeout(closeViewer, 1500);
+                    }
+                }
+            }
+        } catch(e){}
+    }, 1000);
 }
 
 function closeViewer(){
-    document.getElementById("viewer").classList.remove("active");
+    if(viewerPC){
+        viewerPC.close();
+        viewerPC = null;
+    }
+    if(signalPoll){
+        clearInterval(signalPoll);
+        signalPoll = null;
+    }
+
+    if(currentStream){
+        try {
+            CloudTokAPI.request("/webrtc/signal", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    to_username: currentStream.username,
+                    signal_type: "live-leave",
+                    signal_data: { stream_key: currentStream.stream_key }
+                })
+            });
+        } catch(e){}
+    }
+
     currentStream = null;
+    document.getElementById("viewer").classList.remove("active");
+    document.getElementById("viewerVideo").srcObject = null;
 }
 
 loadStreams();
