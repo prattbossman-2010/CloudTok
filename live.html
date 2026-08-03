@@ -132,6 +132,8 @@ document.getElementById("goLiveBtn").onclick = async ()=>{
 
         startSignalPoll();
         showToast("You are now live!");
+
+        window.addEventListener("beforeunload", endStream);
     } else {
         showToast((result && result.error) || "Failed to start stream","error");
     }
@@ -181,19 +183,24 @@ async function handleViewerJoin(viewerUsername, data){
 
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
 
-    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+    localStream.getTracks().forEach(track => {
+        console.log("[Live] Adding track to viewer PC:", track.kind);
+        pc.addTrack(track, localStream);
+    });
 
-    pc.onicecandidate = (e) => {
+    pc.onicecandidate = async (e) => {
         if(e.candidate){
-            CloudTokAPI.request("/webrtc/signal", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    to_username: viewerUsername,
-                    signal_type: "live-ice",
-                    signal_data: { candidate: e.candidate.toJSON() }
-                })
-            });
+            try {
+                await CloudTokAPI.request("/webrtc/signal", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        to_username: viewerUsername,
+                        signal_type: "live-ice",
+                        signal_data: { candidate: e.candidate.toJSON() }
+                    })
+                });
+            } catch(err) { console.error("[Live] Failed to send ICE:", err); }
         }
     };
 
@@ -214,8 +221,10 @@ async function handleViewerJoin(viewerUsername, data){
     if(data && data.offer){
         try {
             await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+            console.log("[Live] Set remote description, creating answer...");
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
+            console.log("[Live] Answer created, SDP length:", pc.localDescription.sdp.length);
 
             await CloudTokAPI.request("/webrtc/signal", {
                 method: "POST",

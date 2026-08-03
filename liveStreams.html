@@ -65,6 +65,7 @@ let currentStream = null;
 let viewerPC = null;
 let signalPollInterval = null;
 let lastSignalId = 0;
+let viewerIceQueue = [];
 
 const ICE_SERVERS = [
     { urls: "stun:stun.l.google.com:19302" },
@@ -121,6 +122,7 @@ async function joinStream(stream){
     }
 
     currentStream = stream;
+    viewerIceQueue = [];
     document.getElementById("viewerTitle").textContent = stream.title || "Live Stream";
     document.getElementById("viewerHost").textContent = "@" + stream.username;
     document.getElementById("viewer").classList.add("active");
@@ -129,23 +131,27 @@ async function joinStream(stream){
     viewerPC = new RTCPeerConnection({ iceServers: ICE_SERVERS });
 
     viewerPC.ontrack = (e) => {
-        console.log("[Viewer] ontrack:", e.track.kind);
-        document.getElementById("viewerVideo").srcObject = e.streams[0];
-        document.getElementById("viewerStatus").textContent = "Watching live";
+        console.log("[Viewer] ontrack:", e.track.kind, "streams:", e.streams.length);
+        if(e.streams && e.streams[0]){
+            document.getElementById("viewerVideo").srcObject = e.streams[0];
+            document.getElementById("viewerStatus").textContent = "Watching live";
+        }
     };
 
-    viewerPC.onicecandidate = (e) => {
+    viewerPC.onicecandidate = async (e) => {
         if(e.candidate){
             console.log("[Viewer] Sending ICE candidate");
-            CloudTokAPI.request("/webrtc/signal", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    to_username: stream.username,
-                    signal_type: "live-ice-viewer",
-                    signal_data: { candidate: e.candidate.toJSON(), stream_key: stream.stream_key }
-                })
-            });
+            try {
+                await CloudTokAPI.request("/webrtc/signal", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        to_username: stream.username,
+                        signal_type: "live-ice-viewer",
+                        signal_data: { candidate: e.candidate.toJSON(), stream_key: stream.stream_key }
+                    })
+                });
+            } catch(err) { console.error("[Viewer] Failed to send ICE:", err); }
         }
     };
 
@@ -208,6 +214,11 @@ function startSignalPoll(){
                             await viewerPC.setRemoteDescription(new RTCSessionDescription(signal.data));
                             console.log("[Viewer] Remote description set from answer");
                             document.getElementById("viewerStatus").textContent = "Connected";
+                            console.log("[Viewer] Draining", viewerIceQueue.length, "queued ICE candidates");
+                            for(const c of viewerIceQueue){
+                                try { await viewerPC.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
+                            }
+                            viewerIceQueue = [];
                         } catch(e){ console.error("[Viewer] setRemoteDescription failed:", e); }
                     }
                     else if(signal.type === "live-ice" && viewerPC && signal.data && signal.data.candidate){
@@ -217,7 +228,7 @@ function startSignalPoll(){
                                 console.log("[Viewer] Added streamer ICE candidate");
                             } else {
                                 console.log("[Viewer] Queuing ICE candidate (no remoteDescription yet)");
-                                viewerPC.addIceCandidate(new RTCIceCandidate(signal.data.candidate)).catch(()=>{});
+                                viewerIceQueue.push(signal.data.candidate);
                             }
                         } catch(e){ console.error("[Viewer] ICE error:", e); }
                     }
@@ -261,6 +272,7 @@ function closeViewer(){
     }
 
     currentStream = null;
+    viewerIceQueue = [];
     document.getElementById("viewer").classList.remove("active");
     document.getElementById("viewerVideo").srcObject = null;
 }

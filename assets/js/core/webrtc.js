@@ -25,18 +25,34 @@ class CloudTokWebRTC {
 
     async startLocalStream(video = true) {
         this._log("Requesting media, video=", video);
-        try {
-            this.localStream = await navigator.mediaDevices.getUserMedia({
-                audio: true,
-                video: video ? { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } : false
-            });
-            this._log("Media OK, tracks:", this.localStream.getTracks().map(t => t.kind));
-            return this.localStream;
-        } catch (e) {
-            console.error("[WebRTC] getUserMedia FAILED:", e.name, e.message);
-            this.localStream = null;
-            return null;
+        const constraints = {
+            audio: true,
+            video: video ? { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } : false
+        };
+
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+                this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                const tracks = this.localStream.getTracks();
+                this._log("Media OK, tracks:", tracks.map(t => t.kind + ":" + t.label));
+                if (tracks.length === 0) {
+                    this._log("WARNING: getUserMedia returned stream with 0 tracks, attempt", attempt);
+                    this.localStream = null;
+                    await new Promise(r => setTimeout(r, 500));
+                    continue;
+                }
+                return this.localStream;
+            } catch (e) {
+                console.error("[WebRTC] getUserMedia attempt", attempt, "FAILED:", e.name, e.message);
+                if (attempt < 3) {
+                    this._log("Retrying in 1s...");
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            }
         }
+
+        this.localStream = null;
+        return null;
     }
 
     _getICEServers() {
