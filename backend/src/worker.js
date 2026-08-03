@@ -42,6 +42,7 @@ export default {
       return corsResponse;
     }
 
+    try{
 
     const url = new URL(request.url);
     const path = url.pathname;
@@ -392,6 +393,19 @@ export default {
         headers: { "Content-Type": "text/plain" }
       })
     );
+
+    }
+    catch(error){
+      return new Response(JSON.stringify({error:error.message||"Server error"}),{
+        status:500,
+        headers:{
+          "Access-Control-Allow-Origin":"*",
+          "Access-Control-Allow-Methods":"GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers":"Content-Type, Authorization",
+          "Content-Type":"application/json"
+        }
+      });
+    }
 
   }
 

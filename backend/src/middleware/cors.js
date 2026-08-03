@@ -26,6 +26,8 @@ export function handleCORS(request){
 
 export async function withCORS(responseOrPromise){
 
+  try{
+
   const response = await responseOrPromise;
 
   const newHeaders = new Headers(response.headers);
@@ -39,5 +41,15 @@ export async function withCORS(responseOrPromise){
     statusText: response.statusText,
     headers: newHeaders
   });
+
+  }
+  catch(error){
+
+  return new Response(JSON.stringify({error:error.message||"Internal error"}),{
+    status:500,
+    headers:{...CORS_HEADERS,"Content-Type":"application/json"}
+  });
+
+  }
 
 }
