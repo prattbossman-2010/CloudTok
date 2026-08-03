@@ -316,7 +316,11 @@
         document.getElementById("remoteVideo").srcObject = stream;
     };
 
-    webrtc.onCallEnd = function(){ hideCallOverlay(); };
+    webrtc.onCallEnd = function(){
+        hideCallOverlay();
+        console.log("[Conv] Call ended, restarting polling");
+        webrtc.startPolling(chatUsername);
+    };
 
     webrtc.onAnswerReceived = function(){
         document.getElementById("callStatus").textContent = "Connected";
@@ -362,37 +366,13 @@
         if(!localStorage.getItem("CloudTokToken")){ alert("Please login first"); return; }
 
         console.log("[Conv] Starting call, video=", video);
-        showCallOverlay(chatUsername, "Checking devices...");
+        showCallOverlay(chatUsername, "Requesting access...");
 
-        var devices = await checkDevices();
-        if(!devices.audio && !devices.video){
-            showCallError("No microphone or camera found on this device.");
-            document.getElementById("callStatus").textContent = "No devices";
-            return;
-        }
-
-        document.getElementById("callStatus").textContent = "Requesting access...";
         var stream = await webrtc.startLocalStream(video);
 
         if(!stream){
-            console.log("[Conv] Media failed, offering fallback");
-            document.getElementById("callStatus").textContent = "Media unavailable";
-            showCallError("Could not access microphone/camera.");
-
-            var fallbackEl = document.getElementById("mediaFallback");
-            var fallbackMsg = document.getElementById("mediaFallbackMsg");
-            fallbackEl.classList.add("show");
-
-            if(!devices.audio){
-                fallbackMsg.textContent = "No microphone detected. You can still make a call, but the other person won't hear you.";
-            } else {
-                fallbackMsg.textContent = "Microphone is busy or blocked. Close other apps using the mic and try again, or call without audio.";
-            }
-
-            document.getElementById("mediaFallbackBtn").onclick = function(){
-                fallbackEl.classList.remove("show");
-                proceedCallWithoutMedia(video);
-            };
+            console.log("[Conv] Media failed, auto-falling back to no-media call");
+            proceedCallWithoutMedia(video);
             return;
         }
 
