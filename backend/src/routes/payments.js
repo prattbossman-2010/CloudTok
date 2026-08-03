@@ -1,11 +1,31 @@
 import { authenticate } from "../middleware/auth.js";
 
+const EXCHANGE_RATES = {
+    USD: 1,
+    NGN: 1550,
+    GHS: 12.5,
+    KES: 155,
+    ZAR: 18.5,
+    GBP: 0.79,
+    EUR: 0.92
+};
+
+const PAYSTACK_CURRENCY_MAP = {
+    USD: "USD",
+    NGN: "NGN",
+    GHS: "GHS",
+    GBP: "GBP",
+    EUR: "EUR",
+    KES: "NGN",
+    ZAR: "NGN"
+};
+
 export async function initializePayment(request, env) {
     const auth = await authenticate(request, env);
     if (auth.error) return auth.error;
 
     const body = await request.json();
-    const { email, amount, description } = body;
+    const { email, amount, currency, description } = body;
 
     if (!email || !amount) {
         return Response.json({ error: "Email and amount required" }, { status: 400 });
@@ -17,6 +37,19 @@ export async function initializePayment(request, env) {
     }
 
     try {
+        const paystackCurrency = PAYSTACK_CURRENCY_MAP[currency] || "USD";
+        const rate = EXCHANGE_RATES[currency] || 1;
+        const amountLocal = amount * rate;
+
+        let paystackAmount;
+        if (currency === "GHS") {
+            paystackAmount = Math.round(amountLocal * 100);
+        } else if (currency === "NGN") {
+            paystackAmount = Math.round(amountLocal);
+        } else {
+            paystackAmount = Math.round(amountLocal * 100);
+        }
+
         const response = await fetch("https://api.paystack.co/transaction/initialize", {
             method: "POST",
             headers: {
@@ -25,11 +58,14 @@ export async function initializePayment(request, env) {
             },
             body: JSON.stringify({
                 email,
-                amount: Math.round(amount * 100),
+                amount: paystackAmount,
+                currency: paystackCurrency,
                 description: description || "CloudTok Wallet Funding",
                 metadata: {
                     user_id: auth.user.id,
-                    username: auth.user.username
+                    username: auth.user.username,
+                    amount_usd: amount,
+                    original_currency: currency
                 }
             })
         });
@@ -81,21 +117,45 @@ export async function verifyPayment(request, env) {
             return Response.json({ success: false, error: "Payment not successful" });
         }
 
-        const amountInNaira = result.data.amount / 100;
+        let amountInUSD;
+        const metadata = result.data.metadata || {};
+        const customFields = metadata.custom_fields || [];
+        const usdAmountField = customFields.find(f => f.variable_name === "usd_amount");
+
+        if (usdAmountField && parseFloat(usdAmountField.value) > 0) {
+            amountInUSD = parseFloat(usdAmountField.value);
+        } else {
+            const currency = result.data.currency || "NGN";
+            const rawAmount = result.data.amount;
+
+            if (currency === "NGN") {
+                amountInUSD = rawAmount / 1550;
+            } else if (currency === "GHS") {
+                amountInUSD = rawAmount / 100 / 12.5;
+            } else if (currency === "GBP") {
+                amountInUSD = rawAmount / 100 / 0.79;
+            } else if (currency === "EUR") {
+                amountInUSD = rawAmount / 100 / 0.92;
+            } else {
+                amountInUSD = rawAmount / 100;
+            }
+        }
+
+        amountInUSD = Math.round(amountInUSD * 100) / 100;
 
         await env.DB.prepare(
             "INSERT INTO transactions (user_id, reference, amount, status, created_at) VALUES (?, ?, ?, ?, ?)"
         ).bind(
             auth.user.id,
             reference,
-            amountInNaira,
+            amountInUSD,
             "success",
             new Date().toISOString()
         ).run();
 
         return Response.json({
             success: true,
-            amount: amountInNaira,
+            amount: amountInUSD,
             reference
         });
 
