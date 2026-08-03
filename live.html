@@ -69,6 +69,7 @@ p{color:#aaa;margin:0 0 30px;font-size:14px}
 <script src="assets/js/database/database.js"></script>
 <script src="assets/js/api/api.js"></script>
 <script src="assets/js/core/webrtc.js"></script>
+<script src="assets/js/core/callPoller.js"></script>
 <script>
 let localStream = null;
 let isStreaming = false;
@@ -119,7 +120,8 @@ document.getElementById("goLiveBtn").onclick = async ()=>{
         startViewerPoll();
         showToast("You are now live!");
     } else {
-        showToast("Failed to start stream. Backend may be updating.","error");
+        const errMsg = (result && result.error) ? result.error : "Failed to start stream";
+        showToast(errMsg, "error");
         if(localStream){
             localStream.getTracks().forEach(t=>t.stop());
             localStream = null;
