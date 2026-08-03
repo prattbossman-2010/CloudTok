@@ -309,6 +309,10 @@ document.addEventListener("DOMContentLoaded", ()=>{
             document.getElementById("callStatus").textContent = "Call ended";
         };
 
+        webrtc.onAnswerReceived = ()=>{
+            document.getElementById("callStatus").textContent = "Connected";
+        };
+
         showCallOverlay(chatUsername, "Calling...");
 
         const stream = await webrtc.startLocalStream(video);

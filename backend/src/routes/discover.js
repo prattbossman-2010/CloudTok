@@ -25,7 +25,7 @@ export async function getTrending(request, env) {
     const params = [];
 
     if (category) {
-        query += ` WHERE (videos.category = ? OR videos.caption LIKE ? OR videos.tags LIKE ?)`;
+        query += ` WHERE LOWER(videos.category) = LOWER(?) OR LOWER(videos.caption) LIKE LOWER(?) OR LOWER(videos.tags) LIKE LOWER(?)`;
         params.push(category, `%${category}%`, `%${category}%`);
     }
 
@@ -69,7 +69,7 @@ export async function getDiscoverVideos(request, env) {
     const params = [];
 
     if (category && category.toLowerCase() !== "all") {
-        query += ` WHERE (videos.category = ? OR videos.caption LIKE ? OR videos.tags LIKE ?)`;
+        query += ` WHERE LOWER(videos.category) = LOWER(?) OR LOWER(videos.caption) LIKE LOWER(?) OR LOWER(videos.tags) LIKE LOWER(?)`;
         params.push(category, `%${category}%`, `%${category}%`);
     }
 
