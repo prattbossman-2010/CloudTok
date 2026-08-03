@@ -176,6 +176,8 @@ if(typeof CloudTokAPI!=="undefined"){
             this.input.value="";
             this.render();
             if(window.CloudTokActiveVideoCard){
+                window.CloudTokActiveVideoCard.commentCountValue=
+                (window.CloudTokActiveVideoCard.commentCountValue||0)+1;
                 window.CloudTokActiveVideoCard.updateCommentCount();
             }
             return;

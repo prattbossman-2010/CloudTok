@@ -544,9 +544,14 @@ if(typeof CloudTokAPI!=="undefined"){
 
         const result=await CloudTokAPI.getLikedVideos();
 
-        if(result.videos){
+        if(result.videos && result.videos.length>0){
 
-            videos=result.videos.map(v=>({
+            const seen=new Set();
+            videos=result.videos.filter(v=>{
+                if(seen.has(v.id))return false;
+                seen.add(v.id);
+                return true;
+            }).map(v=>({
                 id:v.id,
                 username:v.username,
                 caption:v.caption||"",
@@ -578,13 +583,21 @@ if(videos.length===0){
     const currentUser=localStorage.getItem("CloudTokCurrentUser")||"";
     const normalizedCurrentUser=currentUser.replace(/^@+/,"").trim().toLowerCase();
 
+    const seenIds=new Set();
     videos=all.filter(video=>{
-        if(video.liked===true) return true;
+        if(seenIds.has(video.id))return false;
+        let isLiked=false;
+        if(video.liked===true) isLiked=true;
         const likedBy=video.likedBy||[];
-        return likedBy.some(u=>{
+        if(likedBy.some(u=>{
             const nu=String(u).replace(/^@+/,"").trim().toLowerCase();
             return nu===normalizedCurrentUser;
-        });
+        })) isLiked=true;
+        if(isLiked){
+            seenIds.add(video.id);
+            return true;
+        }
+        return false;
     });
 
 }

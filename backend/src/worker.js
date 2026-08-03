@@ -28,7 +28,7 @@ import { getTrending, getDiscoverVideos } from "./routes/discover.js";
 import { toggleSave, getSavedVideos } from "./routes/saves.js";
 import { deleteVideo } from "./routes/videoDelete.js";
 import { handleCORS, withCORS } from "./middleware/cors.js";
-import { adminLogin, adminGetStats, adminGetUsers, adminUpdateUser, adminDeleteVideo, adminGetVideos } from "./routes/admin.js";
+import { adminLogin, adminGetStats, adminGetUsers, adminUpdateUser, adminDeleteVideo, adminGetVideos, adminRunMigration } from "./routes/admin.js";
 
 
 export default {
@@ -384,6 +384,10 @@ export default {
     if(path.match(/^\/api\/admin\/videos\/\d+$/) && method === "DELETE"){
       const videoId = path.split("/")[4];
       return withCORS(adminDeleteVideo(request, env, videoId));
+    }
+
+    if(path === "/api/admin/migrate" && method === "POST"){
+      return withCORS(adminRunMigration(request, env));
     }
 
 

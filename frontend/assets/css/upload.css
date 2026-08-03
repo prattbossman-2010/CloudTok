@@ -172,6 +172,25 @@ body.uploadPageBody{overflow-y:auto;}
 }
 @keyframes spin{to{transform:rotate(360deg);}}
 
+/* GO LIVE SECTION */
+.goLiveSection{
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+    padding:20px;
+}
+.goLiveBtn{
+    display:flex;align-items:center;gap:10px;
+    padding:14px 32px;border-radius:999px;border:none;
+    background:linear-gradient(135deg,#ff2d55,#ff6b6b);
+    color:#fff;font-size:16px;font-weight:700;
+    cursor:pointer;transition:all .3s ease;
+    box-shadow:0 6px 25px rgba(255,45,85,.3);
+}
+.goLiveBtn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(255,45,85,.4);}
+.goLiveBtn:active{transform:translateY(0);}
+.liveIcon{font-size:18px;animation:livePulse 1.5s ease-in-out infinite;}
+@keyframes livePulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+.goLiveHint{color:rgba(255,255,255,.4);font-size:13px;}
+
 @media(max-width:768px){
     .uploadPage{padding:0 12px 24px;}
     .uploadArea{min-height:280px;}

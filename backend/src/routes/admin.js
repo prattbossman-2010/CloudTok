@@ -134,3 +134,56 @@ export async function adminGetVideos(request, env) {
 
     return Response.json({ videos: results });
 }
+
+export async function adminRunMigration(request, env) {
+    const auth = await adminCheck(request, env);
+    if (auth.error) return auth;
+
+    const results = [];
+
+    try {
+        await env.DB.prepare("ALTER TABLE videos ADD COLUMN tags TEXT DEFAULT '[]'").run();
+        results.push("Added tags column");
+    } catch(e) {
+        if (e.message && e.message.includes("duplicate column")) {
+            results.push("tags column already exists");
+        } else {
+            results.push("tags error: " + e.message);
+        }
+    }
+
+    try {
+        await env.DB.prepare("ALTER TABLE videos ADD COLUMN category TEXT DEFAULT 'General'").run();
+        results.push("Added category column");
+    } catch(e) {
+        if (e.message && e.message.includes("duplicate column")) {
+            results.push("category column already exists");
+        } else {
+            results.push("category error: " + e.message);
+        }
+    }
+
+    try {
+        await env.DB.prepare("ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'active'").run();
+        results.push("Added status column");
+    } catch(e) {
+        if (e.message && e.message.includes("duplicate column")) {
+            results.push("status column already exists");
+        } else {
+            results.push("status error: " + e.message);
+        }
+    }
+
+    try {
+        await env.DB.prepare("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'").run();
+        results.push("Added role column");
+    } catch(e) {
+        if (e.message && e.message.includes("duplicate column")) {
+            results.push("role column already exists");
+        } else {
+            results.push("role error: " + e.message);
+        }
+    }
+
+    return Response.json({ success: true, results });
+}

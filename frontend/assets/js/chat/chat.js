@@ -129,4 +129,63 @@ users.forEach(user=>{
 
 }
 
-document.addEventListener("DOMContentLoaded",()=>{new CloudTokChat();});
+document.addEventListener("DOMContentLoaded",()=>{
+
+const chat=new CloudTokChat();
+
+const newChatBtn=document.getElementById("newChatBtn");
+const newChatOverlay=document.getElementById("newChatOverlay");
+const newChatSearchInput=document.getElementById("newChatSearchInput");
+const newChatUserList=document.getElementById("newChatUserList");
+
+if(newChatBtn){
+    newChatBtn.onclick=()=>{
+        newChatOverlay.style.display="flex";
+        newChatUserList.innerHTML="";
+        newChatSearchInput.focus();
+    };
+}
+
+if(newChatSearchInput){
+    let searchTimeout=null;
+    newChatSearchInput.addEventListener("input",()=>{
+        clearTimeout(searchTimeout);
+        const query=newChatSearchInput.value.trim();
+        if(query.length<2){
+            newChatUserList.innerHTML="";
+            return;
+        }
+        searchTimeout=setTimeout(async()=>{
+            if(typeof CloudTokAPI==="undefined")return;
+            try{
+                const result=await CloudTokAPI.search(query);
+                newChatUserList.innerHTML="";
+                const users=result.users||[];
+                const currentUser=localStorage.getItem("CloudTokCurrentUser")||"";
+                users.filter(u=>u.username!==currentUser).forEach(user=>{
+                    const card=document.createElement("div");
+                    card.className="newChatUserCard";
+                    card.innerHTML=`
+                        <img src="${user.avatar||"assets/images/default-avatar.png"}" class="newChatAvatar" onerror="this.src='assets/images/default-avatar.png'">
+                        <div class="newChatUserInfo">
+                            <h3>${user.displayName||user.username}</h3>
+                            <p>@${user.username}</p>
+                        </div>
+                    `;
+                    card.onclick=()=>{
+                        newChatOverlay.style.display="none";
+                        window.location.href="conversation.html?user="+encodeURIComponent(user.username);
+                    };
+                    newChatUserList.appendChild(card);
+                });
+                if(users.length===0){
+                    newChatUserList.innerHTML='<div style="text-align:center;padding:40px;color:#555;">No users found</div>';
+                }
+            }catch(e){
+                console.log("Search failed",e);
+            }
+        },300);
+    });
+}
+
+});

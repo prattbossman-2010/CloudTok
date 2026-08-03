@@ -39,6 +39,11 @@ constructor(videoData){
     this.likes =
     videoData.likes || 0;
 
+    this.commentCountValue =
+    videoData.comments ?
+    (Array.isArray(videoData.comments) ?
+    videoData.comments.length :
+    videoData.comments) : 0;
 
     this.isLiked =
 hasLikedVideo(
@@ -391,9 +396,7 @@ createAction(
     createAction(
         "commentBtn",
         "💬",
-        this.data.comments ?
-        this.data.comments.length :
-        0
+        this.commentCountValue
     );
 
 
@@ -805,6 +808,9 @@ localStorage.setItem(
         new CloudTokComments(this.data);
 
         window.CloudTokActiveComments.open();
+
+        this.commentCountValue =
+        (this.commentCountValue || 0) + 1;
 
         this.updateCommentCount();
 
@@ -1748,16 +1754,8 @@ updateSave(){
 
 updateCommentCount(){
 
-    const count =
-    this.data.comments ?
-    this.data.comments.length :
-    0;
-
-
     if(this.commentCount){
-
-        this.commentCount.textContent = count;
-
+        this.commentCount.textContent = this.commentCountValue || 0;
     }
 
 }

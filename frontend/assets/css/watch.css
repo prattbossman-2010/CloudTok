@@ -213,9 +213,9 @@ font-size:14px;
 
 position:absolute;
 
-right:32px;
+right:38px;
 
-bottom:70px;
+bottom:60px;
 
 
 display:flex;
@@ -935,7 +935,7 @@ overflow:visible;
     #topBar{height:56px;padding:12px 15px;}
     #topBar h2{font-size:18px;}
     #backBtn{font-size:20px;padding:8px 10px;}
-    .watchActions{right:14px;bottom:140px;gap:24px;}
+    .watchActions{right:18px;bottom:130px;gap:24px;}
     .actionIcon{width:38px;height:38px;}
     .watchActions img.actionIcon{width:38px;height:38px;}
     .watchActions button{font-size:13px;}
@@ -952,7 +952,7 @@ overflow:visible;
 }
 
 @media(max-width:420px){
-    .watchActions{right:12px;bottom:130px;gap:22px;}
+    .watchActions{right:14px;bottom:120px;gap:22px;}
     .actionIcon{width:36px;height:36px;}
     .watchActions img.actionIcon{width:36px;height:36px;}
     .watchAvatar{width:46px;height:46px;}
@@ -970,8 +970,8 @@ overflow:visible;
         top:11%;
     }
     .watchActions{
-        right:calc(31% - 70px);
-        bottom:15%;
+        right:calc(31% - 90px);
+        bottom:12%;
         gap:30px;
     }
     #videoInfo{
