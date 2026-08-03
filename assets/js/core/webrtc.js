@@ -56,6 +56,9 @@ class CloudTokWebRTC {
         if (video && devices.video && devices.audio) {
             attempts.push({ audio: true, video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } });
         }
+        if (video && devices.video) {
+            attempts.push({ audio: false, video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } });
+        }
         if (devices.audio) {
             attempts.push({ audio: true, video: false });
         }
