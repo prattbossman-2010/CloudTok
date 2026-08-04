@@ -339,7 +339,8 @@ async function endStream(){
     document.getElementById("streamView").classList.remove("active");
     document.getElementById("startScreen").style.display = "block";
     showToast("Stream ended");
-loadActiveStreams();
+    loadActiveStreams();
+}
 
 function addStreamChatMessage(username, text){
     var el = document.createElement("div");
