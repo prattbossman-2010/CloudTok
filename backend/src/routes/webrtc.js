@@ -99,12 +99,11 @@ export async function createLiveStream(request, env) {
 
 export async function getLiveStreams(request, env) {
     await ensureTables(env);
-    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
     try {
         await env.DB.prepare(
-            "UPDATE live_streams SET status = 'ended', ended_at = datetime('now') WHERE status = 'active' AND created_at < ?"
-        ).bind(fiveMinAgo).run();
+            "UPDATE live_streams SET status = 'ended', ended_at = datetime('now') WHERE status = 'active' AND created_at < datetime('now', '-5 minutes')"
+        ).run();
     } catch(e) {}
 
     const { results } = await env.DB.prepare(
