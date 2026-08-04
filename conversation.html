@@ -37,6 +37,9 @@
 .callBtns{display:flex;gap:4px;}
 .callBtn{background:none !important;border:none !important;font-size:18px !important;cursor:pointer !important;padding:6px 8px !important;border-radius:8px !important;color:#fff !important;}
 .callBtn:hover{background:rgba(255,255,255,.08) !important;}
+@media(min-width:769px){
+.callBtn{font-size:26px !important;padding:10px 14px !important;}
+}
 
 .callOverlay{display:none;position:fixed;inset:0;background:#000;z-index:999;flex-direction:column;align-items:center;justify-content:center;}
 .callOverlay.active{display:flex;}
@@ -312,15 +315,14 @@
     }
 
     webrtc.onRemoteStream = function(stream) {
+        var videoEl = document.getElementById("remoteVideo");
         console.log("[Conv] onRemoteStream, tracks:", stream.getTracks().length);
-        document.getElementById("remoteVideo").srcObject = stream;
+        videoEl.srcObject = null;
+        videoEl.srcObject = stream;
+        videoEl.play().catch(function(e){ console.log("[Conv] remote video play:", e.message); });
     };
 
-    webrtc.onCallEnd = function(){
-        hideCallOverlay();
-        console.log("[Conv] Call ended, restarting polling");
-        webrtc.startPolling(chatUsername);
-    };
+    webrtc.onCallEnd = function(){ hideCallOverlay(); };
 
     webrtc.onAnswerReceived = function(){
         document.getElementById("callStatus").textContent = "Connected";
@@ -366,13 +368,37 @@
         if(!localStorage.getItem("CloudTokToken")){ alert("Please login first"); return; }
 
         console.log("[Conv] Starting call, video=", video);
-        showCallOverlay(chatUsername, "Requesting access...");
+        showCallOverlay(chatUsername, "Checking devices...");
 
+        var devices = await checkDevices();
+        if(!devices.audio && !devices.video){
+            showCallError("No microphone or camera found on this device.");
+            document.getElementById("callStatus").textContent = "No devices";
+            return;
+        }
+
+        document.getElementById("callStatus").textContent = "Requesting access...";
         var stream = await webrtc.startLocalStream(video);
 
         if(!stream){
-            console.log("[Conv] Media failed, auto-falling back to no-media call");
-            proceedCallWithoutMedia(video);
+            console.log("[Conv] Media failed, offering fallback");
+            document.getElementById("callStatus").textContent = "Media unavailable";
+            showCallError("Could not access microphone/camera.");
+
+            var fallbackEl = document.getElementById("mediaFallback");
+            var fallbackMsg = document.getElementById("mediaFallbackMsg");
+            fallbackEl.classList.add("show");
+
+            if(!devices.audio){
+                fallbackMsg.textContent = "No microphone detected. You can still make a call, but the other person won't hear you.";
+            } else {
+                fallbackMsg.textContent = "Microphone is busy or blocked. Close other apps using the mic and try again, or call without audio.";
+            }
+
+            document.getElementById("mediaFallbackBtn").onclick = function(){
+                fallbackEl.classList.remove("show");
+                proceedCallWithoutMedia(video);
+            };
             return;
         }
 
