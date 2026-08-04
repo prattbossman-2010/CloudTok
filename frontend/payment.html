@@ -306,6 +306,7 @@ const CURRENCY_SYMBOLS = {
 
 let selectedCurrency = "USD";
 let selectedPayMethod = "paystack";
+let presetAmountsUSD = [0.5, 1, 5, 10];
 
 function showToast(msg, type="success"){
     const t=document.createElement("div");
@@ -320,41 +321,50 @@ function showFundSection(){
     document.getElementById("fundSection").scrollIntoView({behavior:"smooth"});
 }
 
-function setAmount(val){
+function setAmount(localAmount){
     const input = document.getElementById("payAmount");
-    if(val === 0){
+    if(localAmount === 0){
         input.value = "";
         input.placeholder = "Enter custom amount";
         input.focus();
     } else {
-        input.value = val;
+        input.value = localAmount;
         input.placeholder = "Enter amount";
     }
-    document.querySelectorAll(".amountPreset").forEach(b=>b.classList.remove("active"));
-    event.target.classList.add("active");
+    document.querySelectorAll(".amountPreset").forEach(function(b){ b.classList.remove("active"); });
+    if(event && event.target){
+        event.target.closest(".amountPreset").classList.add("active");
+    }
     updateConversion();
 }
 
 function onCurrencyChange(){
     selectedCurrency = document.getElementById("currencySelect").value;
     updateAmountPresets();
-    updateConversion();
+    var currentVal = parseFloat(document.getElementById("payAmount").value);
+    if(currentVal){
+        updateConversion();
+    }
 }
 
 function updateAmountPresets(){
     const presets = document.getElementById("amountPresets");
     const sym = CURRENCY_SYMBOLS[selectedCurrency];
-    const rates = EXCHANGE_RATES;
+    const rate = EXCHANGE_RATES[selectedCurrency];
+    const isWhole = selectedCurrency === "NGN" || selectedCurrency === "KES";
 
-    const amountsUSD = [0.5, 1, 5, 10];
     presets.innerHTML = "";
 
-    amountsUSD.forEach(usd => {
-        const converted = (usd * rates[selectedCurrency]).toFixed(selectedCurrency === "NGN" || selectedCurrency === "KES" ? 0 : 2);
+    presetAmountsUSD.forEach(function(usd){
+        const localVal = usd * rate;
+        const display = isWhole ? Math.round(localVal) : parseFloat(localVal.toFixed(2));
         const btn = document.createElement("button");
         btn.className = "amountPreset";
-        btn.textContent = sym + converted;
-        btn.onclick = function(){ setAmount(usd); };
+        btn.textContent = sym + display;
+        btn.setAttribute("data-local", localVal);
+        btn.onclick = function(ev){
+            setAmount(display);
+        };
         presets.appendChild(btn);
     });
 
@@ -366,25 +376,23 @@ function updateAmountPresets(){
 }
 
 function updateConversion(){
-    const amount = parseFloat(document.getElementById("payAmount").value);
+    const input = document.getElementById("payAmount");
+    const amount = parseFloat(input.value);
     const info = document.getElementById("conversionInfo");
 
-    if(!amount || amount < 0.5){
+    if(!amount || amount <= 0){
         info.style.display = "none";
         document.getElementById("bankAmount").value = "";
         return;
     }
 
     const rate = EXCHANGE_RATES[selectedCurrency];
-    const localAmount = (amount * rate).toFixed(
-        selectedCurrency === "NGN" || selectedCurrency === "KES" ? 0 : 2
-    );
-    const sym = CURRENCY_SYMBOLS[selectedCurrency];
+    const usdAmount = amount / rate;
 
-    document.getElementById("conversionText").textContent = "You pay: " + sym + localAmount.toLocaleString();
-    document.getElementById("conversionUsd").textContent = "= $" + amount.toFixed(2);
+    document.getElementById("conversionText").textContent = "You pay: " + CURRENCY_SYMBOLS[selectedCurrency] + amount.toLocaleString();
+    document.getElementById("conversionUsd").textContent = "= $" + usdAmount.toFixed(2);
     info.style.display = "flex";
-    document.getElementById("bankAmount").value = "$" + amount.toFixed(2);
+    document.getElementById("bankAmount").value = "$" + usdAmount.toFixed(2);
 }
 
 function selectPayMethod(method, el){
@@ -401,15 +409,23 @@ function selectPayMethod(method, el){
 }
 
 function processPayment(){
-    const amount = parseFloat(document.getElementById("payAmount").value);
-    if(!amount || amount < 0.5){
+    const localAmount = parseFloat(document.getElementById("payAmount").value);
+    if(!localAmount || localAmount <= 0){
+        showToast("Please enter an amount","error");
+        return;
+    }
+
+    const rate = EXCHANGE_RATES[selectedCurrency];
+    const amountUSD = localAmount / rate;
+
+    if(amountUSD < 0.5){
         showToast("Minimum amount is $0.50","error");
         return;
     }
 
     if(selectedPayMethod === "bank"){
         document.getElementById("bankForm").classList.add("show");
-        document.getElementById("bankAmount").value = "$" + amount.toFixed(2);
+        document.getElementById("bankAmount").value = "$" + amountUSD.toFixed(2);
         return;
     }
 
@@ -418,29 +434,18 @@ function processPayment(){
         return;
     }
 
-    payWithPaystack(amount);
+    payWithPaystack(amountUSD, localAmount);
 }
 
-function payWithPaystack(amountUSD){
+function payWithPaystack(amountUSD, localAmount){
     const email = localStorage.getItem("CloudTokCurrentUser") + "@cloudtok.app";
-    const rate = EXCHANGE_RATES[selectedCurrency];
     const paystackCurrency = PAYSTACK_CURRENCY_MAP[selectedCurrency];
 
-    let amountLocal;
     let paystackAmount;
-
-    if(selectedCurrency === "GHS"){
-        amountLocal = amountUSD * rate;
-        paystackAmount = Math.round(amountLocal * 100);
-    } else if(selectedCurrency === "NGN"){
-        amountLocal = amountUSD * rate;
-        paystackAmount = Math.round(amountLocal);
-    } else if(selectedCurrency === "GBP" || selectedCurrency === "EUR"){
-        amountLocal = amountUSD * rate;
-        paystackAmount = Math.round(amountLocal * 100);
+    if(selectedCurrency === "NGN"){
+        paystackAmount = Math.round(localAmount);
     } else {
-        amountLocal = amountUSD * rate;
-        paystackAmount = Math.round(amountLocal * 100);
+        paystackAmount = Math.round(localAmount * 100);
     }
 
     if(typeof PaystackPop === "undefined"){
