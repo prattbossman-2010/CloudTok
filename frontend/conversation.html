@@ -64,6 +64,26 @@
 .mediaFallback.show{display:flex;}
 .mediaFallback p{color:rgba(255,255,255,.6);font-size:13px;margin:0;text-align:center;}
 .mediaFallback button{background:#fe2c55;color:#fff;border:none;padding:10px 20px;border-radius:20px;font-weight:600;cursor:pointer;}
+
+.convGiftBtn{background:none !important;border:none !important;color:rgba(255,255,255,.5) !important;font-size:18px !important;cursor:pointer !important;padding:8px !important;border-radius:8px !important;}
+.convGiftBtn:hover{color:#ff2d55 !important;}
+
+.convGiftPanel{display:none;position:absolute;bottom:100%;left:0;right:0;background:#111;border-top:1px solid rgba(255,255,255,.08);max-height:320px;overflow-y:auto;padding:12px;z-index:50;}
+.convGiftPanel.show{display:block;}
+.convGiftPanelTitle{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;}
+.convGiftBalance{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:8px;}
+.convGiftGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.convGiftItem{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;background:rgba(255,255,255,.06);border-radius:12px;cursor:pointer;border:2px solid transparent;transition:all .2s;}
+.convGiftItem:hover{background:rgba(255,255,255,.1);border-color:rgba(255,45,85,.3);}
+.convGiftItem.selected{border-color:#ff2d55;background:rgba(255,45,85,.15);}
+.convGiftEmoji{font-size:28px;}
+.convGiftName{font-size:10px;color:rgba(255,255,255,.7);}
+.convGiftPrice{font-size:11px;color:#ff2d55;font-weight:700;}
+.convGiftSendBtn{width:100%;margin-top:8px;padding:10px;background:#ff2d55;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;}
+.convGiftSendBtn:disabled{opacity:.4;cursor:not-allowed;}
+
+.giftAnimFloat{position:fixed;bottom:200px;left:50%;transform:translateX(-50%);font-size:60px;z-index:9999;pointer-events:none;animation:giftFloatConv 2s ease-out forwards;}
+@keyframes giftFloatConv{0%{opacity:1;transform:translateX(-50%) translateY(0) scale(1);}100%{opacity:0;transform:translateX(-50%) translateY(-200px) scale(1.5);}}
 </style>
 </head>
 <body>
@@ -83,6 +103,7 @@
     <div class="messageBar">
         <button class="emojiToggleBtn" id="emojiToggleBtn">😊</button>
         <button class="gifToggleBtn" id="gifToggleBtn">GIF</button>
+        <button class="convGiftBtn" id="convGiftBtn">🎁</button>
         <input id="messageInput" type="text" placeholder="Type a message...">
         <button id="sendMessageBtn">Send</button>
 
@@ -95,6 +116,13 @@
             <input class="gifSearch" id="gifSearch" placeholder="Search GIFs...">
             <div class="gifGrid" id="gifGrid"></div>
             <input type="file" id="gifFileInput" accept="image/gif" style="display:none;">
+        </div>
+
+        <div class="convGiftPanel" id="convGiftPanel">
+            <div class="convGiftPanelTitle">Send a Gift</div>
+            <div class="convGiftBalance" id="convGiftBalance">Balance: $0.00</div>
+            <div class="convGiftGrid" id="convGiftGrid"></div>
+            <button class="convGiftSendBtn" id="convGiftSendBtn" disabled>Select a gift</button>
         </div>
     </div>
 </div>
@@ -184,6 +212,7 @@
     document.addEventListener("click", function(){
         emojiBar.classList.remove("show");
         gifPanel.classList.remove("show");
+        document.getElementById("convGiftPanel").classList.remove("show");
     });
 
     var gifDebounce = null;
@@ -457,6 +486,108 @@
             }
         }
     }
+
+    const CONV_GIFTS = [
+        { name: "Rose", emoji: "🌹", price: 0.99 },
+        { name: "Heart", emoji: "❤️", price: 1.99 },
+        { name: "Star", emoji: "⭐", price: 4.99 },
+        { name: "Fire", emoji: "🔥", price: 9.99 },
+        { name: "Diamond", emoji: "💎", price: 19.99 },
+        { name: "Crown", emoji: "👑", price: 49.99 },
+        { name: "Party", emoji: "🎉", price: 9.99 },
+        { name: "Clap", emoji: "👏", price: 0.99 }
+    ];
+    let selectedConvGift = null;
+    let convGiftBalance = 0;
+
+    function showConvGiftAnim(emoji){
+        var el = document.createElement("div");
+        el.className = "giftAnimFloat";
+        el.textContent = emoji;
+        document.body.appendChild(el);
+        setTimeout(function(){ el.remove(); }, 2000);
+    }
+
+    function renderConvGiftGrid(){
+        var grid = document.getElementById("convGiftGrid");
+        grid.innerHTML = "";
+        CONV_GIFTS.forEach(function(gift){
+            var item = document.createElement("div");
+            item.className = "convGiftItem";
+            item.innerHTML = '<div class="convGiftEmoji">'+gift.emoji+'</div><div class="convGiftName">'+gift.name+'</div><div class="convGiftPrice">$'+gift.price.toFixed(2)+'</div>';
+            item.onclick = function(){
+                document.querySelectorAll(".convGiftItem").forEach(function(g){ g.classList.remove("selected"); });
+                item.classList.add("selected");
+                selectedConvGift = gift;
+                document.getElementById("convGiftSendBtn").disabled = false;
+                document.getElementById("convGiftSendBtn").textContent = "Send " + gift.emoji + " " + gift.name + " ($" + gift.price.toFixed(2) + ")";
+            };
+            grid.appendChild(item);
+        });
+    }
+
+    async function loadConvGiftBalance(){
+        if(!localStorage.getItem("CloudTokToken")) return;
+        try {
+            var result = await CloudTokAPI.request("/wallet/balance");
+            convGiftBalance = result.balance || 0;
+            document.getElementById("convGiftBalance").textContent = "Balance: $" + convGiftBalance.toFixed(2);
+        } catch(e){}
+    }
+
+    async function sendConvGift(){
+        if(!selectedConvGift || !chatUsername) return;
+        if(convGiftBalance < selectedConvGift.price){
+            alert("Insufficient balance. Fund your wallet first.");
+            return;
+        }
+        try {
+            var result = await CloudTokAPI.request("/gifts/send", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    receiver_username: chatUsername,
+                    gift_name: selectedConvGift.name,
+                    gift_emoji: selectedConvGift.emoji,
+                    amount_usd: selectedConvGift.price
+                })
+            });
+            if(result.success){
+                showConvGiftAnim(selectedConvGift.emoji);
+                convGiftBalance = result.wallet_balance;
+                document.getElementById("convGiftBalance").textContent = "Balance: $" + convGiftBalance.toFixed(2);
+                selectedConvGift = null;
+                document.querySelectorAll(".convGiftItem").forEach(function(g){ g.classList.remove("selected"); });
+                document.getElementById("convGiftSendBtn").disabled = true;
+                document.getElementById("convGiftSendBtn").textContent = "Select a gift";
+                document.getElementById("convGiftPanel").classList.remove("show");
+                var msgList = document.getElementById("messageList");
+                var msgDiv = document.createElement("div");
+                msgDiv.className = "message messageMe";
+                msgDiv.innerHTML = '<div class="messageBubble">'+result.gift.emoji+' Sent '+result.gift.name+'</div>';
+                msgList.appendChild(msgDiv);
+                msgList.scrollTop = msgList.scrollHeight;
+            } else {
+                alert(result.error || "Failed to send gift");
+            }
+        } catch(e){
+            alert("Failed to send gift");
+        }
+    }
+
+    document.getElementById("convGiftBtn").addEventListener("click", function(ev){
+        ev.stopPropagation();
+        var panel = document.getElementById("convGiftPanel");
+        var isOpen = panel.classList.toggle("show");
+        emojiBar.classList.remove("show");
+        gifPanel.classList.remove("show");
+        if(isOpen){
+            renderConvGiftGrid();
+            loadConvGiftBalance();
+        }
+    });
+
+    document.getElementById("convGiftSendBtn").onclick = sendConvGift;
 
     setInterval(function(){
         if(webrtc.backendReady){

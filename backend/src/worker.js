@@ -33,6 +33,10 @@ import { initializePayment, verifyPayment, getTransactions } from "./routes/paym
 import { sendSignal, pollSignals, createLiveStream, getLiveStreams, endLiveStream } from "./routes/webrtc.js";
 
 
+import { sendGift, getGiftHistory, getWalletBalance } from "./routes/gifts.js";
+import { adminGetLiveStreams, adminStopStream, adminGetTransactions, adminGetGifts, adminGetMessages, adminGetActivityLogs, adminGetStorageHealth, adminDeleteComment, adminGetComments } from "./routes/adminExtended.js";
+
+
 export default {
 
   async fetch(request, env) {
@@ -422,6 +426,48 @@ export default {
 
     if(path === "/api/live/end" && method === "POST"){
       return withCORS(endLiveStream(request, env));
+    }
+
+    // Gift routes
+    if(path === "/api/gifts/send" && method === "POST"){
+      return withCORS(sendGift(request, env));
+    }
+    if(path === "/api/gifts/history" && method === "GET"){
+      return withCORS(getGiftHistory(request, env));
+    }
+    if(path === "/api/wallet/balance" && method === "GET"){
+      return withCORS(getWalletBalance(request, env));
+    }
+
+    // Extended admin routes
+    if(path === "/api/admin/streams" && method === "GET"){
+      return withCORS(adminGetLiveStreams(request, env));
+    }
+    if(path.match(/^\/api\/admin\/streams\/\d+\/stop$/) && method === "POST"){
+      const streamId = path.split("/")[4];
+      return withCORS(adminStopStream(request, env, streamId));
+    }
+    if(path === "/api/admin/transactions" && method === "GET"){
+      return withCORS(adminGetTransactions(request, env));
+    }
+    if(path === "/api/admin/gifts" && method === "GET"){
+      return withCORS(adminGetGifts(request, env));
+    }
+    if(path === "/api/admin/messages" && method === "GET"){
+      return withCORS(adminGetMessages(request, env));
+    }
+    if(path === "/api/admin/comments" && method === "GET"){
+      return withCORS(adminGetComments(request, env));
+    }
+    if(path.match(/^\/api\/admin\/comments\/\d+$/) && method === "DELETE"){
+      const commentId = path.split("/")[4];
+      return withCORS(adminDeleteComment(request, env, commentId));
+    }
+    if(path === "/api/admin/logs" && method === "GET"){
+      return withCORS(adminGetActivityLogs(request, env));
+    }
+    if(path === "/api/admin/storage" && method === "GET"){
+      return withCORS(adminGetStorageHealth(request, env));
     }
 
 

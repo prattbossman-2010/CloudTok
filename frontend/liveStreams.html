@@ -31,7 +31,28 @@ body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Seg
 .viewerTitle{flex:1;font-size:16px;font-weight:600;}
 .viewerHost{font-size:13px;color:rgba(255,255,255,.6);}
 .viewerLive{display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(255,45,85,.9);border-radius:20px;font-size:12px;font-weight:600;}
-.viewerStatus{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);padding:8px 16px;background:rgba(0,0,0,.6);border-radius:20px;font-size:13px;z-index:2;}
+.viewerStatus{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);padding:8px 16px;background:rgba(0,0,0,.6);border-radius:20px;font-size:13px;z-index:2;}
+.viewerBottom{position:absolute;bottom:0;left:0;right:0;padding:12px 16px;display:flex;align-items:center;gap:10px;background:linear-gradient(transparent,rgba(0,0,0,.8));z-index:2;}
+.giftBtn{background:rgba(255,255,255,.15);border:none;color:#fff;width:44px;height:44px;border-radius:50%;font-size:22px;cursor:pointer;flex-shrink:0;}
+.giftBtn:hover{background:rgba(255,45,85,.3);}
+.viewerInput{flex:1;padding:10px 14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.1);border-radius:20px;color:#fff;font-size:14px;outline:none;}
+.viewerInput::placeholder{color:rgba(255,255,255,.4);}
+.viewerSend{background:#ff2d55;border:none;color:#fff;padding:10px 16px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;}
+.giftPanel{display:none;position:absolute;bottom:70px;left:0;right:0;background:rgba(0,0,0,.9);border-top:1px solid rgba(255,255,255,.1);padding:12px;z-index:3;}
+.giftPanel.show{display:block;}
+.giftPanelTitle{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;}
+.giftGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.giftItem{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;background:rgba(255,255,255,.06);border-radius:12px;cursor:pointer;border:2px solid transparent;transition:all .2s;}
+.giftItem:hover{background:rgba(255,255,255,.1);border-color:rgba(255,45,85,.3);}
+.giftItem.selected{border-color:#ff2d55;background:rgba(255,45,85,.15);}
+.giftEmoji{font-size:28px;}
+.giftName{font-size:10px;color:rgba(255,255,255,.7);}
+.giftPrice{font-size:11px;color:#ff2d55;font-weight:700;}
+.giftBalance{font-size:12px;color:rgba(255,255,255,.5);margin-top:8px;text-align:center;}
+.giftSendBtn{width:100%;margin-top:8px;padding:10px;background:#ff2d55;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;}
+.giftSendBtn:disabled{opacity:.4;cursor:not-allowed;}
+.giftAnimation{position:fixed;bottom:200px;left:50%;transform:translateX(-50%);font-size:60px;z-index:9999;pointer-events:none;animation:giftFloat 2s ease-out forwards;}
+@keyframes giftFloat{0%{opacity:1;transform:translateX(-50%) translateY(0) scale(1);}100%{opacity:0;transform:translateX(-50%) translateY(-200px) scale(1.5);}}
 .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;}
 .toast.success{background:#00c853;color:#fff;}
 .toast.error{background:#ff2d55;color:#fff;}
@@ -55,6 +76,19 @@ body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Seg
         <div class="viewerLive"><span class="liveDot"></span> LIVE</div>
     </div>
     <div class="viewerStatus" id="viewerStatus">Connecting...</div>
+
+    <div class="giftPanel" id="giftPanel">
+        <div class="giftPanelTitle">Send a Gift</div>
+        <div class="giftBalance" id="giftBalance">Balance: $0.00</div>
+        <div class="giftGrid" id="giftGrid"></div>
+        <button class="giftSendBtn" id="giftSendBtn" disabled>Select a gift</button>
+    </div>
+
+    <div class="viewerBottom">
+        <button class="giftBtn" id="giftToggleBtn">🎁</button>
+        <input class="viewerInput" id="chatInput" placeholder="Send a message...">
+        <button class="viewerSend" id="chatSendBtn">Send</button>
+    </div>
 </div>
 
 <script src="assets/js/database/database.js"></script>
@@ -66,6 +100,19 @@ let viewerPC = null;
 let signalPollInterval = null;
 let lastSignalId = 0;
 let viewerIceQueue = [];
+let selectedGift = null;
+let walletBalance = 0;
+
+const GIFTS = [
+    { name: "Rose", emoji: "🌹", price: 0.99 },
+    { name: "Heart", emoji: "❤️", price: 1.99 },
+    { name: "Star", emoji: "⭐", price: 4.99 },
+    { name: "Fire", emoji: "🔥", price: 9.99 },
+    { name: "Diamond", emoji: "💎", price: 19.99 },
+    { name: "Crown", emoji: "👑", price: 49.99 },
+    { name: "Party", emoji: "🎉", price: 9.99 },
+    { name: "Clap", emoji: "👏", price: 0.99 }
+];
 
 const ICE_SERVERS = [
     { urls: "stun:stun.l.google.com:19302" },
@@ -82,6 +129,89 @@ function showToast(msg, type="success"){
     document.body.appendChild(t);
     setTimeout(()=>t.remove(),3000);
 }
+
+function showGiftAnimation(emoji){
+    const el = document.createElement("div");
+    el.className = "giftAnimation";
+    el.textContent = emoji;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 2000);
+}
+
+function renderGiftGrid(){
+    const grid = document.getElementById("giftGrid");
+    grid.innerHTML = "";
+    GIFTS.forEach(function(gift){
+        const item = document.createElement("div");
+        item.className = "giftItem";
+        item.innerHTML = '<div class="giftEmoji">'+gift.emoji+'</div><div class="giftName">'+gift.name+'</div><div class="giftPrice">$'+gift.price.toFixed(2)+'</div>';
+        item.onclick = function(){
+            document.querySelectorAll(".giftItem").forEach(function(g){ g.classList.remove("selected"); });
+            item.classList.add("selected");
+            selectedGift = gift;
+            document.getElementById("giftSendBtn").disabled = false;
+            document.getElementById("giftSendBtn").textContent = "Send " + gift.emoji + " " + gift.name + " ($" + gift.price.toFixed(2) + ")";
+        };
+        grid.appendChild(item);
+    });
+}
+
+async function loadWalletBalance(){
+    if(!localStorage.getItem("CloudTokToken")) return;
+    try {
+        const result = await CloudTokAPI.request("/wallet/balance");
+        walletBalance = result.balance || 0;
+        document.getElementById("giftBalance").textContent = "Balance: $" + walletBalance.toFixed(2);
+    } catch(e){}
+}
+
+async function sendGift(){
+    if(!selectedGift || !currentStream) return;
+    if(walletBalance < selectedGift.price){
+        showToast("Insufficient balance. Fund your wallet first.","error");
+        return;
+    }
+
+    try {
+        const result = await CloudTokAPI.request("/gifts/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                receiver_username: currentStream.username,
+                gift_name: selectedGift.name,
+                gift_emoji: selectedGift.emoji,
+                amount_usd: selectedGift.price,
+                stream_id: currentStream.id
+            })
+        });
+
+        if(result.success){
+            showToast("Sent " + selectedGift.emoji + " " + selectedGift.name + "!");
+            showGiftAnimation(selectedGift.emoji);
+            walletBalance = result.wallet_balance;
+            document.getElementById("giftBalance").textContent = "Balance: $" + walletBalance.toFixed(2);
+            selectedGift = null;
+            document.querySelectorAll(".giftItem").forEach(function(g){ g.classList.remove("selected"); });
+            document.getElementById("giftSendBtn").disabled = true;
+            document.getElementById("giftSendBtn").textContent = "Select a gift";
+        } else {
+            showToast(result.error || "Failed to send gift","error");
+        }
+    } catch(e){
+        showToast("Failed to send gift","error");
+    }
+}
+
+document.getElementById("giftToggleBtn").onclick = function(){
+    const panel = document.getElementById("giftPanel");
+    panel.classList.toggle("show");
+    if(panel.classList.contains("show")){
+        loadWalletBalance();
+        renderGiftGrid();
+    }
+};
+
+document.getElementById("giftSendBtn").onclick = sendGift;
 
 async function loadStreams(){
     const grid = document.getElementById("streamsGrid");
@@ -127,6 +257,8 @@ async function joinStream(stream){
     document.getElementById("viewerHost").textContent = "@" + stream.username;
     document.getElementById("viewer").classList.add("active");
     document.getElementById("viewerStatus").textContent = "Connecting...";
+    document.getElementById("giftPanel").classList.remove("show");
+    selectedGift = null;
 
     viewerPC = new RTCPeerConnection({ iceServers: ICE_SERVERS });
 
@@ -142,7 +274,6 @@ async function joinStream(stream){
 
     viewerPC.onicecandidate = async (e) => {
         if(e.candidate){
-            console.log("[Viewer] Sending ICE candidate");
             try {
                 await CloudTokAPI.request("/webrtc/signal", {
                     method: "POST",
@@ -158,7 +289,6 @@ async function joinStream(stream){
     };
 
     viewerPC.onconnectionstatechange = () => {
-        console.log("[Viewer] connection:", viewerPC ? viewerPC.connectionState : "closed");
         const state = viewerPC ? viewerPC.connectionState : "closed";
         if(state === "connected"){
             document.getElementById("viewerStatus").textContent = "Watching live";
@@ -176,7 +306,6 @@ async function joinStream(stream){
         viewerPC.addTransceiver("audio", { direction: "recvonly" });
         const offer = await viewerPC.createOffer();
         await viewerPC.setLocalDescription(offer);
-        console.log("[Viewer] Offer created, SDP length:", viewerPC.localDescription.sdp.length);
 
         await CloudTokAPI.request("/webrtc/signal", {
             method: "POST",
@@ -190,7 +319,6 @@ async function joinStream(stream){
                 }
             })
         });
-        console.log("[Viewer] Join signal sent, starting poll");
 
         startSignalPoll();
     } catch(e){
@@ -211,14 +339,11 @@ function startSignalPoll(){
             if(result && result.signals){
                 for(const signal of result.signals){
                     if(signal.id > lastSignalId) lastSignalId = signal.id;
-                    console.log("[Viewer] Signal:", signal.type);
 
                     if(signal.type === "live-answer" && viewerPC){
                         try {
                             await viewerPC.setRemoteDescription(new RTCSessionDescription(signal.data));
-                            console.log("[Viewer] Remote description set from answer");
                             document.getElementById("viewerStatus").textContent = "Connected";
-                            console.log("[Viewer] Draining", viewerIceQueue.length, "queued ICE candidates");
                             for(const c of viewerIceQueue){
                                 try { await viewerPC.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
                             }
@@ -229,9 +354,7 @@ function startSignalPoll(){
                         try {
                             if(viewerPC.remoteDescription){
                                 await viewerPC.addIceCandidate(new RTCIceCandidate(signal.data.candidate));
-                                console.log("[Viewer] Added streamer ICE candidate");
                             } else {
-                                console.log("[Viewer] Queuing ICE candidate (no remoteDescription yet)");
                                 viewerIceQueue.push(signal.data.candidate);
                             }
                         } catch(e){ console.error("[Viewer] ICE error:", e); }
@@ -240,9 +363,12 @@ function startSignalPoll(){
                         document.getElementById("viewerStatus").textContent = "Stream ended";
                         setTimeout(closeViewer, 1500);
                     }
+                    else if(signal.type === "live-gift"){
+                        showGiftAnimation(signal.data?.emoji || "🎁");
+                    }
                 }
             }
-        } catch(e){ console.error("[Viewer] Poll error:", e); }
+        } catch(e){}
 
         if(currentStream){
             signalPollInterval = setTimeout(poll, 800);
@@ -279,6 +405,7 @@ function closeViewer(){
     viewerIceQueue = [];
     document.getElementById("viewer").classList.remove("active");
     document.getElementById("viewerVideo").srcObject = null;
+    document.getElementById("giftPanel").classList.remove("show");
 }
 
 loadStreams();
