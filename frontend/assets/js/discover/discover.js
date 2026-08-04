@@ -69,6 +69,19 @@ if(typeof CloudTokAPI!=="undefined"){
 
 }
 
+if(this.searchText && videos.length > 0){
+    videos = videos.filter(video => {
+        const text =
+        ((video.caption || "") + " " +
+        (video.username || "") + " " +
+        (video.displayName || "") + " " +
+        (video.category || "") + " " +
+        (video.tags || []).join(" "))
+        .toLowerCase();
+        return text.includes(this.searchText);
+    });
+}
+
 if(videos.length===0){
 
     videos=CloudTokDatabase.videos||[];

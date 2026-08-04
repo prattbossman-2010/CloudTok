@@ -970,7 +970,7 @@ overflow:visible;
         top:11%;
     }
     .watchActions{
-        right:calc(31% - 100px);
+        right:calc(31% - 160px);
         bottom:12%;
         gap:30px;
     }
