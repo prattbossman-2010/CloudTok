@@ -1,6 +1,13 @@
 import { authenticate } from "../middleware/auth.js";
 
+async function ensureTables(env) {
+    try { await env.DB.prepare("CREATE TABLE IF NOT EXISTS webrtc_signals (id INTEGER PRIMARY KEY, from_username TEXT NOT NULL, to_username TEXT NOT NULL, signal_type TEXT NOT NULL, signal_data TEXT DEFAULT '{}', created_at TEXT DEFAULT (datetime('now')))").run(); } catch(e) {}
+    try { await env.DB.prepare("CREATE TABLE IF NOT EXISTS live_streams (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, username TEXT NOT NULL, stream_key TEXT UNIQUE NOT NULL, title TEXT DEFAULT 'Live Stream', status TEXT DEFAULT 'active', viewers INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')), ended_at TEXT)").run(); } catch(e) {}
+    try { await env.DB.prepare("CREATE TABLE IF NOT EXISTS live_chat (id INTEGER PRIMARY KEY, stream_key TEXT, sender_id INTEGER, sender_username TEXT, text TEXT, to_username TEXT, created_at TEXT DEFAULT (datetime('now')))").run(); } catch(e) {}
+}
+
 export async function sendSignal(request, env) {
+    await ensureTables(env);
     const auth = await authenticate(request, env);
     if (auth.error) return auth.error;
 
@@ -27,6 +34,7 @@ export async function sendSignal(request, env) {
 }
 
 export async function pollSignals(request, env) {
+    await ensureTables(env);
     const auth = await authenticate(request, env);
     if (auth.error) return auth.error;
 
@@ -55,6 +63,7 @@ export async function pollSignals(request, env) {
 }
 
 export async function createLiveStream(request, env) {
+    await ensureTables(env);
     const auth = await authenticate(request, env);
     if (auth.error) return auth.error;
 
@@ -82,18 +91,21 @@ export async function createLiveStream(request, env) {
 }
 
 export async function getLiveStreams(request, env) {
+    await ensureTables(env);
+    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+
+    try {
+        await env.DB.prepare(
+            "UPDATE live_streams SET status = 'ended', ended_at = datetime('now') WHERE status = 'active' AND created_at < ?"
+        ).bind(fiveMinAgo).run();
+    } catch(e) {}
+
     const { results } = await env.DB.prepare(
         "SELECT ls.*, u.username, u.avatar, u.display_name FROM live_streams ls JOIN users u ON ls.user_id = u.id WHERE ls.status = 'active' ORDER BY ls.created_at DESC"
     ).all();
 
-    const cutoff = Date.now() - 5 * 60 * 1000;
-    const active = results.filter(s => {
-        const created = new Date(s.created_at).getTime();
-        return created > cutoff;
-    });
-
     const seen = new Set();
-    const unique = active.filter(s => {
+    const unique = (results || []).filter(s => {
         if(seen.has(s.user_id)) return false;
         seen.add(s.user_id);
         return true;
@@ -103,6 +115,7 @@ export async function getLiveStreams(request, env) {
 }
 
 export async function endLiveStream(request, env) {
+    await ensureTables(env);
     const auth = await authenticate(request, env);
     if (auth.error) return auth.error;
 
@@ -117,6 +130,7 @@ export async function endLiveStream(request, env) {
 }
 
 export async function sendLiveChat(request, env) {
+    await ensureTables(env);
     const auth = await authenticate(request, env);
     if (auth.error) return auth.error;
 
@@ -148,6 +162,7 @@ export async function sendLiveChat(request, env) {
 }
 
 export async function getLiveChat(request, env) {
+    await ensureTables(env);
     const auth = await authenticate(request, env);
     if (auth.error) return auth.error;
 

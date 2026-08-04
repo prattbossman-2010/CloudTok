@@ -1,5 +1,10 @@
 import { authenticate } from "../middleware/auth.js";
 
+async function ensurePaymentTables(env) {
+    try { await env.DB.prepare("CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, reference TEXT UNIQUE, amount INTEGER, currency TEXT, amount_usd REAL, status TEXT, method TEXT, provider_reference TEXT, created_at TEXT DEFAULT (datetime('now')))").run(); } catch(e) {}
+    try { await env.DB.prepare("ALTER TABLE users ADD COLUMN wallet_balance REAL DEFAULT 0").run(); } catch(e) {}
+}
+
 const EXCHANGE_RATES = {
     USD: 1,
     NGN: 1550,
@@ -21,6 +26,7 @@ const PAYSTACK_CURRENCY_MAP = {
 };
 
 export async function initializePayment(request, env) {
+    await ensurePaymentTables(env);
     const auth = await authenticate(request, env);
     if (auth.error) return auth.error;
 
@@ -89,6 +95,7 @@ export async function initializePayment(request, env) {
 }
 
 export async function verifyPayment(request, env) {
+    await ensurePaymentTables(env);
     const auth = await authenticate(request, env);
     if (auth.error) return auth.error;
 
@@ -177,6 +184,7 @@ export async function verifyPayment(request, env) {
 }
 
 export async function getTransactions(request, env) {
+    await ensurePaymentTables(env);
     const auth = await authenticate(request, env);
     if (auth.error) return auth.error;
 

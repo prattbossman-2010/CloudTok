@@ -1,6 +1,10 @@
 import { authenticate } from "../middleware/auth.js";
 import { createNotification } from "./notifications.js";
 
+async function ensureMsgTables(env) {
+    try { await env.DB.prepare("CREATE TABLE IF NOT EXISTS conversations (id INTEGER PRIMARY KEY, user1_id INTEGER, user2_id INTEGER, last_message TEXT, last_message_at TEXT)").run(); } catch(e) {}
+    try { await env.DB.prepare("CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, conversation_id INTEGER, sender_id INTEGER, text TEXT, read INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')))").run(); } catch(e) {}
+}
 
 async function getOrCreateConversation(env, user1Id, user2Id){
 
@@ -43,7 +47,7 @@ async function getOrCreateConversation(env, user1Id, user2Id){
 
 
 export async function getConversations(request, env){
-
+  await ensureMsgTables(env);
 
   const auth = await authenticate(request, env);
 
@@ -100,7 +104,7 @@ export async function getConversations(request, env){
 
 
 export async function getMessages(request, env, otherUsername){
-
+  await ensureMsgTables(env);
 
   const auth = await authenticate(request, env);
 
@@ -171,7 +175,7 @@ export async function getMessages(request, env, otherUsername){
 
 
 export async function sendMessage(request, env, otherUsername){
-
+  await ensureMsgTables(env);
 
   const auth = await authenticate(request, env);
 

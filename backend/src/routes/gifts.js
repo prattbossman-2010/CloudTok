@@ -1,5 +1,12 @@
+async function ensureGiftTables(env) {
+    try { await env.DB.prepare("CREATE TABLE IF NOT EXISTS gift_transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, sender_id INTEGER NOT NULL, receiver_id INTEGER NOT NULL, gift_name TEXT NOT NULL, gift_emoji TEXT DEFAULT '', amount_usd REAL NOT NULL, stream_id INTEGER, conversation_id INTEGER, message TEXT DEFAULT '', created_at TEXT DEFAULT (datetime('now')))").run(); } catch(e) {}
+    try { await env.DB.prepare("CREATE TABLE IF NOT EXISTS gift_config (id INTEGER PRIMARY KEY, gift_name TEXT UNIQUE, price_usd REAL, updated_at TEXT)").run(); } catch(e) {}
+    try { await env.DB.prepare("ALTER TABLE users ADD COLUMN wallet_balance REAL DEFAULT 0").run(); } catch(e) {}
+}
+
 export async function sendGift(request, env) {
     try {
+        await ensureGiftTables(env);
         const authHeader = request.headers.get("Authorization");
         if (!authHeader) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -62,6 +69,7 @@ export async function sendGift(request, env) {
 
 export async function getGiftHistory(request, env) {
     try {
+        await ensureGiftTables(env);
         const authHeader = request.headers.get("Authorization");
         if (!authHeader) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -92,6 +100,7 @@ export async function getGiftHistory(request, env) {
 
 export async function getWalletBalance(request, env) {
     try {
+        await ensureGiftTables(env);
         const authHeader = request.headers.get("Authorization");
         if (!authHeader) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
