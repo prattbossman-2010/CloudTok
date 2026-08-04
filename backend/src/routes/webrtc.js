@@ -115,3 +115,63 @@ export async function endLiveStream(request, env) {
 
     return Response.json({ success: true });
 }
+
+export async function sendLiveChat(request, env) {
+    const auth = await authenticate(request, env);
+    if (auth.error) return auth.error;
+
+    const body = await request.json();
+    const { stream_key, text, to_username } = body;
+
+    if (!stream_key || !text) {
+        return Response.json({ error: "stream_key and text required" }, { status: 400 });
+    }
+
+    try {
+        await env.DB.prepare(
+            "CREATE TABLE IF NOT EXISTS live_chat (id INTEGER PRIMARY KEY, stream_key TEXT, sender_id INTEGER, sender_username TEXT, text TEXT, to_username TEXT, created_at TEXT)"
+        ).run();
+    } catch(e) {}
+
+    await env.DB.prepare(
+        "INSERT INTO live_chat (stream_key, sender_id, sender_username, text, to_username, created_at) VALUES (?, ?, ?, ?, ?, ?)"
+    ).bind(
+        stream_key,
+        auth.user.id,
+        auth.user.username,
+        text,
+        to_username || null,
+        new Date().toISOString()
+    ).run();
+
+    return Response.json({ success: true });
+}
+
+export async function getLiveChat(request, env) {
+    const auth = await authenticate(request, env);
+    if (auth.error) return auth.error;
+
+    const url = new URL(request.url);
+    const streamKey = url.searchParams.get("stream_key");
+    const after = parseInt(url.searchParams.get("after") || "0");
+
+    if (!streamKey) {
+        return Response.json({ error: "stream_key required" }, { status: 400 });
+    }
+
+    let messages = [];
+    try {
+        const { results } = await env.DB.prepare(
+            "SELECT * FROM live_chat WHERE stream_key = ? AND id > ? ORDER BY id ASC LIMIT 50"
+        ).bind(streamKey, after).all();
+        messages = results || [];
+    } catch(e) {
+        try {
+            await env.DB.prepare(
+                "CREATE TABLE IF NOT EXISTS live_chat (id INTEGER PRIMARY KEY, stream_key TEXT, sender_id INTEGER, sender_username TEXT, text TEXT, to_username TEXT, created_at TEXT)"
+            ).run();
+        } catch(e2) {}
+    }
+
+    return Response.json({ messages });
+}

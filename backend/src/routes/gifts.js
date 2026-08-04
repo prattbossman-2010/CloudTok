@@ -16,10 +16,18 @@ export async function sendGift(request, env) {
             return Response.json({ error: "Missing required fields" }, { status: 400 });
         }
 
+        let finalAmount = Number(amount_usd);
+        try {
+            const { results: config } = await env.DB.prepare("SELECT price_usd FROM gift_config WHERE gift_name = ?").bind(gift_name).all();
+            if (config && config.length > 0) {
+                finalAmount = Number(config[0].price_usd);
+            }
+        } catch(e) {}
+
         const { results: sender } = await env.DB.prepare("SELECT id, wallet_balance FROM users WHERE id = ?").bind(senderId).all();
         if (!sender || sender.length === 0) return Response.json({ error: "Sender not found" }, { status: 404 });
 
-        if ((sender[0].wallet_balance || 0) < amount_usd) {
+        if ((sender[0].wallet_balance || 0) < finalAmount) {
             return Response.json({ error: "Insufficient balance. Please fund your wallet first." }, { status: 400 });
         }
 
@@ -28,22 +36,23 @@ export async function sendGift(request, env) {
 
         const receiverId = receiver[0].id;
 
-        await env.DB.prepare("UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?").bind(amount_usd, senderId).run();
-        await env.DB.prepare("UPDATE users SET wallet_balance = wallet_balance + ? WHERE id = ?").bind(amount_usd, receiverId).run();
+        await env.DB.prepare("UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?").bind(finalAmount, senderId).run();
+        await env.DB.prepare("UPDATE users SET wallet_balance = wallet_balance + ? WHERE id = ?").bind(finalAmount, receiverId).run();
 
         await env.DB.prepare(
             "INSERT INTO gift_transactions (sender_id, receiver_id, gift_name, gift_emoji, amount_usd, stream_id, conversation_id, message) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-        ).bind(senderId, receiverId, gift_name, gift_emoji || "", amount_usd, stream_id || null, conversation_id || null, message || "").run();
+        ).bind(senderId, receiverId, gift_name, gift_emoji || "", finalAmount, stream_id || null, conversation_id || null, message || "").run();
 
         await env.DB.prepare(
             "INSERT INTO notifications (user_id, from_user_id, type, message, reference_type, reference_id) VALUES (?, ?, 'gift', ?, 'gift', ?)"
-        ).bind(receiverId, senderId, `Sent you a ${gift_emoji} ${gift_name} ($${amount_usd.toFixed(2)})`, senderId).run();
+        ).bind(receiverId, senderId, `Sent you a ${gift_emoji} ${gift_name} ($${finalAmount.toFixed(2)})`, senderId).run();
 
         const { results: updatedSender } = await env.DB.prepare("SELECT wallet_balance FROM users WHERE id = ?").bind(senderId).all();
 
         return Response.json({
             success: true,
             wallet_balance: updatedSender[0].wallet_balance,
+            gift: { name: gift_name, emoji: gift_emoji, price: finalAmount },
             message: `Gift sent to @${receiver_username}`
         });
     } catch (e) {

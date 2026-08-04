@@ -569,7 +569,11 @@ function initVirtualCard(amountUSD, localAmount){
 
 async function verifyAndCredit(reference, amountUSD){
     try{
-        const result = await CloudTokAPI.verifyPayment(reference);
+        const result = await CloudTokAPI.request("/payments/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reference: reference })
+        });
         if(result.success){
             showToast("$" + amountUSD.toFixed(2) + " added to wallet!");
             loadBalance();
@@ -585,9 +589,9 @@ async function verifyAndCredit(reference, amountUSD){
 
 async function loadBalance(){
     try{
-        const result = await CloudTokAPI.getTransactions();
-        const total = (result.transactions || []).reduce((sum, t) => sum + (t.amount || 0), 0);
-        document.getElementById("walletBalance").textContent = "$" + total.toFixed(2);
+        const result = await CloudTokAPI.request("/wallet/balance");
+        const balance = result.balance || 0;
+        document.getElementById("walletBalance").textContent = "$" + balance.toFixed(2);
     } catch(e){}
 }
 
@@ -617,7 +621,7 @@ async function loadTransactions(){
 }
 
 function buyGift(name, price){
-    showToast("Gift: " + name + " ($" + price + ") — Coming soon!");
+    showToast("Go to a live stream to send " + name + " ($" + price + ") gifts!");
 }
 
 document.getElementById("payAmount").addEventListener("input", updateConversion);

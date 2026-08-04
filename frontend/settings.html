@@ -65,9 +65,13 @@
         <span class="settingIcon">💬</span>
         <div class="settingInfo">
             <span class="settingLabel">Allow Messages</span>
-            <span class="settingDesc">Who can send you messages</span>
+            <span class="settingDesc" id="allowMessagesDesc">Everyone</span>
         </div>
-        <span class="settingArrow">›</span>
+        <select id="allowMessagesSelect" style="background:#1a1a1a;color:#fff;border:1px solid #333;border-radius:8px;padding:6px 10px;font-size:13px;outline:none;">
+            <option value="everyone">Everyone</option>
+            <option value="followers">Followers Only</option>
+            <option value="nobody">Nobody</option>
+        </select>
     </div>
 </div>
 
@@ -185,6 +189,25 @@ document.addEventListener("DOMContentLoaded", async ()=>{
         emailEl.textContent = user.email;
     }
 
+    const allowMsgSelect = document.getElementById("allowMessagesSelect");
+    const allowMsgDesc = document.getElementById("allowMessagesDesc");
+    const savedPreference = localStorage.getItem("CloudTokAllowMessages") || "everyone";
+    allowMsgSelect.value = savedPreference;
+    allowMsgDesc.textContent = savedPreference === "everyone" ? "Everyone" : savedPreference === "followers" ? "Followers Only" : "Nobody";
+
+    allowMsgSelect.addEventListener("change", function(){
+        const val = this.value;
+        localStorage.setItem("CloudTokAllowMessages", val);
+        allowMsgDesc.textContent = val === "everyone" ? "Everyone" : val === "followers" ? "Followers Only" : "Nobody";
+        if(typeof CloudTokAPI !== "undefined"){
+            CloudTokAPI.request("/users/profile", {
+                method: "PUT",
+                headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({ allow_messages: val })
+            }).catch(function(){});
+        }
+    });
+
     document.getElementById("logoutBtn").addEventListener("click", ()=>{
         if(confirm("Are you sure you want to log out?")){
             localStorage.removeItem("CloudTokToken");
@@ -194,8 +217,8 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     });
 
     document.getElementById("deleteAccountBtn").addEventListener("click", async ()=>{
-        if(confirm("Are you sure? This cannot be undone.")){
-            if(confirm("This will permanently delete your account. Continue?")){
+        if(confirm("Are you sure you want to delete your account? This action cannot be undone.")){
+            if(confirm("This will permanently delete all your data. Are you really sure?")){
                 localStorage.clear();
                 window.location.href = "login.html";
             }

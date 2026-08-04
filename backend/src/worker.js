@@ -30,11 +30,11 @@ import { deleteVideo } from "./routes/videoDelete.js";
 import { handleCORS, withCORS } from "./middleware/cors.js";
 import { adminLogin, adminGetStats, adminGetUsers, adminUpdateUser, adminDeleteVideo, adminGetVideos, adminRunMigration } from "./routes/admin.js";
 import { initializePayment, verifyPayment, getTransactions } from "./routes/payments.js";
-import { sendSignal, pollSignals, createLiveStream, getLiveStreams, endLiveStream } from "./routes/webrtc.js";
+import { sendSignal, pollSignals, createLiveStream, getLiveStreams, endLiveStream, sendLiveChat, getLiveChat } from "./routes/webrtc.js";
 
 
 import { sendGift, getGiftHistory, getWalletBalance } from "./routes/gifts.js";
-import { adminGetLiveStreams, adminStopStream, adminGetTransactions, adminGetGifts, adminGetMessages, adminGetActivityLogs, adminGetStorageHealth, adminDeleteComment, adminGetComments } from "./routes/adminExtended.js";
+import { adminGetLiveStreams, adminStopStream, adminGetTransactions, adminGetGifts, adminGetMessages, adminGetActivityLogs, adminGetStorageHealth, adminDeleteComment, adminGetComments, adminAdjustBalance, adminUpdateGiftPrice, adminGetGiftConfig } from "./routes/adminExtended.js";
 
 
 export default {
@@ -427,6 +427,12 @@ export default {
     if(path === "/api/live/end" && method === "POST"){
       return withCORS(endLiveStream(request, env));
     }
+    if(path === "/api/live/chat" && method === "POST"){
+      return withCORS(sendLiveChat(request, env));
+    }
+    if(path === "/api/live/chat" && method === "GET"){
+      return withCORS(getLiveChat(request, env));
+    }
 
     // Gift routes
     if(path === "/api/gifts/send" && method === "POST"){
@@ -437,6 +443,14 @@ export default {
     }
     if(path === "/api/wallet/balance" && method === "GET"){
       return withCORS(getWalletBalance(request, env));
+    }
+    if(path === "/api/gift-config" && method === "GET"){
+      try {
+        const { results } = await env.DB.prepare("SELECT gift_name, price_usd FROM gift_config").all();
+        return withCORS(Response.json({ config: results || [] }));
+      } catch(e) {
+        return withCORS(Response.json({ config: [] }));
+      }
     }
 
     // Extended admin routes
@@ -468,6 +482,15 @@ export default {
     }
     if(path === "/api/admin/storage" && method === "GET"){
       return withCORS(adminGetStorageHealth(request, env));
+    }
+    if(path === "/api/admin/balance" && method === "POST"){
+      return withCORS(adminAdjustBalance(request, env));
+    }
+    if(path === "/api/admin/gift-config" && method === "GET"){
+      return withCORS(adminGetGiftConfig(request, env));
+    }
+    if(path === "/api/admin/gift-config" && method === "POST"){
+      return withCORS(adminUpdateGiftPrice(request, env));
     }
 
 

@@ -143,6 +143,14 @@ export async function verifyPayment(request, env) {
 
         amountInUSD = Math.round(amountInUSD * 100) / 100;
 
+        const { results: existing } = await env.DB.prepare(
+            "SELECT id FROM transactions WHERE reference = ?"
+        ).bind(reference).all();
+
+        if(existing && existing.length > 0){
+            return Response.json({ success: true, amount: amountInUSD, reference, message: "Already verified" });
+        }
+
         await env.DB.prepare(
             "INSERT INTO transactions (user_id, reference, amount, status, created_at) VALUES (?, ?, ?, ?, ?)"
         ).bind(
@@ -152,6 +160,10 @@ export async function verifyPayment(request, env) {
             "success",
             new Date().toISOString()
         ).run();
+
+        await env.DB.prepare(
+            "UPDATE users SET wallet_balance = COALESCE(wallet_balance, 0) + ? WHERE id = ?"
+        ).bind(amountInUSD, auth.user.id).run();
 
         return Response.json({
             success: true,

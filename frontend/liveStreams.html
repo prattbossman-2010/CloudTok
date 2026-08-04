@@ -111,6 +111,7 @@ let lastSignalId = 0;
 let viewerIceQueue = [];
 let selectedGift = null;
 let walletBalance = 0;
+let lastChatId = 0;
 
 const GIFTS = [
     { name: "Rose", emoji: "🌹", price: 0.99 },
@@ -249,16 +250,31 @@ async function sendLiveChat(){
     addLiveChatMessage(currentUser, text);
 
     try {
-        await CloudTokAPI.request("/webrtc/signal", {
+        await CloudTokAPI.request("/live/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                to_username: currentStream.username,
-                signal_type: "live-chat-viewer",
-                signal_data: { username: currentUser, text: text, stream_key: currentStream.stream_key }
+                stream_key: currentStream.stream_key,
+                text: text,
+                to_username: currentStream.username
             })
         });
     } catch(e){ console.error("[Viewer] Chat send failed:", e); }
+}
+
+async function pollLiveChat(){
+    if(!currentStream) return;
+    try {
+        var result = await CloudTokAPI.request("/live/chat?stream_key=" + encodeURIComponent(currentStream.stream_key) + "&after=" + lastChatId);
+        if(result && result.messages){
+            result.messages.forEach(function(msg){
+                if(msg.id > lastChatId) lastChatId = msg.id;
+                if(msg.sender_username !== localStorage.getItem("CloudTokCurrentUser")){
+                    addLiveChatMessage(msg.sender_username || "viewer", msg.text || "");
+                }
+            });
+        }
+    } catch(e){}
 }
 
 async function loadStreams(){
@@ -419,6 +435,8 @@ function startSignalPoll(){
                     }
                 }
             }
+
+            await pollLiveChat();
         } catch(e){}
 
         if(currentStream){
