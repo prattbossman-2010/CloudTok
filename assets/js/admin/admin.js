@@ -82,6 +82,7 @@ setupTabs(){
             else if(tab==="streams") this.loadStreams();
             else if(tab==="transactions") this.loadTransactions();
             else if(tab==="gifts") this.loadGifts();
+            else if(tab==="giftConfig") this.loadGiftConfig();
             else if(tab==="logs") this.loadLogs();
             else if(tab==="storage") this.loadStorage();
         };
@@ -200,6 +201,7 @@ async loadUsers(){
                 <td><span class="statusBadge ${status}">${status}</span></td>
                 <td>${u.created_at?new Date(u.created_at).toLocaleDateString():""}</td>
                 <td class="actionsCell">
+                    <button class="adminBtn view" onclick="admin.adjustBalance(${u.id})">💰 Balance</button>
                     ${status!=="banned"?`<button class="adminBtn ban" onclick="admin.banUser(${u.id})">Ban</button>`:`<button class="adminBtn unban" onclick="admin.unbanUser(${u.id})">Unban</button>`}
                     ${role!=="admin"?`<button class="adminBtn admin" onclick="admin.makeAdmin(${u.id})">Admin</button>`:""}
                 </td>
@@ -438,18 +440,45 @@ async loadLogs(){
 async loadStorage(){
     try{
         const result=await this.api("/admin/storage");
-        if(result.error){
-            document.getElementById("storageGrid").innerHTML="<p>"+result.error+"</p>";
-            return;
-        }
         const s=result.storage||result;
-        document.getElementById("storageGrid").innerHTML=`
-            <div class="statCard"><div class="statNumber">${s.totalFiles||0}</div><div class="statLabel">Total Files</div></div>
-            <div class="statCard"><div class="statNumber">${s.videos||0}</div><div class="statLabel">Videos</div></div>
-            <div class="statCard"><div class="statNumber">${s.avatars||0}</div><div class="statLabel">Avatars</div></div>
-            <div class="statCard"><div class="statNumber">${s.gifs||0}</div><div class="statLabel">GIFs</div></div>
-            <div class="statCard"><div class="statNumber">${s.totalSizeMB||0} MB</div><div class="statLabel">Total Size</div></div>
-        `;
+        const providers=s.providers||[];
+        const events=s.events||[];
+
+        let html=`<div class="statsGrid">`;
+        html+=`<div class="statCard"><div class="statNumber">${providers.length}</div><div class="statLabel">Providers</div></div>`;
+        html+=`<div class="statCard"><div class="statNumber">${events.length}</div><div class="statLabel">Storage Events</div></div>`;
+        html+=`</div>`;
+
+        if(providers.length>0){
+            html+=`<h3 style="color:#888;font-size:12px;text-transform:uppercase;margin:20px 0 10px;letter-spacing:1px;">Cloud Storage Providers</h3>`;
+            html+=`<table><thead><tr><th>Provider</th><th>Status</th><th>Configured</th></tr></thead><tbody>`;
+            providers.forEach(p=>{
+                const statusColor=p.status==="ok"||p.status==="healthy"?"#00c853":p.status==="error"?"#ff2d55":"#ffc107";
+                html+=`<tr>
+                    <td><strong>${p.id||p.name||"Unknown"}</strong></td>
+                    <td><span style="color:${statusColor};font-weight:600;">${p.status||"unknown"}</span></td>
+                    <td>${p.configured!==false?"✅ Yes":"❌ No"}</td>
+                </tr>`;
+            });
+            html+=`</tbody></table>`;
+        }
+
+        if(events.length>0){
+            html+=`<h3 style="color:#888;font-size:12px;text-transform:uppercase;margin:20px 0 10px;letter-spacing:1px;">Recent Events</h3>`;
+            html+=`<table><thead><tr><th>Type</th><th>Provider</th><th>File</th><th>Status</th><th>Date</th></tr></thead><tbody>`;
+            events.forEach(e=>{
+                html+=`<tr>
+                    <td>${e.event_type||"-"}</td>
+                    <td>${e.provider||"-"}</td>
+                    <td>${(e.filename||"-").substring(0,30)}</td>
+                    <td><span class="statusBadge ${e.status==="success"?"active":"banned"}">${e.status||"-"}</span></td>
+                    <td>${e.created_at?new Date(e.created_at).toLocaleDateString():""}</td>
+                </tr>`;
+            });
+            html+=`</tbody></table>`;
+        }
+
+        document.getElementById("storageGrid").innerHTML=html;
     }catch(e){
         document.getElementById("storageGrid").innerHTML="<p>Failed to load storage info.</p>";
     }
@@ -506,6 +535,75 @@ async stopStream(streamKey){
     if(!confirm("Stop this live stream?")) return;
     await this.api("/admin/streams/"+encodeURIComponent(streamKey)+"/stop","POST");
     this.loadStreams();
+}
+
+async adjustBalance(userId){
+    const amount=prompt("Enter amount to add (positive) or remove (negative):\nExample: 10 or -5");
+    if(amount===null) return;
+    const num=parseFloat(amount);
+    if(isNaN(num)){
+        alert("Invalid amount");
+        return;
+    }
+    const reason=prompt("Reason (optional):") || "";
+    const result=await this.api("/admin/balance","POST",{user_id:userId,amount:num,reason:reason});
+    if(result.success){
+        alert("Balance updated! New balance: $"+result.balance.toFixed(2));
+        this.loadUsers();
+    } else {
+        alert(result.error||"Failed to update balance");
+    }
+}
+
+async loadGiftConfig(){
+    try{
+        const result=await this.api("/admin/gift-config");
+        const config=result.config||[];
+        const defaultGifts=[
+            {gift_name:"Rose",price_usd:0.99},
+            {gift_name:"Heart",price_usd:1.99},
+            {gift_name:"Star",price_usd:4.99},
+            {gift_name:"Fire",price_usd:9.99},
+            {gift_name:"Diamond",price_usd:19.99},
+            {gift_name:"Crown",price_usd:49.99},
+            {gift_name:"Party",price_usd:9.99},
+            {gift_name:"Clap",price_usd:0.99}
+        ];
+        const merged=defaultGifts.map(d=>{
+            const found=config.find(c=>c.gift_name===d.gift_name);
+            return{gift_name:d.gift_name,price_usd:found?found.price_usd:d.price_usd};
+        });
+        let html=`<table><thead><tr><th>Gift</th><th>Price (USD)</th><th>Actions</th></tr></thead><tbody>`;
+        const emojis={Rose:"🌹",Heart:"❤️",Star:"⭐",Fire:"🔥",Diamond:"💎",Crown:"👑",Party:"🎉",Clap:"👏"};
+        merged.forEach(g=>{
+            html+=`<tr>
+                <td>${emojis[g.gift_name]||"🎁"} ${g.gift_name}</td>
+                <td>$${g.price_usd.toFixed(2)}</td>
+                <td><button class="adminBtn view" onclick="admin.editGiftPrice('${g.gift_name}',${g.price_usd})">Edit</button></td>
+            </tr>`;
+        });
+        html+="</tbody></table>";
+        document.getElementById("giftConfigTable").innerHTML=html;
+    }catch(e){
+        document.getElementById("giftConfigTable").innerHTML="<p>Failed to load gift config.</p>";
+    }
+}
+
+async editGiftPrice(giftName,currentPrice){
+    const newPrice=prompt("Enter new price for "+giftName+":",currentPrice);
+    if(newPrice===null) return;
+    const num=parseFloat(newPrice);
+    if(isNaN(num)||num<=0){
+        alert("Invalid price");
+        return;
+    }
+    const result=await this.api("/admin/gift-config","POST",{gift_name:giftName,new_price:num});
+    if(result.success){
+        alert(giftName+" price updated to $"+num.toFixed(2));
+        this.loadGiftConfig();
+    } else {
+        alert(result.error||"Failed to update price");
+    }
 }
 
 }

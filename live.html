@@ -92,6 +92,7 @@ let isMuted = false;
 let isVideoOff = false;
 let viewerConnections = [];
 let viewerIceQueues = {};
+let lastStreamChatId = 0;
 
 const ICE_SERVERS = [
     { urls: "stun:stun.l.google.com:19302" },
@@ -204,6 +205,18 @@ function startSignalPoll(){
                     }
                 }
             }
+
+            try {
+                var chatResult = await CloudTokAPI.request("/live/chat?stream_key=" + encodeURIComponent(streamKey) + "&after=" + lastStreamChatId);
+                if(chatResult && chatResult.messages){
+                    chatResult.messages.forEach(function(msg){
+                        if(msg.id > lastStreamChatId) lastStreamChatId = msg.id;
+                        if(msg.sender_username !== localStorage.getItem("CloudTokCurrentUser")){
+                            addStreamChatMessage(msg.sender_username || "viewer", msg.text || "");
+                        }
+                    });
+                }
+            } catch(e){}
         } catch(e){console.error("[Live] Poll error:",e);}
 
         if(isStreaming){
@@ -357,19 +370,17 @@ async function sendStreamChat(){
     var currentUser = localStorage.getItem("CloudTokCurrentUser") || "streamer";
     addStreamChatMessage(currentUser, text);
 
-    viewerConnections.forEach(async function(v){
-        try {
-            await CloudTokAPI.request("/webrtc/signal", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    to_username: v.username,
-                    signal_type: "live-chat-streamer",
-                    signal_data: { username: currentUser, text: text }
-                })
-            });
-        } catch(e){}
-    });
+    try {
+        await CloudTokAPI.request("/live/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                stream_key: streamKey,
+                text: text,
+                to_username: null
+            })
+        });
+    } catch(e){}
 }
 }
 
