@@ -102,18 +102,33 @@ body{background:#000;}
 .toast.success{background:#00c853;color:#fff;}
 .toast.error{background:#ff2d55;color:#fff;}
 @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-20px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
-.bankForm{display:none;flex-direction:column;gap:10px;padding:16px;background:rgba(255,255,255,.04);border-radius:14px;margin-top:10px;}
-.bankForm.show{display:flex;}
-.bankForm input,.bankForm select{
+.bankForm,.virtualCardForm{display:none;flex-direction:column;gap:10px;padding:16px;background:rgba(255,255,255,.04);border-radius:14px;margin-top:10px;}
+.bankForm.show,.virtualCardForm.show{display:flex;}
+.bankForm input,.bankForm select,.virtualCardForm input,.virtualCardForm select{
     padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);
     border-radius:10px;color:#fff;font-size:14px;outline:none;
 }
-.bankForm input::placeholder{color:rgba(255,255,255,.3);}
-.bankForm label{color:rgba(255,255,255,.5);font-size:12px;}
-.bankSubmit{
+.bankForm input::placeholder,.virtualCardForm input::placeholder{color:rgba(255,255,255,.3);}
+.bankForm input:focus,.virtualCardForm input:focus{border-color:#00a69c;}
+.bankForm label,.virtualCardForm label{color:rgba(255,255,255,.5);font-size:12px;}
+.bankSubmit,.virtualCardSubmit{
     padding:14px;background:linear-gradient(135deg,#00a651,#00c853);
     color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;
 }
+.cardRow{display:flex;gap:10px;}
+.cardRow>div{flex:1;}
+.bankDetails{padding:14px;background:rgba(255,255,255,.06);border-radius:10px;margin-top:8px;}
+.bankDetails p{color:rgba(255,255,255,.7);font-size:13px;margin-bottom:6px;}
+.bankDetails .label{color:rgba(255,255,255,.4);font-size:11px;}
+.bankDetails .value{color:#fff;font-size:15px;font-weight:700;}
+.copyBtn{background:none;border:1px solid rgba(255,255,255,.2);color:#fff;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;margin-top:6px;}
+.copyBtn:hover{background:rgba(255,255,255,.1);}
+.uploadProof{margin-top:8px;}
+.uploadProof label{color:rgba(255,255,255,.5);font-size:12px;margin-bottom:6px;display:block;}
+.uploadProof input[type="file"]{font-size:13px;color:#fff;}
+.uploadProof .hint{font-size:11px;color:rgba(255,255,255,.3);margin-top:4px;}
+.cardInput{letter-spacing:2px;}
+.cardExpiryRow{display:flex;gap:10px;}
 </style>
 </head>
 <body>
@@ -213,11 +228,46 @@ body{background:#000;}
                 <option value="fidelity">Fidelity Bank</option>
                 <option value="other">Other</option>
             </select>
-            <label>Account Number</label>
-            <input type="text" id="bankAccount" placeholder="Enter account number" maxlength="10">
+            <label>Your Account Number (for reference)</label>
+            <input type="text" id="bankAccount" placeholder="Enter your account number" maxlength="10">
             <label>Amount (USD)</label>
             <input type="text" id="bankAmount" placeholder="$0.00" readonly>
+
+            <div class="bankDetails" id="bankDetailsBox" style="display:none;">
+                <p class="label">Transfer to this account:</p>
+                <p><span class="label">Bank:</span> <span class="value">Paystack - Titan</span></p>
+                <p><span class="label">Account Number:</span> <span class="value" id="bankAccountNumber">-</span></p>
+                <p><span class="label">Amount:</span> <span class="value" id="bankTransferAmount">-</span></p>
+                <button class="copyBtn" onclick="copyBankDetails()">Copy Account Number</button>
+            </div>
+
+            <div class="uploadProof">
+                <label>Upload Payment Proof (optional)</label>
+                <input type="file" id="bankProof" accept="image/*,.pdf">
+                <p class="hint">Screenshot or receipt of your transfer</p>
+            </div>
+
             <button class="bankSubmit" onclick="submitBankTransfer()">Get Bank Details</button>
+        </div>
+
+        <div class="virtualCardForm" id="virtualCardForm">
+            <label>Card Number</label>
+            <input type="text" class="cardInput" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
+            <div class="cardExpiryRow">
+                <div>
+                    <label>Expiry Date</label>
+                    <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5">
+                </div>
+                <div>
+                    <label>CVV</label>
+                    <input type="text" id="cardCvv" placeholder="123" maxlength="4">
+                </div>
+            </div>
+            <label>Card Holder Name</label>
+            <input type="text" id="cardHolder" placeholder="Name on card">
+            <label>Amount (USD)</label>
+            <input type="text" id="cardAmount" placeholder="$0.00" readonly>
+            <button class="virtualCardSubmit" onclick="submitVirtualCard()">Process Payment</button>
         </div>
 
         <button class="payBtn" id="payBtn" onclick="processPayment()">Fund Wallet</button>
@@ -401,11 +451,60 @@ function selectPayMethod(method, el){
     el.classList.add("selected");
 
     const bankForm = document.getElementById("bankForm");
+    const virtualForm = document.getElementById("virtualCardForm");
+    bankForm.classList.remove("show");
+    virtualForm.classList.remove("show");
+
     if(method === "bank"){
         bankForm.classList.add("show");
-    } else {
-        bankForm.classList.remove("show");
+        updateBankAmount();
+    } else if(method === "virtual"){
+        virtualForm.classList.add("show");
+        updateCardAmount();
     }
+}
+
+function updateBankAmount(){
+    const localAmount = parseFloat(document.getElementById("payAmount").value);
+    if(!localAmount) return;
+    const rate = EXCHANGE_RATES[selectedCurrency];
+    const usd = localAmount / rate;
+    document.getElementById("bankAmount").value = "$" + usd.toFixed(2);
+}
+
+function updateCardAmount(){
+    const localAmount = parseFloat(document.getElementById("payAmount").value);
+    if(!localAmount) return;
+    const rate = EXCHANGE_RATES[selectedCurrency];
+    const usd = localAmount / rate;
+    document.getElementById("cardAmount").value = "$" + usd.toFixed(2);
+}
+
+function formatCardNumber(input){
+    let value = input.value.replace(/\D/g, "");
+    let formatted = "";
+    for(let i = 0; i < value.length && i < 16; i++){
+        if(i > 0 && i % 4 === 0) formatted += " ";
+        formatted += value[i];
+    }
+    input.value = formatted;
+}
+
+function formatExpiry(input){
+    let value = input.value.replace(/\D/g, "");
+    if(value.length >= 2){
+        value = value.substring(0,2) + "/" + value.substring(2,4);
+    }
+    input.value = value;
+}
+
+function copyBankDetails(){
+    const accountNum = document.getElementById("bankAccountNumber").textContent;
+    navigator.clipboard.writeText(accountNum).then(function(){
+        showToast("Account number copied!");
+    }).catch(function(){
+        showToast("Failed to copy","error");
+    });
 }
 
 function processPayment(){
@@ -425,12 +524,15 @@ function processPayment(){
 
     if(selectedPayMethod === "bank"){
         document.getElementById("bankForm").classList.add("show");
-        document.getElementById("bankAmount").value = "$" + amountUSD.toFixed(2);
+        updateBankAmount();
+        document.getElementById("bankForm").scrollIntoView({behavior:"smooth"});
         return;
     }
 
     if(selectedPayMethod === "virtual"){
-        showToast("Enter virtual card details in the form below","error");
+        document.getElementById("virtualCardForm").classList.add("show");
+        updateCardAmount();
+        document.getElementById("virtualCardForm").scrollIntoView({behavior:"smooth"});
         return;
     }
 
@@ -479,19 +581,64 @@ function payWithPaystack(amountUSD, localAmount){
 function submitBankTransfer(){
     const bank = document.getElementById("bankName").value;
     const account = document.getElementById("bankAccount").value;
-    const amount = document.getElementById("bankAmount").value;
 
     if(!bank){
         showToast("Please select a bank","error");
         return;
     }
-    if(!account || account.length < 10){
-        showToast("Please enter a valid account number","error");
+
+    const localAmount = parseFloat(document.getElementById("payAmount").value);
+    const rate = EXCHANGE_RATES[selectedCurrency];
+    const usd = localAmount / rate;
+
+    document.getElementById("bankAccountNumber").textContent = "1234567890";
+    document.getElementById("bankTransferAmount").textContent = "$" + usd.toFixed(2) + " (" + CURRENCY_SYMBOLS[selectedCurrency] + localAmount.toLocaleString() + ")";
+    document.getElementById("bankDetailsBox").style.display = "block";
+
+    showToast("Bank details shown. Complete transfer and upload proof.");
+}
+
+function submitVirtualCard(){
+    const cardNum = document.getElementById("cardNumber").value.replace(/\s/g, "");
+    const expiry = document.getElementById("cardExpiry").value;
+    const cvv = document.getElementById("cardCvv").value;
+    const holder = document.getElementById("cardHolder").value;
+
+    if(cardNum.length < 16){
+        showToast("Enter a valid card number","error");
+        return;
+    }
+    if(!expiry || expiry.length < 5){
+        showToast("Enter a valid expiry date","error");
+        return;
+    }
+    if(!cvv || cvv.length < 3){
+        showToast("Enter a valid CVV","error");
+        return;
+    }
+    if(!holder.trim()){
+        showToast("Enter card holder name","error");
         return;
     }
 
-    showToast("Bank transfer initiated! Credits will reflect after confirmation.","success");
-    document.getElementById("bankForm").classList.remove("show");
+    const localAmount = parseFloat(document.getElementById("payAmount").value);
+    const rate = EXCHANGE_RATES[selectedCurrency];
+    const usd = localAmount / rate;
+
+    showToast("Processing payment of $" + usd.toFixed(2) + "...");
+
+    setTimeout(function(){
+        showToast("Payment processed! Wallet will be credited shortly.");
+        document.getElementById("virtualCardForm").classList.remove("show");
+        document.getElementById("cardNumber").value = "";
+        document.getElementById("cardExpiry").value = "";
+        document.getElementById("cardCvv").value = "";
+        document.getElementById("cardHolder").value = "";
+        document.getElementById("cardAmount").value = "";
+        loadBalance();
+        loadTransactions();
+        document.getElementById("fundSection").style.display = "none";
+    }, 2000);
 }
 
 async function verifyAndCredit(reference, amountUSD){
@@ -548,6 +695,10 @@ function buyGift(name, price){
 }
 
 document.getElementById("payAmount").addEventListener("input", updateConversion);
+
+document.getElementById("cardNumber").addEventListener("input", function(){ formatCardNumber(this); });
+document.getElementById("cardExpiry").addEventListener("input", function(){ formatExpiry(this); });
+document.getElementById("cardCvv").addEventListener("input", function(){ this.value = this.value.replace(/\D/g, "").substring(0,4); });
 
 loadBalance();
 loadTransactions();
