@@ -67,21 +67,28 @@ export async function createLiveStream(request, env) {
     const auth = await authenticate(request, env);
     if (auth.error) return auth.error;
 
-    const body = await request.json();
-    const { title } = body;
+    let title = "Live Stream";
+    try {
+        const body = await request.json();
+        if (body && body.title) title = body.title;
+    } catch(e) {}
 
     const streamKey = `live_${auth.user.username}_${Date.now()}`;
 
-    await env.DB.prepare(
-        "INSERT INTO live_streams (user_id, username, stream_key, title, status, created_at) VALUES (?, ?, ?, ?, ?, ?)"
-    ).bind(
-        auth.user.id,
-        auth.user.username,
-        streamKey,
-        title || "Live Stream",
-        "active",
-        new Date().toISOString()
-    ).run();
+    try {
+        await env.DB.prepare(
+            "INSERT INTO live_streams (user_id, username, stream_key, title, status, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))"
+        ).bind(
+            auth.user.id,
+            auth.user.username,
+            streamKey,
+            title,
+            "active"
+        ).run();
+    } catch(e) {
+        console.error("[Live] D1 insert failed:", e.message);
+        return Response.json({ error: "Failed to create stream: " + e.message }, { status: 500 });
+    }
 
     return Response.json({
         success: true,

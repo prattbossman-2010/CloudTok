@@ -25,9 +25,10 @@ async function adminAuth(request, env) {
     const { verifyToken } = await import("../utils/jwt.js");
     const payload = await verifyToken(token, env.JWT_SECRET || "cloudtok-secret");
     if (!payload) return { error: Response.json({ error: "Invalid token" }, { status: 401 }) };
-    const { results: user } = await env.DB.prepare("SELECT role, username FROM users WHERE id = ?").bind(payload.userId).all();
+    const uid = payload.userId || payload.id;
+    const { results: user } = await env.DB.prepare("SELECT role, username FROM users WHERE id = ?").bind(uid).all();
     if (!user || !user[0] || user[0].role !== "admin") return { error: Response.json({ error: "Admin only" }, { status: 403 }) };
-    return { userId: payload.userId, username: user[0].username };
+    return { userId: uid, username: user[0].username };
 }
 
 async function safeQuery(env, sql, bindArr) {
@@ -185,16 +186,21 @@ export async function adminAdjustBalance(request, env) {
         await ensureAllTables(env);
         const auth = await adminAuth(request, env);
         if (auth.error) return auth.error;
-        const body = await request.json();
-        const userId = Number(body.user_id);
-        const amount = Number(body.amount);
-        const reason = body.reason || "";
-        if (!userId || isNaN(amount)) {
-            return Response.json({ error: "user_id and amount required" }, { status: 400 });
+
+        let body = {};
+        try { body = await request.json(); } catch(e) { body = {}; }
+
+        const userId = parseInt(String(body.user_id || ""), 10);
+        const amount = parseFloat(String(body.amount || ""));
+        const reason = String(body.reason || "");
+
+        if (isNaN(userId) || userId <= 0 || isNaN(amount)) {
+            return Response.json({ error: "Valid user_id and amount required" }, { status: 400 });
         }
-        await env.DB.prepare("UPDATE users SET wallet_balance = COALESCE(wallet_balance, 0) + ? WHERE id = ?").bind(amount, userId).run();
+
+        await env.DB.prepare("UPDATE users SET wallet_balance = COALESCE(wallet_balance, 0) + ? WHERE id = ?").bind(Number(amount), Number(userId)).run();
         try { await logActivity(env, auth.username || "", "adjust_balance", "user", String(userId), `${amount >= 0 ? "Added" : "Removed"} $${Math.abs(amount).toFixed(2)}${reason ? " - " + reason : ""}`); } catch(e) {}
-        const { results } = await env.DB.prepare("SELECT wallet_balance FROM users WHERE id = ?").bind(userId).all();
+        const { results } = await env.DB.prepare("SELECT wallet_balance FROM users WHERE id = ?").bind(Number(userId)).all();
         return Response.json({ success: true, balance: results[0]?.wallet_balance || 0 });
     } catch (e) {
         return Response.json({ error: e.message }, { status: 500 });
@@ -206,17 +212,22 @@ export async function adminUpdateGiftPrice(request, env) {
         await ensureAllTables(env);
         const auth = await adminAuth(request, env);
         if (auth.error) return auth.error;
-        const body = await request.json();
-        const giftName = body.gift_name;
-        const newPrice = Number(body.new_price);
-        if (!giftName || isNaN(newPrice)) {
-            return Response.json({ error: "gift_name and new_price required" }, { status: 400 });
+
+        let body = {};
+        try { body = await request.json(); } catch(e) { body = {}; }
+
+        const giftName = String(body.gift_name || "");
+        const newPrice = parseFloat(String(body.new_price || ""));
+
+        if (!giftName || isNaN(newPrice) || newPrice <= 0) {
+            return Response.json({ error: "Valid gift_name and new_price required" }, { status: 400 });
         }
+
         const { results: existing } = await env.DB.prepare("SELECT id FROM gift_config WHERE gift_name = ?").bind(giftName).all();
         if (existing && existing.length > 0) {
-            await env.DB.prepare("UPDATE gift_config SET price_usd = ?, updated_at = datetime('now') WHERE gift_name = ?").bind(newPrice, giftName).run();
+            await env.DB.prepare("UPDATE gift_config SET price_usd = ?, updated_at = datetime('now') WHERE gift_name = ?").bind(Number(newPrice), giftName).run();
         } else {
-            await env.DB.prepare("INSERT INTO gift_config (gift_name, price_usd, updated_at) VALUES (?, ?, datetime('now'))").bind(giftName, newPrice).run();
+            await env.DB.prepare("INSERT INTO gift_config (gift_name, price_usd, updated_at) VALUES (?, ?, datetime('now'))").bind(giftName, Number(newPrice)).run();
         }
         try { await logActivity(env, auth.username || "", "update_gift_price", "gift", giftName, `Updated ${giftName} to $${newPrice.toFixed(2)}`); } catch(e) {}
         return Response.json({ success: true });
@@ -241,6 +252,6 @@ async function logActivity(env, username, action, targetType, targetId, details)
     try {
         await env.DB.prepare(
             "INSERT INTO activity_logs (admin_username, action, target_type, target_id, details) VALUES (?, ?, ?, ?, ?)"
-        ).bind(username || "", action, targetType || "", String(targetId || ""), details || "").run();
+        ).bind(String(username || ""), String(action || ""), String(targetType || ""), String(targetId || ""), String(details || "")).run();
     } catch (e) {}
 }

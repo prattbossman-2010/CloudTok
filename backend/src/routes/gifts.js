@@ -15,7 +15,7 @@ export async function sendGift(request, env) {
         const payload = await verifyToken(token, env.JWT_SECRET || "cloudtok-secret");
         if (!payload) return Response.json({ error: "Invalid token" }, { status: 401 });
 
-        const senderId = payload.userId;
+        const senderId = payload.userId || payload.id;
         const body = await request.json();
         const { receiver_username, gift_name, gift_emoji, amount_usd, stream_id, conversation_id, message } = body;
 
@@ -78,7 +78,7 @@ export async function getGiftHistory(request, env) {
         const payload = await verifyToken(token, env.JWT_SECRET || "cloudtok-secret");
         if (!payload) return Response.json({ error: "Invalid token" }, { status: 401 });
 
-        const userId = payload.userId;
+        const userId = payload.userId || payload.id;
 
         const { results: sent } = await env.DB.prepare(
             `SELECT g.*, u.username as receiver_name, u.avatar as receiver_avatar
@@ -109,7 +109,7 @@ export async function getWalletBalance(request, env) {
         const payload = await verifyToken(token, env.JWT_SECRET || "cloudtok-secret");
         if (!payload) return Response.json({ error: "Invalid token" }, { status: 401 });
 
-        const { results } = await env.DB.prepare("SELECT wallet_balance FROM users WHERE id = ?").bind(payload.userId).all();
+        const { results } = await env.DB.prepare("SELECT wallet_balance FROM users WHERE id = ?").bind(payload.userId || payload.id).all();
         return Response.json({ balance: results[0]?.wallet_balance || 0 });
     } catch (e) {
         return Response.json({ error: e.message || "Failed" }, { status: 500 });
