@@ -169,7 +169,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
         <div id="commentsTab" class="adminTab">
             <h1>💬 Comments</h1>
-            <div class="searchBar"><button class="refreshBtn" onclick="admin.loadComments()">Refresh</button></div>
+            <div class="searchBar"><button class="refreshBtn" onclick="admin.loadComments()">Refresh</button><button class="refreshBtn" onclick="admin.clearTable('video_comments','comments')" style="margin-left:8px;color:#ff4444;border-color:#ff4444;">Clear All</button></div>
             <div id="commentsTable" class="adminTable"></div>
         </div>
 
@@ -187,13 +187,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
         <div id="transactionsTab" class="adminTab">
             <h1>💰 Transactions</h1>
-            <div class="searchBar"><button class="refreshBtn" onclick="admin.loadTransactions()">Refresh</button></div>
+            <div class="searchBar"><button class="refreshBtn" onclick="admin.loadTransactions()">Refresh</button><button class="refreshBtn" onclick="admin.clearTable('transactions','transactions')" style="margin-left:8px;color:#ff4444;border-color:#ff4444;">Clear All</button></div>
             <div id="transactionsTable" class="adminTable"></div>
         </div>
 
         <div id="giftsTab" class="adminTab">
             <h1>🎁 Gifts</h1>
-            <div class="searchBar"><button class="refreshBtn" onclick="admin.loadGifts()">Refresh</button></div>
+            <div class="searchBar"><button class="refreshBtn" onclick="admin.loadGifts()">Refresh</button><button class="refreshBtn" onclick="admin.clearTable('gift_transactions','gifts')" style="margin-left:8px;color:#ff4444;border-color:#ff4444;">Clear All</button></div>
             <div id="giftsTable" class="adminTable"></div>
         </div>
 
@@ -205,7 +205,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
         <div id="logsTab" class="adminTab">
             <h1>📋 Activity Logs</h1>
-            <div class="searchBar"><button class="refreshBtn" onclick="admin.loadLogs()">Refresh</button></div>
+            <div class="searchBar"><button class="refreshBtn" onclick="admin.loadLogs()">Refresh</button><button class="refreshBtn" onclick="admin.clearTable('activity_logs','logs')" style="margin-left:8px;color:#ff4444;border-color:#ff4444;">Clear All</button></div>
             <div id="logsTable" class="adminTable"></div>
         </div>
 

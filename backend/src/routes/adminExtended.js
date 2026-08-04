@@ -15,6 +15,8 @@ async function ensureAllTables(env) {
     await ensureTable(env, `CREATE TABLE IF NOT EXISTS webrtc_signals (id INTEGER PRIMARY KEY, from_username TEXT, to_username TEXT, signal_type TEXT, signal_data TEXT, created_at TEXT DEFAULT (datetime('now')))`);
     await ensureTable(env, `CREATE TABLE IF NOT EXISTS live_chat (id INTEGER PRIMARY KEY, stream_key TEXT, sender_id INTEGER, sender_username TEXT, text TEXT, to_username TEXT, created_at TEXT DEFAULT (datetime('now')))`);
     await ensureTable(env, `CREATE TABLE IF NOT EXISTS notifications (id INTEGER PRIMARY KEY, user_id INTEGER, from_user_id INTEGER, type TEXT, message TEXT, reference_type TEXT, reference_id INTEGER, read INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')))`);
+    await ensureTable(env, `CREATE TABLE IF NOT EXISTS video_likes (id INTEGER PRIMARY KEY, video_id INTEGER, user_id INTEGER, created_at TEXT DEFAULT (datetime('now')))`);
+    await ensureTable(env, `CREATE TABLE IF NOT EXISTS video_saves (id INTEGER PRIMARY KEY, video_id INTEGER, user_id INTEGER, created_at TEXT DEFAULT (datetime('now')))`);
     try { await env.DB.prepare("ALTER TABLE users ADD COLUMN wallet_balance REAL DEFAULT 0").run(); } catch(e) {}
     try { await env.DB.prepare("ALTER TABLE users ADD COLUMN allow_messages TEXT DEFAULT 'everyone'").run(); } catch(e) {}
 }
@@ -55,7 +57,8 @@ export async function adminGetLiveStreams(request, env) {
         const results = await safeQuery(env,
             `SELECT ls.*, u.avatar, u.display_name
              FROM live_streams ls LEFT JOIN users u ON ls.user_id = u.id
-             ORDER BY ls.created_at DESC LIMIT 100`);
+             WHERE ls.status = 'active'
+             ORDER BY ls.created_at DESC`);
         return Response.json({ streams: results });
     } catch (e) {
         return Response.json({ streams: [] }, { status: 500 });
@@ -177,10 +180,9 @@ export async function adminGetComments(request, env) {
         const auth = await adminAuth(request, env);
         if (auth.error) return auth.error;
         const results = await safeQuery(env,
-            `SELECT vc.*, u.username, u.avatar, v.caption as video_caption, v.id as video_id
+            `SELECT vc.*, u.username, u.avatar
              FROM video_comments vc
              LEFT JOIN users u ON vc.user_id = u.id
-             LEFT JOIN videos v ON vc.video_id = v.id
              ORDER BY vc.created_at DESC LIMIT 100`);
         return Response.json({ comments: results });
     } catch (e) {
@@ -261,4 +263,19 @@ async function logActivity(env, username, action, targetType, targetId, details)
             "INSERT INTO activity_logs (admin_username, action, target_type, target_id, details) VALUES (?, ?, ?, ?, ?)"
         ).bind(String(username || ""), String(action || ""), String(targetType || ""), String(targetId || ""), String(details || "")).run();
     } catch (e) {}
+}
+
+export async function adminClearTable(request, env, table) {
+    try {
+        await ensureAllTables(env);
+        const auth = await adminAuth(request, env);
+        if (auth.error) return auth.error;
+        const allowed = ["video_comments", "activity_logs", "transactions", "gift_transactions", "live_streams", "messages", "conversations", "live_chat", "webrtc_signals", "notifications"];
+        if (!allowed.includes(table)) return Response.json({ error: "Table not clearable" }, { status: 400 });
+        await env.DB.prepare("DELETE FROM " + table).run();
+        try { await logActivity(env, auth.username || "", "clear_table", table, table, "Cleared all rows from " + table); } catch(e) {}
+        return Response.json({ success: true, message: "Cleared " + table });
+    } catch (e) {
+        return Response.json({ error: e.message }, { status: 500 });
+    }
 }

@@ -34,7 +34,7 @@ import { sendSignal, pollSignals, createLiveStream, getLiveStreams, endLiveStrea
 
 
 import { sendGift, getGiftHistory, getWalletBalance } from "./routes/gifts.js";
-import { adminGetLiveStreams, adminStopStream, adminGetTransactions, adminGetGifts, adminGetMessages, adminGetActivityLogs, adminGetStorageHealth, adminDeleteComment, adminGetComments, adminAdjustBalance, adminUpdateGiftPrice, adminGetGiftConfig } from "./routes/adminExtended.js";
+import { adminGetLiveStreams, adminStopStream, adminGetTransactions, adminGetGifts, adminGetMessages, adminGetActivityLogs, adminGetStorageHealth, adminDeleteComment, adminGetComments, adminAdjustBalance, adminUpdateGiftPrice, adminGetGiftConfig, adminClearTable } from "./routes/adminExtended.js";
 
 
 export default {
@@ -491,6 +491,11 @@ export default {
     }
     if(path === "/api/admin/gift-config" && method === "POST"){
       return withCORS(adminUpdateGiftPrice(request, env));
+    }
+
+    if(path.startsWith("/api/admin/clear/") && method === "POST"){
+      const table = path.split("/api/admin/clear/")[1];
+      return withCORS(adminClearTable(request, env, table));
     }
 
 

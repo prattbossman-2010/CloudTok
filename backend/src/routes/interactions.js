@@ -1,7 +1,12 @@
 import { authenticate } from "../middleware/auth.js";
 
+async function ensureLikeTables(env) {
+    try { await env.DB.prepare("CREATE TABLE IF NOT EXISTS video_likes (id INTEGER PRIMARY KEY, video_id INTEGER, user_id INTEGER, created_at TEXT DEFAULT (datetime('now')))").run(); } catch(e) {}
+    try { await env.DB.prepare("CREATE TABLE IF NOT EXISTS video_saves (id INTEGER PRIMARY KEY, video_id INTEGER, user_id INTEGER, created_at TEXT DEFAULT (datetime('now')))").run(); } catch(e) {}
+}
 
 export async function toggleLike(request, env, videoId){
+    await ensureLikeTables(env);
 
     const auth =
     await authenticate(request, env);
