@@ -273,10 +273,11 @@ async loadComments(){
         }
         let html=`<table><thead><tr><th>User</th><th>Comment</th><th>Video</th><th>Date</th><th>Actions</th></tr></thead><tbody>`;
         comments.forEach(c=>{
+            const videoLabel=c.video_caption?(c.video_caption.substring(0,30)+(c.video_caption.length>30?"...":"")):(c.video_id?"#"+c.video_id:"-");
             html+=`<tr>
                 <td>@${c.username||"unknown"}</td>
                 <td><span class="commentText" title="${(c.text||"").replace(/"/g,"&quot;")}">${(c.text||"").substring(0,50)}${(c.text||"").length>50?"...":""}</span></td>
-                <td>${c.video_id?"#"+c.video_id:"-"}</td>
+                <td>${videoLabel}</td>
                 <td>${c.created_at?new Date(c.created_at).toLocaleDateString():""}</td>
                 <td><button class="adminBtn delete" onclick="admin.deleteComment(${c.id})">Delete</button></td>
             </tr>`;

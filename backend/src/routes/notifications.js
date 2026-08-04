@@ -1,9 +1,11 @@
 import { authenticate } from "../middleware/auth.js";
 
+async function ensureNotificationsTable(env) {
+  try { await env.DB.prepare("CREATE TABLE IF NOT EXISTS notifications (id INTEGER PRIMARY KEY, user_id INTEGER, from_user_id INTEGER, type TEXT, message TEXT, reference_type TEXT, reference_id INTEGER, read INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')))").run(); } catch(e) {}
+}
 
 export async function getNotifications(request, env){
-
-
+  await ensureNotificationsTable(env);
   const auth = await authenticate(request, env);
 
   if(auth.error){
@@ -45,8 +47,7 @@ export async function getNotifications(request, env){
 
 
 export async function markNotificationRead(request, env, notificationId){
-
-
+  await ensureNotificationsTable(env);
   const auth = await authenticate(request, env);
 
   if(auth.error){
@@ -70,8 +71,7 @@ export async function markNotificationRead(request, env, notificationId){
 
 
 export async function markAllRead(request, env){
-
-
+  await ensureNotificationsTable(env);
   const auth = await authenticate(request, env);
 
   if(auth.error){
@@ -95,8 +95,7 @@ export async function markAllRead(request, env){
 
 
 export async function clearNotifications(request, env){
-
-
+  await ensureNotificationsTable(env);
   const auth = await authenticate(request, env);
 
   if(auth.error){
@@ -120,7 +119,7 @@ export async function clearNotifications(request, env){
 
 
 export async function createNotification(env, { userId, fromUserId, type, message, referenceId, referenceType }){
-
+  await ensureNotificationsTable(env);
 
   await env.DB
   .prepare(

@@ -14,6 +14,7 @@ async function ensureAllTables(env) {
     await ensureTable(env, `CREATE TABLE IF NOT EXISTS video_comments (id INTEGER PRIMARY KEY, user_id INTEGER, video_id INTEGER, text TEXT, created_at TEXT DEFAULT (datetime('now')))`);
     await ensureTable(env, `CREATE TABLE IF NOT EXISTS webrtc_signals (id INTEGER PRIMARY KEY, from_username TEXT, to_username TEXT, signal_type TEXT, signal_data TEXT, created_at TEXT DEFAULT (datetime('now')))`);
     await ensureTable(env, `CREATE TABLE IF NOT EXISTS live_chat (id INTEGER PRIMARY KEY, stream_key TEXT, sender_id INTEGER, sender_username TEXT, text TEXT, to_username TEXT, created_at TEXT DEFAULT (datetime('now')))`);
+    await ensureTable(env, `CREATE TABLE IF NOT EXISTS notifications (id INTEGER PRIMARY KEY, user_id INTEGER, from_user_id INTEGER, type TEXT, message TEXT, reference_type TEXT, reference_id INTEGER, read INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')))`);
     try { await env.DB.prepare("ALTER TABLE users ADD COLUMN wallet_balance REAL DEFAULT 0").run(); } catch(e) {}
     try { await env.DB.prepare("ALTER TABLE users ADD COLUMN allow_messages TEXT DEFAULT 'everyone'").run(); } catch(e) {}
 }
@@ -110,9 +111,13 @@ export async function adminGetMessages(request, env) {
         const auth = await adminAuth(request, env);
         if (auth.error) return auth.error;
         const results = await safeQuery(env,
-            `SELECT m.*, su.username as sender_name
+            `SELECT m.*, su.username as sender_name,
+                    CASE WHEN c.user1_id = m.sender_id THEN u2.username ELSE u1.username END as receiver_name
              FROM messages m
              LEFT JOIN users su ON m.sender_id = su.id
+             LEFT JOIN conversations c ON m.conversation_id = c.id
+             LEFT JOIN users u1 ON c.user1_id = u1.id
+             LEFT JOIN users u2 ON c.user2_id = u2.id
              ORDER BY m.created_at DESC LIMIT 100`);
         return Response.json({ messages: results });
     } catch (e) {
@@ -172,8 +177,10 @@ export async function adminGetComments(request, env) {
         const auth = await adminAuth(request, env);
         if (auth.error) return auth.error;
         const results = await safeQuery(env,
-            `SELECT vc.*, u.username, u.avatar
-             FROM video_comments vc LEFT JOIN users u ON vc.user_id = u.id
+            `SELECT vc.*, u.username, u.avatar, v.caption as video_caption, v.id as video_id
+             FROM video_comments vc
+             LEFT JOIN users u ON vc.user_id = u.id
+             LEFT JOIN videos v ON vc.video_id = v.id
              ORDER BY vc.created_at DESC LIMIT 100`);
         return Response.json({ comments: results });
     } catch (e) {

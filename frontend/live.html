@@ -103,6 +103,7 @@ function showToast(msg, type="success"){
 }
 
 document.getElementById("goLiveBtn").onclick = async ()=>{
+    try {
     if(!localStorage.getItem("CloudTokToken")){
         showToast("Please login first","error");
         return;
@@ -159,6 +160,10 @@ document.getElementById("goLiveBtn").onclick = async ()=>{
         window.addEventListener("beforeunload", endStream);
     } else {
         showToast((result && result.error) || "Failed to start stream","error");
+    }
+    } catch(e) {
+        console.error("[Live] Go Live error:", e);
+        showToast("Error: " + (e.message || "Unknown error"), "error");
     }
 };
 

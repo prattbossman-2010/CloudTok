@@ -1,6 +1,7 @@
 async function ensureGiftTables(env) {
     try { await env.DB.prepare("CREATE TABLE IF NOT EXISTS gift_transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, sender_id INTEGER NOT NULL, receiver_id INTEGER NOT NULL, gift_name TEXT NOT NULL, gift_emoji TEXT DEFAULT '', amount_usd REAL NOT NULL, stream_id INTEGER, conversation_id INTEGER, message TEXT DEFAULT '', created_at TEXT DEFAULT (datetime('now')))").run(); } catch(e) {}
     try { await env.DB.prepare("CREATE TABLE IF NOT EXISTS gift_config (id INTEGER PRIMARY KEY, gift_name TEXT UNIQUE, price_usd REAL, updated_at TEXT)").run(); } catch(e) {}
+    try { await env.DB.prepare("CREATE TABLE IF NOT EXISTS notifications (id INTEGER PRIMARY KEY, user_id INTEGER, from_user_id INTEGER, type TEXT, message TEXT, reference_type TEXT, reference_id INTEGER, read INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')))").run(); } catch(e) {}
     try { await env.DB.prepare("ALTER TABLE users ADD COLUMN wallet_balance REAL DEFAULT 0").run(); } catch(e) {}
 }
 
@@ -53,6 +54,20 @@ export async function sendGift(request, env) {
         await env.DB.prepare(
             "INSERT INTO notifications (user_id, from_user_id, type, message, reference_type, reference_id) VALUES (?, ?, 'gift', ?, 'gift', ?)"
         ).bind(receiverId, senderId, `Sent you a ${gift_emoji} ${gift_name} ($${finalAmount.toFixed(2)})`, senderId).run();
+
+        const { results: senderUser } = await env.DB.prepare("SELECT username FROM users WHERE id = ?").bind(senderId).all();
+        const senderName = senderUser && senderUser[0] ? senderUser[0].username : "someone";
+
+        if (stream_id) {
+            try {
+                const { results: streamRows } = await env.DB.prepare("SELECT stream_key FROM live_streams WHERE id = ?").bind(stream_id).all();
+                if (streamRows && streamRows[0]) {
+                    await env.DB.prepare(
+                        "INSERT INTO live_chat (stream_key, sender_id, sender_username, text, to_username) VALUES (?, ?, ?, ?, ?)"
+                    ).bind(streamRows[0].stream_key, senderId, senderName, `${gift_emoji} ${senderName} sent a ${gift_name} ($${finalAmount.toFixed(2)})!`, receiver_username).run();
+                }
+            } catch(e) {}
+        }
 
         const { results: updatedSender } = await env.DB.prepare("SELECT wallet_balance FROM users WHERE id = ?").bind(senderId).all();
 
