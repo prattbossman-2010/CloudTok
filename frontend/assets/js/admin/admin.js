@@ -298,13 +298,12 @@ async loadMessages(){
             document.getElementById("messagesTable").innerHTML='<div class="emptyState"><div class="icon">✉️</div><p>No messages found</p></div>';
             return;
         }
-        let html=`<table><thead><tr><th>From</th><th>To</th><th>Message</th><th>Type</th><th>Date</th></tr></thead><tbody>`;
+        let html=`<table><thead><tr><th>From</th><th>To</th><th>Message</th><th>Date</th></tr></thead><tbody>`;
         messages.forEach(m=>{
             html+=`<tr>
-                <td>@${m.sender_username||"?"}</td>
-                <td>@${m.receiver_username||"?"}</td>
+                <td>@${m.sender_name||m.sender_username||"?"}</td>
+                <td>@${m.receiver_name||"?"}</td>
                 <td><span class="msgPreview" title="${(m.text||m.content||"").replace(/"/g,"&quot;")}">${(m.text||m.content||"").substring(0,60)}${(m.text||m.content||"").length>60?"...":""}</span></td>
-                <td>${m.message_type||"text"}</td>
                 <td>${m.created_at?new Date(m.created_at).toLocaleDateString():""}</td>
             </tr>`;
         });
@@ -329,12 +328,12 @@ async loadStreams(){
         }
         let html=`<table><thead><tr><th>Streamer</th><th>Title</th><th>Viewers</th><th>Started</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
         streams.forEach(s=>{
-            const isLive=s.status==="live";
+            const isLive=s.status==="active"||s.status==="live";
             html+=`<tr>
                 <td>@${s.username||"?"}</td>
                 <td>${s.title||"Untitled"}</td>
-                <td>${s.viewer_count||0}</td>
-                <td>${s.started_at?new Date(s.started_at).toLocaleString():""}</td>
+                <td>${s.viewers||0}</td>
+                <td>${s.created_at?new Date(s.created_at).toLocaleString():""}</td>
                 <td><span class="statusBadge ${isLive?"live":"offline"}">${isLive?"LIVE":"Ended"}</span></td>
                 <td class="actionsCell">
                     ${isLive?`<button class="adminBtn stop" onclick="admin.stopStream('${s.stream_key}')">Stop</button>`:""}

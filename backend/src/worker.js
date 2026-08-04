@@ -443,9 +443,9 @@ export default {
     if(path === "/api/admin/streams" && method === "GET"){
       return withCORS(adminGetLiveStreams(request, env));
     }
-    if(path.match(/^\/api\/admin\/streams\/\d+\/stop$/) && method === "POST"){
-      const streamId = path.split("/")[4];
-      return withCORS(adminStopStream(request, env, streamId));
+    if(path.match(/^\/api\/admin\/streams\/[^\/]+\/stop$/) && method === "POST"){
+      const streamKey = decodeURIComponent(path.split("/")[4]);
+      return withCORS(adminStopStream(request, env, streamKey));
     }
     if(path === "/api/admin/transactions" && method === "GET"){
       return withCORS(adminGetTransactions(request, env));

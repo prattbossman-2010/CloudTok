@@ -119,7 +119,10 @@
         </div>
 
         <div class="convGiftPanel" id="convGiftPanel">
-            <div class="convGiftPanelTitle">Send a Gift</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div class="convGiftPanelTitle">Send a Gift</div>
+                <button onclick="document.getElementById('convGiftPanel').classList.remove('show')" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;padding:4px 8px;">✕</button>
+            </div>
             <div class="convGiftBalance" id="convGiftBalance">Balance: $0.00</div>
             <div class="convGiftGrid" id="convGiftGrid"></div>
             <button class="convGiftSendBtn" id="convGiftSendBtn" disabled>Select a gift</button>
@@ -208,6 +211,7 @@
 
     emojiBar.addEventListener("click", function(ev){ ev.stopPropagation(); });
     gifPanel.addEventListener("click", function(ev){ ev.stopPropagation(); });
+    document.getElementById("convGiftPanel").addEventListener("click", function(ev){ ev.stopPropagation(); });
 
     document.addEventListener("click", function(){
         emojiBar.classList.remove("show");
@@ -515,13 +519,14 @@
             var item = document.createElement("div");
             item.className = "convGiftItem";
             item.innerHTML = '<div class="convGiftEmoji">'+gift.emoji+'</div><div class="convGiftName">'+gift.name+'</div><div class="convGiftPrice">$'+gift.price.toFixed(2)+'</div>';
-            item.onclick = function(){
+            item.addEventListener("click", function(ev){
+                ev.stopPropagation();
                 document.querySelectorAll(".convGiftItem").forEach(function(g){ g.classList.remove("selected"); });
                 item.classList.add("selected");
                 selectedConvGift = gift;
                 document.getElementById("convGiftSendBtn").disabled = false;
                 document.getElementById("convGiftSendBtn").textContent = "Send " + gift.emoji + " " + gift.name + " ($" + gift.price.toFixed(2) + ")";
-            };
+            });
             grid.appendChild(item);
         });
     }

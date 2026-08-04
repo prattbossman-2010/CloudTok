@@ -192,7 +192,7 @@ body{background:#000;}
                 <div class="payMethodIcon bank">🏦</div>
                 <div class="payMethodInfo">
                     <div class="payMethodName">Bank Transfer</div>
-                    <div class="payMethodDesc">Direct bank deposit</div>
+                    <div class="payMethodDesc">Pay via bank transfer (Paystack generates account)</div>
                 </div>
                 <div class="payMethodCheck">✓</div>
             </div>
@@ -200,7 +200,7 @@ body{background:#000;}
                 <div class="payMethodIcon visa">💳</div>
                 <div class="payMethodInfo">
                     <div class="payMethodName">Debit / Credit Card</div>
-                    <div class="payMethodDesc">Visa, Mastercard, Verve</div>
+                    <div class="payMethodDesc">Visa, Mastercard, Verve via Paystack</div>
                 </div>
                 <div class="payMethodCheck">✓</div>
             </div>
@@ -208,66 +208,24 @@ body{background:#000;}
                 <div class="payMethodIcon virtual">🌐</div>
                 <div class="payMethodInfo">
                     <div class="payMethodName">Virtual Card</div>
-                    <div class="payMethodDesc">Pay with virtual card details</div>
+                    <div class="payMethodDesc">Pay with virtual card via Paystack</div>
                 </div>
                 <div class="payMethodCheck">✓</div>
             </div>
         </div>
 
         <div class="bankForm" id="bankForm">
-            <label>Bank Name</label>
-            <select id="bankName">
-                <option value="">Select bank</option>
-                <option value="access">Access Bank</option>
-                <option value="gtbank">GTBank</option>
-                <option value="firstbank">First Bank</option>
-                <option value="uba">UBA</option>
-                <option value="zenith">Zenith Bank</option>
-                <option value="stanbic">Stanbic IBTC</option>
-                <option value="ecobank">Ecobank</option>
-                <option value="fidelity">Fidelity Bank</option>
-                <option value="other">Other</option>
-            </select>
-            <label>Your Account Number (for reference)</label>
-            <input type="text" id="bankAccount" placeholder="Enter your account number" maxlength="10">
-            <label>Amount (USD)</label>
-            <input type="text" id="bankAmount" placeholder="$0.00" readonly>
-
-            <div class="bankDetails" id="bankDetailsBox" style="display:none;">
-                <p class="label">Transfer to this account:</p>
-                <p><span class="label">Bank:</span> <span class="value">Paystack - Titan</span></p>
-                <p><span class="label">Account Number:</span> <span class="value" id="bankAccountNumber">-</span></p>
-                <p><span class="label">Amount:</span> <span class="value" id="bankTransferAmount">-</span></p>
-                <button class="copyBtn" onclick="copyBankDetails()">Copy Account Number</button>
+            <div class="bankDetails" id="bankDetailsBox">
+                <p style="color:#fff;font-size:14px;margin-bottom:8px;">Paystack will generate a unique bank account for you to transfer to.</p>
+                <p style="color:rgba(255,255,255,.5);font-size:13px;">After clicking "Fund Wallet", you'll see the bank details. Transfer the exact amount to complete payment.</p>
             </div>
-
-            <div class="uploadProof">
-                <label>Upload Payment Proof (optional)</label>
-                <input type="file" id="bankProof" accept="image/*,.pdf">
-                <p class="hint">Screenshot or receipt of your transfer</p>
-            </div>
-
-            <button class="bankSubmit" onclick="submitBankTransfer()">Get Bank Details</button>
         </div>
 
         <div class="virtualCardForm" id="virtualCardForm">
-            <label>Card Number</label>
-            <input type="text" class="cardInput" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
-            <div class="cardExpiryRow">
-                <div>
-                    <label>Expiry Date</label>
-                    <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5">
-                </div>
-                <div>
-                    <label>CVV</label>
-                    <input type="text" id="cardCvv" placeholder="123" maxlength="4">
-                </div>
+            <div class="bankDetails">
+                <p style="color:#fff;font-size:14px;margin-bottom:8px;">Paystack will open a secure card payment form.</p>
+                <p style="color:rgba(255,255,255,.5);font-size:13px;">Enter your card details in the Paystack popup to complete payment. We never see or store your card details.</p>
             </div>
-            <label>Card Holder Name</label>
-            <input type="text" id="cardHolder" placeholder="Name on card">
-            <label>Amount (USD)</label>
-            <input type="text" id="cardAmount" placeholder="$0.00" readonly>
-            <button class="virtualCardSubmit" onclick="submitVirtualCard()">Process Payment</button>
         </div>
 
         <button class="payBtn" id="payBtn" onclick="processPayment()">Fund Wallet</button>
@@ -454,57 +412,10 @@ function selectPayMethod(method, el){
     const virtualForm = document.getElementById("virtualCardForm");
     bankForm.classList.remove("show");
     virtualForm.classList.remove("show");
-
-    if(method === "bank"){
-        bankForm.classList.add("show");
-        updateBankAmount();
-    } else if(method === "virtual"){
-        virtualForm.classList.add("show");
-        updateCardAmount();
-    }
-}
-
-function updateBankAmount(){
-    const localAmount = parseFloat(document.getElementById("payAmount").value);
-    if(!localAmount) return;
-    const rate = EXCHANGE_RATES[selectedCurrency];
-    const usd = localAmount / rate;
-    document.getElementById("bankAmount").value = "$" + usd.toFixed(2);
-}
-
-function updateCardAmount(){
-    const localAmount = parseFloat(document.getElementById("payAmount").value);
-    if(!localAmount) return;
-    const rate = EXCHANGE_RATES[selectedCurrency];
-    const usd = localAmount / rate;
-    document.getElementById("cardAmount").value = "$" + usd.toFixed(2);
-}
-
-function formatCardNumber(input){
-    let value = input.value.replace(/\D/g, "");
-    let formatted = "";
-    for(let i = 0; i < value.length && i < 16; i++){
-        if(i > 0 && i % 4 === 0) formatted += " ";
-        formatted += value[i];
-    }
-    input.value = formatted;
-}
-
-function formatExpiry(input){
-    let value = input.value.replace(/\D/g, "");
-    if(value.length >= 2){
-        value = value.substring(0,2) + "/" + value.substring(2,4);
-    }
-    input.value = value;
 }
 
 function copyBankDetails(){
-    const accountNum = document.getElementById("bankAccountNumber").textContent;
-    navigator.clipboard.writeText(accountNum).then(function(){
-        showToast("Account number copied!");
-    }).catch(function(){
-        showToast("Failed to copy","error");
-    });
+    showToast("Use the Paystack popup to complete your transfer");
 }
 
 function processPayment(){
@@ -523,16 +434,12 @@ function processPayment(){
     }
 
     if(selectedPayMethod === "bank"){
-        document.getElementById("bankForm").classList.add("show");
-        updateBankAmount();
-        document.getElementById("bankForm").scrollIntoView({behavior:"smooth"});
+        initBankTransfer(amountUSD, localAmount);
         return;
     }
 
     if(selectedPayMethod === "virtual"){
-        document.getElementById("virtualCardForm").classList.add("show");
-        updateCardAmount();
-        document.getElementById("virtualCardForm").scrollIntoView({behavior:"smooth"});
+        initVirtualCard(amountUSD, localAmount);
         return;
     }
 
@@ -578,67 +485,86 @@ function payWithPaystack(amountUSD, localAmount){
     handler.openIframe();
 }
 
-function submitBankTransfer(){
-    const bank = document.getElementById("bankName").value;
-    const account = document.getElementById("bankAccount").value;
+function initBankTransfer(amountUSD, localAmount){
+    const email = localStorage.getItem("CloudTokCurrentUser") + "@cloudtok.app";
+    const paystackCurrency = PAYSTACK_CURRENCY_MAP[selectedCurrency];
 
-    if(!bank){
-        showToast("Please select a bank","error");
+    let paystackAmount;
+    if(selectedCurrency === "NGN"){
+        paystackAmount = Math.round(localAmount);
+    } else {
+        paystackAmount = Math.round(localAmount * 100);
+    }
+
+    if(typeof PaystackPop === "undefined"){
+        showToast("Paystack loading, try again","error");
         return;
     }
 
-    const localAmount = parseFloat(document.getElementById("payAmount").value);
-    const rate = EXCHANGE_RATES[selectedCurrency];
-    const usd = localAmount / rate;
+    showToast("Initializing bank transfer...");
 
-    document.getElementById("bankAccountNumber").textContent = "1234567890";
-    document.getElementById("bankTransferAmount").textContent = "$" + usd.toFixed(2) + " (" + CURRENCY_SYMBOLS[selectedCurrency] + localAmount.toLocaleString() + ")";
-    document.getElementById("bankDetailsBox").style.display = "block";
-
-    showToast("Bank details shown. Complete transfer and upload proof.");
+    const handler = PaystackPop.setup({
+        key: "pk_live_15e3b81eee8f83c75bbdac7508a18bd16228d3ed",
+        email: email,
+        amount: paystackAmount,
+        currency: paystackCurrency,
+        channels: ["bank"],
+        metadata: {
+            custom_fields: [
+                {display_name: "User", variable_name: "user", value: localStorage.getItem("CloudTokCurrentUser")},
+                {display_name: "USD Amount", variable_name: "usd_amount", value: amountUSD}
+            ]
+        },
+        callback: function(response){
+            showToast("Payment successful! Verifying...");
+            verifyAndCredit(response.reference, amountUSD);
+        },
+        onClose: function(){
+            showToast("Payment cancelled","error");
+        }
+    });
+    handler.openIframe();
 }
 
-function submitVirtualCard(){
-    const cardNum = document.getElementById("cardNumber").value.replace(/\s/g, "");
-    const expiry = document.getElementById("cardExpiry").value;
-    const cvv = document.getElementById("cardCvv").value;
-    const holder = document.getElementById("cardHolder").value;
+function initVirtualCard(amountUSD, localAmount){
+    const email = localStorage.getItem("CloudTokCurrentUser") + "@cloudtok.app";
+    const paystackCurrency = PAYSTACK_CURRENCY_MAP[selectedCurrency];
 
-    if(cardNum.length < 16){
-        showToast("Enter a valid card number","error");
-        return;
+    let paystackAmount;
+    if(selectedCurrency === "NGN"){
+        paystackAmount = Math.round(localAmount);
+    } else {
+        paystackAmount = Math.round(localAmount * 100);
     }
-    if(!expiry || expiry.length < 5){
-        showToast("Enter a valid expiry date","error");
-        return;
-    }
-    if(!cvv || cvv.length < 3){
-        showToast("Enter a valid CVV","error");
-        return;
-    }
-    if(!holder.trim()){
-        showToast("Enter card holder name","error");
+
+    if(typeof PaystackPop === "undefined"){
+        showToast("Paystack loading, try again","error");
         return;
     }
 
-    const localAmount = parseFloat(document.getElementById("payAmount").value);
-    const rate = EXCHANGE_RATES[selectedCurrency];
-    const usd = localAmount / rate;
+    showToast("Opening card payment...");
 
-    showToast("Processing payment of $" + usd.toFixed(2) + "...");
-
-    setTimeout(function(){
-        showToast("Payment processed! Wallet will be credited shortly.");
-        document.getElementById("virtualCardForm").classList.remove("show");
-        document.getElementById("cardNumber").value = "";
-        document.getElementById("cardExpiry").value = "";
-        document.getElementById("cardCvv").value = "";
-        document.getElementById("cardHolder").value = "";
-        document.getElementById("cardAmount").value = "";
-        loadBalance();
-        loadTransactions();
-        document.getElementById("fundSection").style.display = "none";
-    }, 2000);
+    const handler = PaystackPop.setup({
+        key: "pk_live_15e3b81eee8f83c75bbdac7508a18bd16228d3ed",
+        email: email,
+        amount: paystackAmount,
+        currency: paystackCurrency,
+        channels: ["card"],
+        metadata: {
+            custom_fields: [
+                {display_name: "User", variable_name: "user", value: localStorage.getItem("CloudTokCurrentUser")},
+                {display_name: "USD Amount", variable_name: "usd_amount", value: amountUSD}
+            ]
+        },
+        callback: function(response){
+            showToast("Payment successful! Verifying...");
+            verifyAndCredit(response.reference, amountUSD);
+        },
+        onClose: function(){
+            showToast("Payment cancelled","error");
+        }
+    });
+    handler.openIframe();
 }
 
 async function verifyAndCredit(reference, amountUSD){
@@ -695,10 +621,6 @@ function buyGift(name, price){
 }
 
 document.getElementById("payAmount").addEventListener("input", updateConversion);
-
-document.getElementById("cardNumber").addEventListener("input", function(){ formatCardNumber(this); });
-document.getElementById("cardExpiry").addEventListener("input", function(){ formatExpiry(this); });
-document.getElementById("cardCvv").addEventListener("input", function(){ this.value = this.value.replace(/\D/g, "").substring(0,4); });
 
 loadBalance();
 loadTransactions();
