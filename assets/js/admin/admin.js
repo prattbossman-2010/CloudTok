@@ -607,6 +607,20 @@ async editGiftPrice(giftName,currentPrice){
     }
 }
 
+async clearTable(table,label){
+    if(!confirm("Are you sure you want to clear ALL "+label+"? This cannot be undone.")) return;
+    const result=await this.api("/admin/clear/"+table,"POST");
+    if(result.success){
+        alert(label+" cleared successfully.");
+        if(label==="comments") this.loadComments();
+        else if(label==="transactions") this.loadTransactions();
+        else if(label==="gifts") this.loadGifts();
+        else if(label==="logs") this.loadLogs();
+    } else {
+        alert(result.error||"Failed to clear "+label);
+    }
+}
+
 }
 
 const admin=new CloudTokAdmin();
