@@ -612,7 +612,7 @@ async clearTable(table,label){
     const result=await this.api("/admin/clear/"+table,"POST");
     if(result.success){
         alert(label+" cleared successfully.");
-        if(label==="comments") this.loadComments();
+        if(label==="comments"){ this.loadComments(); this.loadVideos(); }
         else if(label==="transactions") this.loadTransactions();
         else if(label==="gifts") this.loadGifts();
         else if(label==="logs") this.loadLogs();
