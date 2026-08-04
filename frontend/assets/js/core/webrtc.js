@@ -23,74 +23,33 @@ class CloudTokWebRTC {
         console.log("[WebRTC]", ...args);
     }
 
-    async checkDevices() {
-        try {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return { audio: false, video: false };
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            const hasAudio = devices.some(d => d.kind === "audioinput" && d.deviceId !== "");
-            const hasVideo = devices.some(d => d.kind === "videoinput" && d.deviceId !== "");
-            this._log("Devices found:", devices.length, "audio:", hasAudio, "video:", hasVideo);
-            return { audio: hasAudio, video: hasVideo };
-        } catch (e) {
-            this._log("enumerateDevices failed:", e.message);
-            return { audio: true, video: true };
-        }
-    }
-
     async startLocalStream(video = true) {
         this._log("Requesting media, video=", video);
 
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            console.error("[WebRTC] getUserMedia NOT supported on this browser/context");
-            return null;
-        }
-
-        const devices = await this.checkDevices();
-        if (!devices.audio && !devices.video) {
-            this._log("No audio or video devices found");
+            this._log("getUserMedia NOT supported");
             return null;
         }
 
         const attempts = [];
-
-        if (video && devices.video && devices.audio) {
+        if (video) {
             attempts.push({ audio: true, video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } });
-        }
-        if (video && devices.video) {
             attempts.push({ audio: false, video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } });
         }
-        if (devices.audio) {
-            attempts.push({ audio: true, video: false });
-        }
-        if (attempts.length === 0) {
-            this._log("No usable device constraints");
-            return null;
-        }
+        attempts.push({ audio: true, video: false });
+        attempts.push({ audio: false, video: false });
 
         for (let i = 0; i < attempts.length; i++) {
             try {
                 this._log("Attempt", i + 1, "constraints:", JSON.stringify(attempts[i]));
                 this.localStream = await navigator.mediaDevices.getUserMedia(attempts[i]);
                 const tracks = this.localStream.getTracks();
-                this._log("Media OK, tracks:", tracks.map(t => t.kind + ":" + t.label + " enabled=" + t.enabled));
-                if (tracks.length === 0) {
-                    this._log("WARNING: 0 tracks returned");
-                    this.localStream = null;
-                    await new Promise(r => setTimeout(r, 1000));
-                    continue;
-                }
+                this._log("Media OK:", tracks.map(t => t.kind + ":" + t.label));
                 return this.localStream;
             } catch (e) {
-                console.error("[WebRTC] getUserMedia attempt", i + 1, "FAILED:", e.name, e.message);
-                if (e.name === "NotReadableError") {
-                    this._log("Device is claimed by another app or hardware issue");
-                } else if (e.name === "NotAllowedError") {
-                    this._log("Permission denied by user");
-                } else if (e.name === "NotFoundError") {
-                    this._log("Device not found");
-                }
+                this._log("Attempt", i + 1, "FAILED:", e.name, e.message);
                 if (i < attempts.length - 1) {
-                    await new Promise(r => setTimeout(r, 1000));
+                    await new Promise(r => setTimeout(r, 500));
                 }
             }
         }
@@ -114,7 +73,6 @@ class CloudTokWebRTC {
 
     createPeerConnection() {
         if (this.pc) {
-            this._log("Closing existing PC");
             this.pc.close();
             this.pc = null;
         }
@@ -123,7 +81,6 @@ class CloudTokWebRTC {
 
         this.pc.onicecandidate = (e) => {
             if (e.candidate) {
-                this._log("ICE candidate generated, sending...");
                 this.sendSignal("ice-candidate", e.candidate.toJSON());
             }
         };
@@ -140,7 +97,7 @@ class CloudTokWebRTC {
             const state = this.pc ? this.pc.iceConnectionState : "closed";
             this._log("iceConnectionState:", state);
             if (state === "connected" || state === "completed") {
-                this._log("*** ICE CONNECTED - media flowing ***");
+                this._log("*** ICE CONNECTED ***");
             }
         };
 
@@ -155,28 +112,21 @@ class CloudTokWebRTC {
             }
         };
 
-        this.pc.oniceconnectionstatechange = () => {
-            const state = this.pc ? this.pc.iceConnectionState : "closed";
-            this._log("iceConnectionState:", state);
-            if (state === "connected" || state === "completed") {
-                this._log("*** ICE CONNECTED - media flowing ***");
-            }
-        };
-
         if (this.localStream) {
             const tracks = this.localStream.getTracks();
-            this._log("Adding", tracks.length, "tracks to PC");
+            this._log("Adding", tracks.length, "local tracks");
             tracks.forEach(track => {
                 this.pc.addTrack(track, this.localStream);
             });
+            const hasAudio = tracks.some(t => t.kind === "audio");
+            if (!hasAudio) {
+                this._log("No audio track, adding recvonly audio transceiver");
+                try { this.pc.addTransceiver("audio", { direction: "recvonly" }); } catch (e) {}
+            }
         } else {
-            this._log("No localStream - call will proceed without local media (recvonly)");
-            try {
-                this.pc.addTransceiver("audio", { direction: "recvonly" });
-            } catch (e) {}
-            try {
-                this.pc.addTransceiver("video", { direction: "recvonly" });
-            } catch (e) {}
+            this._log("No local stream, adding recvonly transceivers");
+            try { this.pc.addTransceiver("audio", { direction: "recvonly" }); } catch (e) {}
+            try { this.pc.addTransceiver("video", { direction: "recvonly" }); } catch (e) {}
         }
 
         return this.pc;
@@ -206,34 +156,27 @@ class CloudTokWebRTC {
                 video: video
             });
 
-            this._log("Offer sent, starting polling");
+            this._log("Offer sent");
             this.startPolling(toUsername);
             return true;
         } catch (e) {
-            console.error("[WebRTC] initiateCall FAILED:", e);
+            this._log("initiateCall FAILED:", e);
             return false;
         }
     }
 
     async handleAnswer(signalData) {
-        if (!this.pc || !signalData) {
-            this._log("handleAnswer: pc=", !!this.pc, "data=", !!signalData);
-            return;
-        }
+        if (!this.pc || !signalData) return;
 
         try {
-            this._log("Setting remote description from answer...");
             await this.pc.setRemoteDescription(new RTCSessionDescription({
                 sdp: signalData.sdp,
                 type: signalData.type
             }));
-            this._log("Remote description set OK");
+            this._log("Remote description set");
 
-            this._log("Draining", this.iceCandidateQueue.length, "queued ICE candidates");
             for (const candidate of this.iceCandidateQueue) {
-                try {
-                    await this.pc.addIceCandidate(new RTCIceCandidate(candidate));
-                } catch (e) {}
+                try { await this.pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch (e) {}
             }
             this.iceCandidateQueue = [];
 
@@ -241,7 +184,7 @@ class CloudTokWebRTC {
                 this.onAnswerReceived();
             }
         } catch (e) {
-            console.error("[WebRTC] handleAnswer FAILED:", e);
+            this._log("handleAnswer FAILED:", e);
         }
     }
 
@@ -251,12 +194,10 @@ class CloudTokWebRTC {
         if (this.pc && this.pc.remoteDescription) {
             try {
                 await this.pc.addIceCandidate(new RTCIceCandidate(signalData));
-                this._log("Added ICE candidate");
             } catch (e) {
-                console.error("[WebRTC] addIceCandidate FAILED:", e);
+                this._log("addIceCandidate FAILED:", e);
             }
         } else {
-            this._log("Queuing ICE candidate");
             this.iceCandidateQueue.push(signalData);
         }
     }
@@ -277,7 +218,7 @@ class CloudTokWebRTC {
                 })
             });
         } catch (e) {
-            console.error("[WebRTC] sendSignal FAILED:", e);
+            this._log("sendSignal FAILED:", e);
         }
     }
 
@@ -291,7 +232,6 @@ class CloudTokWebRTC {
             this.pollTimeout = null;
         }
 
-        this._log("Starting polling for:", username);
         this._pollOnce();
     }
 
@@ -308,7 +248,7 @@ class CloudTokWebRTC {
                     this.backendReady = true;
 
                     if (result.signals && result.signals.length > 0) {
-                        this._log("Poll got", result.signals.length, "signals");
+                        this._log("Poll:", result.signals.length, "signals");
 
                         for (const signal of result.signals) {
                             if (signal.id > this.lastSignalId) {
