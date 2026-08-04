@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://prattbossman-2010.github.io/CloudTok/sitemap.xml

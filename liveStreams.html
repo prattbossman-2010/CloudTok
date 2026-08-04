@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Live Streams - CloudTok</title>
+<meta name="description" content="Watch live streams on CloudTok. Join real-time conversations, send gifts, and interact with your favorite creators.">
+<meta property="og:title" content="Live Streams - CloudTok">
+<meta property="og:description" content="Watch live streams on CloudTok. Join real-time conversations and send gifts.">
+<meta property="og:type" content="website">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://prattbossman-2010.github.io/CloudTok/liveStreams.html">
 <link rel="stylesheet" href="assets/css/base.css">
 <style>
 body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;margin:0;padding:0;}
@@ -38,10 +44,10 @@ body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Seg
 .viewerInput{flex:1;padding:10px 14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.1);border-radius:20px;color:#fff;font-size:14px;outline:none;}
 .viewerInput::placeholder{color:rgba(255,255,255,.4);}
 .viewerSend{background:#ff2d55;border:none;color:#fff;padding:10px 16px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;}
-.liveChatMessages{position:absolute;bottom:70px;left:12px;right:12px;max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;z-index:2;pointer-events:none;}
-.liveChatMsg{padding:6px 12px;background:rgba(0,0,0,.5);border-radius:16px;font-size:13px;color:#fff;max-width:80%;pointer-events:auto;animation:chatFadeIn .3s ease;}
-.liveChatMsg .chatUser{color:#ff2d55;font-weight:600;margin-right:6px;}
-@keyframes chatFadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.liveChatMessages{position:absolute;bottom:70px;left:12px;right:12px;max-height:180px;display:flex;flex-direction:column;gap:0;z-index:2;pointer-events:none;}
+.floatingViewerMsg{position:fixed;padding:6px 14px;background:rgba(0,0,0,.55);border-radius:20px;font-size:13px;color:#fff;max-width:70%;pointer-events:none;animation:floatUp 5s ease-out forwards;white-space:nowrap;}
+.floatingViewerMsg .chatUser{color:#ff2d55;font-weight:600;margin-right:6px;}
+@keyframes floatUp{0%{opacity:1;bottom:120px;}80%{opacity:1;}100%{opacity:0;bottom:calc(100vh - 60px);}}
 .giftPanel{display:none;position:absolute;bottom:70px;left:0;right:0;background:rgba(0,0,0,.9);border-top:1px solid rgba(255,255,255,.1);padding:12px;z-index:3;}
 .giftPanel.show{display:block;}
 .giftPanelTitle{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;}
@@ -90,8 +96,6 @@ body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Seg
         <div class="giftGrid" id="giftGrid"></div>
         <button class="giftSendBtn" id="giftSendBtn" disabled>Select a gift</button>
     </div>
-
-    <div class="liveChatMessages" id="liveChatMessages"></div>
 
     <div class="viewerBottom">
         <button class="giftBtn" id="giftToggleBtn">🎁</button>
@@ -224,15 +228,12 @@ document.getElementById("giftToggleBtn").onclick = function(){
 document.getElementById("giftSendBtn").onclick = sendGift;
 
 function addLiveChatMessage(username, text){
-    var container = document.getElementById("liveChatMessages");
-    var msg = document.createElement("div");
-    msg.className = "liveChatMsg";
-    msg.innerHTML = '<span class="chatUser">@'+username+'</span>'+text;
-    container.appendChild(msg);
-    container.scrollTop = container.scrollHeight;
-    if(container.children.length > 30){
-        container.removeChild(container.firstChild);
-    }
+    var el = document.createElement("div");
+    el.className = "floatingViewerMsg";
+    el.innerHTML = '<span class="chatUser">@'+username+'</span>'+text;
+    el.style.left = (12 + Math.random() * 40) + 'px';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 5000);
 }
 
 document.getElementById("chatSendBtn").addEventListener("click", sendLiveChat);

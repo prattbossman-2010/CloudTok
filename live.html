@@ -37,14 +37,10 @@ p{color:#aaa;margin:0 0 30px;font-size:14px}
 .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;}
 .toast.success{background:#00c853;color:#fff;}
 .toast.error{background:#ff2d55;color:#fff;}
-.streamChatArea{position:absolute;bottom:90px;left:12px;right:12px;max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;z-index:7;pointer-events:none;}
-.streamChatMsg{padding:6px 12px;background:rgba(0,0,0,.5);border-radius:16px;font-size:13px;color:#fff;max-width:80%;pointer-events:auto;animation:chatFadeIn .3s ease;}
-.streamChatMsg .chatUser{color:#00b7ff;font-weight:600;margin-right:6px;}
-.streamChatInput{position:absolute;bottom:80px;left:12px;right:12px;display:flex;gap:8px;z-index:7;}
-.streamChatInput input{flex:1;padding:10px 14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.1);border-radius:20px;color:#fff;font-size:14px;outline:none;}
-.streamChatInput input::placeholder{color:rgba(255,255,255,.4);}
-.streamChatInput button{background:#00b7ff;border:none;color:#fff;padding:10px 16px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;}
-@keyframes chatFadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.streamChatArea{position:absolute;bottom:90px;left:12px;right:12px;max-height:200px;display:flex;flex-direction:column;gap:6px;z-index:7;pointer-events:none;}
+.floatingMsg{position:fixed;bottom:120px;padding:6px 14px;background:rgba(0,0,0,.55);border-radius:20px;font-size:13px;color:#fff;max-width:70%;pointer-events:none;animation:floatUp 5s ease-out forwards;white-space:nowrap;}
+.floatingMsg .chatUser{color:#00b7ff;font-weight:600;margin-right:6px;}
+@keyframes floatUp{0%{opacity:1;bottom:120px;}80%{opacity:1;}100%{opacity:0;bottom:calc(100vh - 60px);}}
 </style>
 </head>
 <body>
@@ -74,10 +70,6 @@ p{color:#aaa;margin:0 0 30px;font-size:14px}
         <button class="streamCtrlBtn end" id="streamEndBtn">⏹</button>
     </div>
     <div class="streamChatArea" id="streamChatArea"></div>
-    <div class="streamChatInput">
-        <input id="streamChatInput" placeholder="Reply to chat...">
-        <button id="streamChatSend">Send</button>
-    </div>
 </div>
 
 <script src="assets/js/database/database.js"></script>
@@ -345,43 +337,12 @@ async function endStream(){
 loadActiveStreams();
 
 function addStreamChatMessage(username, text){
-    var container = document.getElementById("streamChatArea");
-    var msg = document.createElement("div");
-    msg.className = "streamChatMsg";
-    msg.innerHTML = '<span class="chatUser">@'+username+'</span>'+text;
-    container.appendChild(msg);
-    container.scrollTop = container.scrollHeight;
-    if(container.children.length > 30){
-        container.removeChild(container.firstChild);
-    }
-}
-
-document.getElementById("streamChatSend").addEventListener("click", sendStreamChat);
-document.getElementById("streamChatInput").addEventListener("keypress", function(e){
-    if(e.key === "Enter") sendStreamChat();
-});
-
-async function sendStreamChat(){
-    var input = document.getElementById("streamChatInput");
-    var text = input.value.trim();
-    if(!text || !isStreaming) return;
-    input.value = "";
-
-    var currentUser = localStorage.getItem("CloudTokCurrentUser") || "streamer";
-    addStreamChatMessage(currentUser, text);
-
-    try {
-        await CloudTokAPI.request("/live/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                stream_key: streamKey,
-                text: text,
-                to_username: null
-            })
-        });
-    } catch(e){}
-}
+    var el = document.createElement("div");
+    el.className = "floatingMsg";
+    el.innerHTML = '<span class="chatUser">@'+username+'</span>'+text;
+    el.style.left = (12 + Math.random() * 40) + 'px';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 5000);
 }
 
 document.getElementById("streamMuteBtn").onclick = ()=>{
