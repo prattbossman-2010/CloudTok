@@ -273,6 +273,9 @@ export async function adminClearTable(request, env, table) {
         const allowed = ["video_comments", "activity_logs", "transactions", "gift_transactions", "live_streams", "messages", "conversations", "live_chat", "webrtc_signals", "notifications"];
         if (!allowed.includes(table)) return Response.json({ error: "Table not clearable" }, { status: 400 });
         await env.DB.prepare("DELETE FROM " + table).run();
+        if (table === "video_comments") {
+            try { await env.DB.prepare("UPDATE videos SET comments = 0").run(); } catch(e) {}
+        }
         try { await logActivity(env, auth.username || "", "clear_table", table, table, "Cleared all rows from " + table); } catch(e) {}
         return Response.json({ success: true, message: "Cleared " + table });
     } catch (e) {
