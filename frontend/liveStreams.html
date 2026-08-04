@@ -134,7 +134,6 @@ async function joinStream(stream){
         console.log("[Viewer] ontrack:", e.track.kind, "streams:", e.streams.length);
         if(e.streams && e.streams[0]){
             var videoEl = document.getElementById("viewerVideo");
-            videoEl.srcObject = null;
             videoEl.srcObject = e.streams[0];
             videoEl.play().catch(function(){});
             document.getElementById("viewerStatus").textContent = "Watching live";

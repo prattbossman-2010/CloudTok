@@ -317,9 +317,8 @@
     webrtc.onRemoteStream = function(stream) {
         var videoEl = document.getElementById("remoteVideo");
         console.log("[Conv] onRemoteStream, tracks:", stream.getTracks().length);
-        videoEl.srcObject = null;
         videoEl.srcObject = stream;
-        videoEl.play().catch(function(e){ console.log("[Conv] remote video play:", e.message); });
+        videoEl.play().catch(function(){});
     };
 
     webrtc.onCallEnd = function(){ hideCallOverlay(); };
