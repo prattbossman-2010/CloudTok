@@ -116,12 +116,10 @@ await CloudTokAPI.uploadVideo(
 progress(80);
 
 
-let cloudVideoURL="";
+let cloudVideoURL=localVideoURL;
 
 if(uploadResult && uploadResult.success && uploadResult.videoUrl){
-
     cloudVideoURL=uploadResult.videoUrl;
-
 }
 
 const video={
@@ -231,15 +229,13 @@ progress(85);
 
 this.finishUpload(
 
-    video,
+video,
 
-    file,
+progress,
 
-    progress,
+options,
 
-    options,
-
-    resolve
+resolve
 
 );
 
@@ -332,7 +328,7 @@ resolve("");
 
 }
     
-finishUpload(video,file,progress,options,resolve){
+finishUpload(video,progress,options,resolve){
 
 if(!CloudTokDatabase.searchIndex){
 
@@ -403,7 +399,7 @@ typeof CloudTokThumbnailAI !== "undefined"
 ){
 
 
-CloudTokThumbnailAI.generate(file)
+CloudTokThumbnailAI.generate(video.video)
 
 .then((thumb)=>{
 
