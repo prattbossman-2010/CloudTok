@@ -36,6 +36,7 @@ import { sendSignal, pollSignals, createLiveStream, getLiveStreams, endLiveStrea
 import { sendGift, getGiftHistory, getWalletBalance } from "./routes/gifts.js";
 import { adminGetLiveStreams, adminStopStream, adminGetTransactions, adminGetGifts, adminGetMessages, adminGetActivityLogs, adminGetStorageHealth, adminDeleteComment, adminGetComments, adminAdjustBalance, adminUpdateGiftPrice, adminGetGiftConfig, adminClearTable } from "./routes/adminExtended.js";
 
+import { testSupabaseUpload } from "./routes/supabaseTest.js";
 
 export default {
 
@@ -364,6 +365,15 @@ export default {
       const result = await StorageRouter.healthCheck(env);
       return withCORS(Response.json(result));
     }
+      
+      if(
+path === "/api/storage/test/supabase-upload" &&
+method === "POST"
+){
+return withCORS(
+testSupabaseUpload(request, env)
+);
+}
 
     // Admin routes
     if(path === "/api/admin/login" && method === "POST"){
