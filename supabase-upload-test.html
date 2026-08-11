@@ -1,0 +1,328 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>CloudTok Supabase Upload Test</title><style>
+
+body{
+    font-family:Arial,sans-serif;
+    background:#111;
+    color:#fff;
+    padding:20px;
+}
+
+h1{
+    margin-bottom:20px;
+}
+
+input,
+button{
+    display:block;
+    width:100%;
+    max-width:500px;
+    margin:10px 0;
+    padding:12px;
+    box-sizing:border-box;
+}
+
+button{
+    background:#2196f3;
+    color:white;
+    border:0;
+    border-radius:6px;
+    font-size:16px;
+}
+
+#status{
+    margin-top:20px;
+    padding:15px;
+    background:#222;
+    border-radius:6px;
+    white-space:pre-wrap;
+    word-break:break-word;
+}
+
+#result{
+    margin-top:20px;
+    padding:15px;
+    background:#182018;
+    border-radius:6px;
+    display:none;
+}
+
+a{
+    color:#4fc3f7;
+    word-break:break-all;
+}
+
+</style></head><body><h1>CloudTok Supabase Upload Test</h1><p>
+This page tests Supabase video storage without changing
+the normal CloudTok upload pipeline.
+</p><input
+type="file"
+id="videoInput"
+accept="video/*"
+
+«»
+
+<button id="uploadButton">
+Upload Test Video
+</button><div id="status">
+Waiting for video...
+</div><div id="result"><h3>Upload Result</h3><p>
+<strong>URL:</strong>
+</p><a
+id="videoUrl"
+target="_blank">
+</a>
+
+<p>
+<strong>Provider:</strong>
+<span id="provider"></span>
+</p><p>
+<strong>Path:</strong>
+<span id="path"></span>
+</p></div><script>
+
+const API =
+"https://cloudtok-api.bossmanp16.workers.dev/api";
+
+
+const videoInput =
+document.getElementById("videoInput");
+
+const uploadButton =
+document.getElementById("uploadButton");
+
+const status =
+document.getElementById("status");
+
+const resultBox =
+document.getElementById("result");
+
+const videoUrl =
+document.getElementById("videoUrl");
+
+const provider =
+document.getElementById("provider");
+
+const path =
+document.getElementById("path");
+
+
+function log(message){
+
+    status.textContent +=
+    "\n" + message;
+
+}
+
+
+videoInput.addEventListener(
+    "change",
+    () => {
+
+        if(!videoInput.files.length){
+
+            status.textContent =
+            "No video selected.";
+
+            return;
+
+        }
+
+        const file =
+        videoInput.files[0];
+
+        status.textContent =
+        "Selected video:\n" +
+        file.name +
+        "\nSize: " +
+        (file.size / 1024 / 1024).toFixed(2) +
+        " MB" +
+        "\nType: " +
+        file.type;
+
+    }
+);
+
+
+uploadButton.addEventListener(
+    "click",
+    async () => {
+
+        const file =
+        videoInput.files[0];
+
+
+        if(!file){
+
+            status.textContent =
+            "Please select a video first.";
+
+            return;
+
+        }
+
+
+        uploadButton.disabled = true;
+
+        resultBox.style.display =
+        "none";
+
+        status.textContent =
+        "Starting Supabase upload test...";
+
+
+        try{
+
+
+            const token =
+            localStorage.getItem(
+                "CloudTokToken"
+            );
+
+
+            if(!token){
+
+                throw new Error(
+                    "CloudTokToken not found. Please log into CloudTok first."
+                );
+
+            }
+
+
+            const form =
+            new FormData();
+
+
+            form.append(
+                "file",
+                file
+            );
+
+
+            form.append(
+                "caption",
+                "[SUPABASE TEST]"
+            );
+
+
+            form.append(
+                "tags",
+                "[]"
+            );
+
+
+            form.append(
+                "category",
+                "Test"
+            );
+
+
+            log(
+                "\nSending video to test endpoint..."
+            );
+
+
+            const response =
+            await fetch(
+                API + "/storage/test/supabase-upload",
+                {
+                    method:"POST",
+
+                    headers:{
+                        Authorization:
+                        "Bearer " + token
+                    },
+
+                    body:form
+                }
+            );
+
+
+            log(
+                "HTTP status: " +
+                response.status
+            );
+
+
+            const text =
+            await response.text();
+
+
+            log(
+                "Server response:\n" +
+                text
+            );
+
+
+            let data;
+
+
+            try{
+
+                data =
+                JSON.parse(text);
+
+            }
+            catch{
+
+                throw new Error(
+                    "Server returned non-JSON response."
+                );
+
+            }
+
+
+            if(!data.success){
+
+                throw new Error(
+                    data.error ||
+                    "Supabase upload failed."
+                );
+
+            }
+
+
+            videoUrl.textContent =
+            data.url;
+
+            videoUrl.href =
+            data.url;
+
+            provider.textContent =
+            data.provider || "supabase";
+
+            path.textContent =
+            data.path || "N/A";
+
+
+            resultBox.style.display =
+            "block";
+
+
+            log(
+                "\n✅ SUPABASE UPLOAD SUCCESSFUL"
+            );
+
+
+        }
+        catch(error){
+
+            log(
+                "\n❌ TEST FAILED\n" +
+                error.message
+            );
+
+        }
+        finally{
+
+            uploadButton.disabled =
+            false;
+
+        }
+
+    }
+);
+
+</script></body></html>
