@@ -116,10 +116,12 @@ await CloudTokAPI.uploadVideo(
 progress(80);
 
 
-let cloudVideoURL=localVideoURL;
+let cloudVideoURL="";
 
 if(uploadResult && uploadResult.success && uploadResult.videoUrl){
+
     cloudVideoURL=uploadResult.videoUrl;
+
 }
 
 const video={
