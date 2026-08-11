@@ -229,13 +229,15 @@ progress(85);
 
 this.finishUpload(
 
-video,
+    video,
 
-progress,
+    file,
 
-options,
+    progress,
 
-resolve
+    options,
+
+    resolve
 
 );
 
@@ -328,7 +330,7 @@ resolve("");
 
 }
     
-finishUpload(video,progress,options,resolve){
+finishUpload(video,file,progress,options,resolve){
 
 if(!CloudTokDatabase.searchIndex){
 
@@ -399,7 +401,7 @@ typeof CloudTokThumbnailAI !== "undefined"
 ){
 
 
-CloudTokThumbnailAI.generate(video.video)
+CloudTokThumbnailAI.generate(file)
 
 .then((thumb)=>{
 
