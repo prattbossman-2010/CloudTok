@@ -1,192 +1,147 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport"
-content="width=device-width, initial-scale=1.0">
-
-<title>CloudTok Supabase Video Test</title><style>
-
-body{
-    font-family:Arial,sans-serif;
-    background:#111;
-    color:#fff;
-    padding:20px;
-}
-
-input,
-button{
-    width:100%;
-    max-width:700px;
-    box-sizing:border-box;
-    padding:12px;
-    margin:10px 0;
-}
-
-button{
-    background:#2196f3;
-    color:#fff;
-    border:0;
-    border-radius:6px;
-    font-size:16px;
-}
-
-video{
-    display:block;
-    width:100%;
-    max-width:700px;
-    margin-top:20px;
-    background:#000;
-}
-
-#status{
-    margin-top:20px;
-    padding:15px;
-    background:#222;
-    border-radius:6px;
-    white-space:pre-wrap;
-    word-break:break-all;
-}
-
-</style></head><body><h1>CloudTok Supabase Video Test</h1><p>
-Paste a Supabase public video URL below and test whether
-the browser can load and play it.
-</p><input
-type="text"
-id="urlInput"
-placeholder="Paste Supabase video URL"
-
-«»
-
-<button id="loadButton">
-Load Supabase Video
-</button><video
-id="videoPlayer"
-controls
-playsinline>
-</video>
-
-<div id="status">
-Waiting for video URL...
-</div><script>
-
-const urlInput =
-document.getElementById("urlInput");
-
-const loadButton =
-document.getElementById("loadButton");
-
-const videoPlayer =
-document.getElementById("videoPlayer");
-
-const status =
-document.getElementById("status");
-
-
-function setStatus(message){
-
-    status.textContent =
-    message;
-
-}
-
-
-loadButton.addEventListener(
-    "click",
-    () => {
-
-        const url =
-        urlInput.value.trim();
-
-
-        if(!url){
-
-            setStatus(
-                "Please enter a Supabase video URL."
-            );
-
-            return;
-
-        }
-
-
-        setStatus(
-            "Loading video...\n\n" +
-            url
-        );
-
-
-        videoPlayer.pause();
-
-        videoPlayer.removeAttribute(
-            "src"
-        );
-
-        videoPlayer.load();
-
-
-        videoPlayer.src =
-        url;
-
-
-        videoPlayer.load();
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>CloudTok Supabase Video Test</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      padding: 16px;
+      line-height: 1.45;
     }
-);
-
-
-videoPlayer.addEventListener(
-    "loadedmetadata",
-    () => {
-
-        setStatus(
-            "✅ VIDEO LOADED\n\n" +
-
-            "Duration: " +
-            videoPlayer.duration +
-            " seconds\n\n" +
-
-            "Resolution: " +
-            videoPlayer.videoWidth +
-            " × " +
-            videoPlayer.videoHeight
-        );
-
+    .container { max-width: 640px; margin: 0 auto; }
+    h1 { font-size: 22px; margin-bottom: 8px; }
+    p { color: #aaa; font-size: 14px; margin-bottom: 16px; }
+    input[type="text"] {
+      width: 100%;
+      padding: 14px;
+      background: #1c1c1c;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 10px;
+      font-size: 15px;
+      margin-bottom: 12px;
     }
-);
-
-
-videoPlayer.addEventListener(
-    "canplay",
-    () => {
-
-        setStatus(
-            "✅ VIDEO CAN PLAY\n\n" +
-            "Supabase video delivery is working."
-        );
-
+    button {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 10px;
+      background: #2196f3;
+      color: white;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
     }
-);
-
-
-videoPlayer.addEventListener(
-    "error",
-    () => {
-
-        const error =
-        videoPlayer.error;
-
-
-        setStatus(
-            "❌ VIDEO LOAD FAILED\n\n" +
-
-            "Error code: " +
-            (error ?
-            error.code :
-            "unknown") +
-            "\n\n" +
-
-            "Check the Supabase URL, bucket visibility, " +
-            "CORS, and video response."
-        );
-
+    button:disabled { opacity: 0.5; }
+    video {
+      display: block;
+      width: 100%;
+      max-height: 70vh;
+      margin-top: 20px;
+      background: #000;
+      border-radius: 10px;
     }
-);
+    #status {
+      margin-top: 16px;
+      padding: 14px;
+      background: #1a1a1a;
+      border-radius: 10px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 13px;
+      line-height: 1.5;
+      min-height: 60px;
+    }
+    .success { color: #4caf50; }
+    .error { color: #f44336; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>CloudTok Supabase Video Test</h1>
+    <p>Paste a Supabase public video URL and test if the browser can play it.</p>
 
-</script></body></html>
+    <input type="text" id="urlInput" placeholder="Paste Supabase video URL here">
+    <button id="loadButton">Load Supabase Video</button>
+
+    <video id="videoPlayer" controls playsinline></video>
+
+    <div id="status">Waiting for video URL...</div>
+  </div>
+
+  <script>
+    const urlInput    = document.getElementById("urlInput");
+    const loadButton  = document.getElementById("loadButton");
+    const videoPlayer = document.getElementById("videoPlayer");
+    const statusEl    = document.getElementById("status");
+
+    function setStatus(msg) {
+      statusEl.textContent = msg;
+    }
+
+    loadButton.addEventListener("click", function () {
+      const url = urlInput.value.trim();
+
+      if (!url) {
+        setStatus("Please enter a Supabase video URL.");
+        return;
+      }
+
+      setStatus("Loading video...\n\n" + url);
+
+      // Reset the player
+      videoPlayer.pause();
+      videoPlayer.removeAttribute("src");
+      videoPlayer.load();
+
+      // Set new source
+      videoPlayer.src = url;
+      videoPlayer.load();
+    });
+
+    videoPlayer.addEventListener("loadedmetadata", function () {
+      setStatus(
+        "✅ VIDEO LOADED\n\n" +
+        "Duration: " + videoPlayer.duration.toFixed(1) + " seconds\n" +
+        "Resolution: " + videoPlayer.videoWidth + " × " + videoPlayer.videoHeight
+      );
+    });
+
+    videoPlayer.addEventListener("canplay", function () {
+      setStatus(
+        statusEl.textContent + "\n\n✅ VIDEO CAN PLAY\nSupabase video delivery is working."
+      );
+    });
+
+    videoPlayer.addEventListener("error", function () {
+      const err = videoPlayer.error;
+      let code = "unknown";
+      let message = "";
+
+      if (err) {
+        code = err.code;
+        // MediaError codes
+        if (code === 1) message = "MEDIA_ERR_ABORTED";
+        else if (code === 2) message = "MEDIA_ERR_NETWORK";
+        else if (code === 3) message = "MEDIA_ERR_DECODE";
+        else if (code === 4) message = "MEDIA_ERR_SRC_NOT_SUPPORTED";
+      }
+
+      setStatus(
+        "❌ VIDEO LOAD FAILED\n\n" +
+        "Error code: " + code + " (" + message + ")\n\n" +
+        "Possible causes:\n" +
+        "• Bucket is not public\n" +
+        "• Wrong URL\n" +
+        "• CORS issue\n" +
+        "• File not found"
+      );
+    });
+  </script>
+</body>
+</html>
