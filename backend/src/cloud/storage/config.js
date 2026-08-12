@@ -13,7 +13,7 @@ const StorageConfig = {
 
             roles: ["video"],
 
-            priority: 1,
+            priority: 3,
 
             maxFileSize: "500MB",
 
@@ -97,7 +97,7 @@ const StorageConfig = {
 
             roles: ["video"],
 
-            priority: 3,
+            priority: 1,
 
             maxFileSize: "50MB",
 
