@@ -1,3 +1,5 @@
+import StorageCredentials from "../credentials.js";
+
 class R2Provider{
 
 
