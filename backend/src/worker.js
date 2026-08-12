@@ -36,7 +36,10 @@ import { sendSignal, pollSignals, createLiveStream, getLiveStreams, endLiveStrea
 import { sendGift, getGiftHistory, getWalletBalance } from "./routes/gifts.js";
 import { adminGetLiveStreams, adminStopStream, adminGetTransactions, adminGetGifts, adminGetMessages, adminGetActivityLogs, adminGetStorageHealth, adminDeleteComment, adminGetComments, adminAdjustBalance, adminUpdateGiftPrice, adminGetGiftConfig, adminClearTable } from "./routes/adminExtended.js";
 
-import { testSupabaseUpload } from "./routes/supabaseTest.js";
+import {
+  testSupabaseUpload,
+  listSupabaseVideos
+} from "./routes/supabaseTest.js";
 
 export default {
 
@@ -375,6 +378,15 @@ testSupabaseUpload(request, env)
 );
 }
 
+      if(
+  path === "/api/storage/test/supabase-videos" &&
+  method === "GET"
+){
+  return withCORS(
+    listSupabaseVideos(request, env)
+  );
+}
+      
     // Admin routes
     if(path === "/api/admin/login" && method === "POST"){
       return withCORS(adminLogin(request, env));
