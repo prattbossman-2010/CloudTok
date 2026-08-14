@@ -7,13 +7,13 @@ const StorageConfig = {
 
             name: "Cloudinary",
 
-            enabled: false,
+            enabled: true,
 
             apiConfigured: true,
 
             roles: ["video"],
 
-            priority: 3,
+            priority: 1,
 
             maxFileSize: "500MB",
 
@@ -49,7 +49,7 @@ const StorageConfig = {
 
             name: "Backblaze B2",
 
-            enabled: false,
+            enabled: true,
 
             apiConfigured: true,
 
@@ -97,7 +97,7 @@ const StorageConfig = {
 
             roles: ["video"],
 
-            priority: 1,
+            priority: 3,
 
             maxFileSize: "50MB",
 
@@ -178,7 +178,7 @@ const StorageConfig = {
 
             name: "Cloudflare R2",
 
-            enabled: false,
+            enabled: true,
 
             apiConfigured: true,
 
