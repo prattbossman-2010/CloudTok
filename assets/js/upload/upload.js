@@ -72,56 +72,61 @@ class CloudTokUploader {
             progress(60);
 
             // === REAL UPLOAD TO BACKEND ===
-            let uploadResult = null;
-            try {
-              uploadResult = await CloudTokAPI.uploadVideo(
-                file,
-                caption,
-                localThumbnail,          // send the dataURL thumbnail if the API accepts it
-                JSON.stringify(tags),
-                category
-              );
-            } catch (err) {
-              console.error("Upload API error:", err);
-              uploadResult = null;
-            }
+let uploadResult = null;
+try {
+  uploadResult = await CloudTokAPI.uploadVideo(
+    file,
+    caption,
+    localThumbnail,
+    JSON.stringify(tags),
+    category
+  );
+} catch (err) {
+  console.error("Upload API error:", err);
+  uploadResult = null;
+}
 
-            // Clean up the temporary object URL
-            URL.revokeObjectURL(tempURL);
+// Clean up the temporary object URL
+URL.revokeObjectURL(tempURL);
 
-            progress(80);
+progress(80);
 
-            // STRICT: only continue if the backend really saved the video
-            if (!uploadResult || !uploadResult.success || !uploadResult.videoUrl) {
-  // Show the full error so we can see why Supabase failed
+// Support both old and new response shapes
+const isSuccess = uploadResult && uploadResult.success === true;
+const videoUrl = uploadResult?.data?.videoUrl || uploadResult?.videoUrl;
+const videoId = uploadResult?.data?.videoId || uploadResult?.videoId;
+const provider = uploadResult?.data?.provider || uploadResult?.provider;
+
+if (!isSuccess || !videoUrl) {
   const fullError = JSON.stringify(uploadResult, null, 2);
   console.error("FULL UPLOAD ERROR:", fullError);
   reject(new Error(
-    (uploadResult && uploadResult.error) 
-      ? uploadResult.error + "\n\n" + fullError
-      : "Upload failed. Video was not saved to cloud storage.\n\n" + fullError
+    (uploadResult && uploadResult.error)
+      ? uploadResult.error
+      : "Upload failed. Video was not saved to cloud storage."
   ));
   return;
 }
 
             // Success – use the real cloud URL
-            const video = {
-              id: uploadResult.videoId || Date.now(),
-              username: "@" + this.currentUser.username,
-              displayName: this.currentUser.displayName,
-              avatar: this.currentUser.avatar,
-              caption: caption,
-              tags: tags,
-              category: category,
-              thumbnail: localThumbnail,          // temporary local thumbnail
-              video: uploadResult.videoUrl,       // REAL cloud URL
-              likes: 0,
-              comments: [],
-              shares: 0,
-              saves: 0,
-              views: 0,
-              uploaded: Date.now()
-            };
+const video = {
+  id: videoId || Date.now(),
+  username: "@" + this.currentUser.username,
+  displayName: this.currentUser.displayName,
+  avatar: this.currentUser.avatar,
+  caption: caption,
+  tags: tags,
+  category: category,
+  thumbnail: localThumbnail,
+  video: videoUrl,                    // ← extracted from new API shape
+  likes: 0,
+  comments: [],
+  shares: 0,
+  saves: 0,
+  views: 0,
+  uploaded: Date.now(),
+  provider: provider || null
+};
 
             // Keep a light local list (never store base64 video data)
             if (!CloudTokDatabase.videos) {
