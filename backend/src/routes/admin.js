@@ -136,99 +136,127 @@ export async function adminGetVideos(request, env) {
 }
 
 export async function adminRunMigration(request, env) {
-    const auth = await adminCheck(request, env);
-    if (auth.error) return auth;
+  const auth = await adminCheck(request, env);
+  if (auth.error) return auth;
 
-    const results = [];
+  const results = [];
 
+  // ========== Existing column migrations ==========
+  const columnMigrations = [
+    { sql: "ALTER TABLE videos ADD COLUMN tags TEXT DEFAULT '[]'", name: "tags" },
+    { sql: "ALTER TABLE videos ADD COLUMN category TEXT DEFAULT 'General'", name: "category" },
+    { sql: "ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'active'", name: "status" },
+    { sql: "ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'", name: "role" }
+  ];
+
+  for (const m of columnMigrations) {
     try {
-        await env.DB.prepare("ALTER TABLE videos ADD COLUMN tags TEXT DEFAULT '[]'").run();
-        results.push("Added tags column");
-    } catch(e) {
-        if (e.message && e.message.includes("duplicate column")) {
-            results.push("tags column already exists");
-        } else {
-            results.push("tags error: " + e.message);
-        }
+      await env.DB.prepare(m.sql).run();
+      results.push(`Added ${m.name} column`);
+    } catch (e) {
+      if (e.message && e.message.includes("duplicate column")) {
+        results.push(`${m.name} column already exists`);
+      } else {
+        results.push(`${m.name} error: ${e.message}`);
+      }
     }
+  }
 
+  // ========== Tables ==========
+  const tables = [
+    {
+      name: "webrtc_signals",
+      sql: `CREATE TABLE IF NOT EXISTS webrtc_signals (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        from_username TEXT NOT NULL,
+        to_username TEXT NOT NULL,
+        signal_type TEXT NOT NULL,
+        signal_data TEXT DEFAULT '{}',
+        created_at TEXT DEFAULT (datetime('now'))
+      )`
+    },
+    {
+      name: "live_streams",
+      sql: `CREATE TABLE IF NOT EXISTS live_streams (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        username TEXT NOT NULL,
+        stream_key TEXT UNIQUE NOT NULL,
+        title TEXT DEFAULT 'Live Stream',
+        status TEXT DEFAULT 'active',
+        viewers INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now')),
+        ended_at TEXT
+      )`
+    },
+    {
+      name: "transactions",
+      sql: `CREATE TABLE IF NOT EXISTS transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        reference TEXT UNIQUE NOT NULL,
+        amount REAL NOT NULL,
+        status TEXT DEFAULT 'pending',
+        created_at TEXT DEFAULT (datetime('now'))
+      )`
+    },
+    {
+      name: "storage_events",
+      sql: `CREATE TABLE IF NOT EXISTS storage_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        event_type TEXT NOT NULL,
+        provider TEXT DEFAULT '',
+        filename TEXT DEFAULT '',
+        file_size INTEGER DEFAULT 0,
+        status TEXT DEFAULT 'success',
+        error_message TEXT DEFAULT '',
+        created_at TEXT DEFAULT (datetime('now'))
+      )`
+    }
+  ];
+
+  for (const t of tables) {
     try {
-        await env.DB.prepare("ALTER TABLE videos ADD COLUMN category TEXT DEFAULT 'General'").run();
-        results.push("Added category column");
-    } catch(e) {
-        if (e.message && e.message.includes("duplicate column")) {
-            results.push("category column already exists");
-        } else {
-            results.push("category error: " + e.message);
-        }
+      await env.DB.prepare(t.sql).run();
+      results.push(`Created ${t.name} table`);
+    } catch (e) {
+      results.push(`${t.name}: ${e.message}`);
     }
+  }
 
+  // ========== Performance Indexes ==========
+  const indexes = [
+    "CREATE INDEX IF NOT EXISTS idx_videos_user_id ON videos(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_videos_created_at ON videos(created_at DESC)",
+    "CREATE INDEX IF NOT EXISTS idx_videos_category ON videos(category)",
+    "CREATE INDEX IF NOT EXISTS idx_video_likes_video_id ON video_likes(video_id)",
+    "CREATE INDEX IF NOT EXISTS idx_video_likes_user_id ON video_likes(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_video_likes_user_video ON video_likes(user_id, video_id)",
+    "CREATE INDEX IF NOT EXISTS idx_video_saves_user_id ON video_saves(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_video_saves_video_id ON video_saves(video_id)",
+    "CREATE INDEX IF NOT EXISTS idx_video_comments_video_id ON video_comments(video_id)",
+    "CREATE INDEX IF NOT EXISTS idx_follows_follower ON follows(follower_id)",
+    "CREATE INDEX IF NOT EXISTS idx_follows_following ON follows(following_id)",
+    "CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(user_id, read)",
+    "CREATE INDEX IF NOT EXISTS idx_storage_events_created ON storage_events(created_at DESC)",
+    "CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)",
+    "CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)"
+  ];
+
+  for (const sql of indexes) {
     try {
-        await env.DB.prepare("ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'active'").run();
-        results.push("Added status column");
-    } catch(e) {
-        if (e.message && e.message.includes("duplicate column")) {
-            results.push("status column already exists");
-        } else {
-            results.push("status error: " + e.message);
-        }
+      await env.DB.prepare(sql).run();
+      const name = sql.split(" ON ")[1] || sql;
+      results.push("Index ready: " + name);
+    } catch (e) {
+      results.push("Index error: " + e.message);
     }
+  }
 
-    try {
-        await env.DB.prepare("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'").run();
-        results.push("Added role column");
-    } catch(e) {
-        if (e.message && e.message.includes("duplicate column")) {
-            results.push("role column already exists");
-        } else {
-            results.push("role error: " + e.message);
-        }
-    }
-
-    try {
-        await env.DB.prepare(`CREATE TABLE IF NOT EXISTS webrtc_signals (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            from_username TEXT NOT NULL,
-            to_username TEXT NOT NULL,
-            signal_type TEXT NOT NULL,
-            signal_data TEXT DEFAULT '{}',
-            created_at TEXT DEFAULT (datetime('now'))
-        )`).run();
-        results.push("Created webrtc_signals table");
-    } catch(e) {
-        results.push("webrtc_signals: " + e.message);
-    }
-
-    try {
-        await env.DB.prepare(`CREATE TABLE IF NOT EXISTS live_streams (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            username TEXT NOT NULL,
-            stream_key TEXT UNIQUE NOT NULL,
-            title TEXT DEFAULT 'Live Stream',
-            status TEXT DEFAULT 'active',
-            viewers INTEGER DEFAULT 0,
-            created_at TEXT DEFAULT (datetime('now')),
-            ended_at TEXT
-        )`).run();
-        results.push("Created live_streams table");
-    } catch(e) {
-        results.push("live_streams: " + e.message);
-    }
-
-    try {
-        await env.DB.prepare(`CREATE TABLE IF NOT EXISTS transactions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            reference TEXT UNIQUE NOT NULL,
-            amount REAL NOT NULL,
-            status TEXT DEFAULT 'pending',
-            created_at TEXT DEFAULT (datetime('now'))
-        )`).run();
-        results.push("Created transactions table");
-    } catch(e) {
-        results.push("transactions: " + e.message);
-    }
-
-    return Response.json({ success: true, results });
+  return Response.json({
+    success: true,
+    message: "Migration completed",
+    results
+  });
 }
