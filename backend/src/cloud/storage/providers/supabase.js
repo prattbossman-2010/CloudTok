@@ -11,38 +11,40 @@ class SupabaseProvider {
 
     const credentials = StorageCredentials.getSupabase(env);
 
-    if (!credentials.url || !credentials.key) {
+    // Extra safety checks
+    if (!credentials || !credentials.url || !credentials.key) {
       return {
         success: false,
         provider: this.name,
-        error: "Supabase credentials missing"
+        error: "Supabase credentials missing (url or key is empty)"
       };
     }
 
+    // Remove trailing slash if present
+    const baseUrl = credentials.url.replace(/\/$/, "");
+
     try {
-      // Choose bucket based on role
-      const bucket = metadata.role === "video"
+      const bucket = (metadata.role === "video")
         ? "cloudtok-videos"
         : "cloudtok-images";
 
-      // File extension
-      const extension = file.name && file.name.includes(".")
+      const extension = (file.name && file.name.includes("."))
         ? file.name.split(".").pop().toLowerCase()
-        : (metadata.role === "video" ? "mp4" : "jpg");
+        : "mp4";
 
-      const filename = `\( {metadata.userId || "unknown"}_ \){Date.now()}.${extension}`;
-      const path = filename;
+      const userId = metadata.userId || "unknown";
+      const filename = userId + "_" + Date.now() + "." + extension;
 
       const arrayBuffer = await file.arrayBuffer();
 
-      const uploadUrl = `\( {credentials.url}/storage/v1/object/ \){bucket}/${path}`;
+      const uploadUrl = baseUrl + "/storage/v1/object/" + bucket + "/" + filename;
 
       const response = await fetch(uploadUrl, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${credentials.key}`,
-          apikey: credentials.key,                    // ← this was missing
-          "Content-Type": file.type || (metadata.role === "video" ? "video/mp4" : "image/jpeg"),
+          "Authorization": "Bearer " + credentials.key,
+          "apikey": credentials.key,
+          "Content-Type": file.type || "video/mp4",
           "x-upsert": "true"
         },
         body: arrayBuffer
@@ -54,21 +56,19 @@ class SupabaseProvider {
         return {
           success: false,
           provider: this.name,
-          error: "Supabase upload failed",
-          status: response.status,
+          error: "Supabase upload failed – status " + response.status,
           response: responseText
         };
       }
 
-      // Public URL
-      const publicUrl = `\( {credentials.url}/storage/v1/object/public/ \){bucket}/${path}`;
+      const publicUrl = baseUrl + "/storage/v1/object/public/" + bucket + "/" + filename;
 
       return {
         success: true,
         provider: this.name,
         url: publicUrl,
-        path: `\( {bucket}/ \){path}`,
-        filename
+        path: bucket + "/" + filename,
+        filename: filename
       };
 
     } catch (error) {
@@ -90,11 +90,11 @@ class SupabaseProvider {
 
   async healthCheck(env) {
     const credentials = StorageCredentials.getSupabase(env);
-    const healthy = Boolean(credentials.url && credentials.key);
+    const healthy = Boolean(credentials && credentials.url && credentials.key);
 
     return {
       provider: this.name,
-      healthy,
+      healthy: healthy,
       message: healthy ? "Supabase configured" : "Supabase credentials missing"
     };
   }
