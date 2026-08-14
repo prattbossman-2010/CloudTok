@@ -23,63 +23,105 @@ window.CloudTokAPI = {
     },
 
 
-    async login(email,password){
+    async login(email, password){
 
-        const response =
-        await fetch(
-            this.baseURL + "/users/login",
-            {
-                method:"POST",
-                headers:{
-                    "Content-Type":"application/json"
-                },
-                body: JSON.stringify({ email, password })
-            }
+    const response =
+    await fetch(
+        this.baseURL + "/users/login",
+        {
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body: JSON.stringify({ email, password })
+        }
+    );
+
+    const raw = await response.json();
+
+    const result = {
+        ...raw,
+        ...(raw.data || {})
+    };
+
+    if(result.token && result.user){
+
+        localStorage.setItem(
+            "CloudTokToken",
+            result.token
         );
 
-        const result = await response.json();
+        localStorage.setItem(
+            "CloudTokCurrentUser",
+            result.user.username
+        );
 
-        if(result.token){
-            localStorage.setItem("CloudTokToken", result.token);
-            localStorage.setItem("CloudTokCurrentUser", result.user.username);
-        }
+    }
 
-        return result;
-    },
+    return result;
+},
 
 
     async request(url, options={}){
 
-        const token = localStorage.getItem("CloudTokToken");
+    const token =
+    localStorage.getItem("CloudTokToken");
 
-        options.headers = {
-            ...options.headers,
-            "Authorization": "Bearer " + token
-        };
+    options.headers = {
+        ...options.headers,
+        "Authorization": "Bearer " + token
+    };
 
-        const response =
-        await fetch(this.baseURL + url, options);
+    const response =
+    await fetch(
+        this.baseURL + url,
+        options
+    );
 
-        return await response.json();
-    },
+    const raw =
+    await response.json();
+
+    return {
+        ...raw,
+        ...(raw.data || {})
+    };
+},
 
 
     async getProfile(username){
 
-        const response =
-        await fetch(this.baseURL + "/users/" + username);
+    const response =
+    await fetch(
+        this.baseURL + "/users/" +
+        encodeURIComponent(username)
+    );
 
-        return await response.json();
-    },
+    const raw = await response.json();
+
+    return {
+        ...raw,
+        ...(raw.data || {})
+    };
+},
 
 
     async getUserVideos(username){
 
-        const response =
-        await fetch(this.baseURL + "/users/" + username + "/videos");
+    const response =
+    await fetch(
+        this.baseURL +
+        "/users/" +
+        encodeURIComponent(username) +
+        "/videos"
+    );
 
-        return await response.json();
-    },
+    const raw = await response.json();
+
+    return {
+        ...raw,
+        ...(raw.data || {})
+    };
+},
 
 
     async updateProfile(displayName, bio, website){
@@ -106,11 +148,17 @@ window.CloudTokAPI = {
 
     async getVideos(){
 
-        const response =
-        await fetch(this.baseURL + "/videos");
+    const response =
+    await fetch(this.baseURL + "/videos");
 
-        return await response.json();
-    },
+    const raw =
+    await response.json();
+
+    return {
+        ...raw,
+        ...(raw.data || {})
+    };
+},
 
 
     async uploadVideo(file, caption="", thumbnail="", tags="[]", category="General"){
