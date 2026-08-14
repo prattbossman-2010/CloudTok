@@ -7,7 +7,7 @@ const StorageConfig = {
 
             name: "Cloudinary",
 
-            enabled: true,
+            enabled: false,
 
             apiConfigured: true,
 
@@ -49,7 +49,7 @@ const StorageConfig = {
 
             name: "Backblaze B2",
 
-            enabled: true,
+            enabled: false,
 
             apiConfigured: true,
 
@@ -178,7 +178,7 @@ const StorageConfig = {
 
             name: "Cloudflare R2",
 
-            enabled: true,
+            enabled: false,
 
             apiConfigured: true,
 
