@@ -109,15 +109,66 @@ export async function adminUpdateUser(request, env, userId) {
 }
 
 export async function adminDeleteVideo(request, env, videoId) {
-    const auth = await adminCheck(request, env);
-    if (auth.error) return auth;
+  const auth = await adminCheck(request, env);
+  if (auth.error) return auth;
 
+  try {
+    // Get the video first so we can delete the actual files
+    const video = await env.DB.prepare(
+      `SELECT id, video_url, thumbnail_url FROM videos WHERE id = ?`
+    ).bind(videoId).first();
+
+    if (!video) {
+      return Response.json({ success: false, error: "Video not found" }, { status: 404 });
+    }
+
+    // Try to delete from storage (best effort)
+    let storageResult = {};
+    try {
+      const StorageRouter = (await import("../cloud/storage/router.js")).default;
+
+      if (video.video_url) {
+        storageResult.video = await StorageRouter.delete(video.video_url, env);
+      }
+      if (video.thumbnail_url) {
+        storageResult.thumbnail = await StorageRouter.delete(video.thumbnail_url, env);
+      }
+    } catch (e) {
+      storageResult.error = e.message;
+    }
+
+    // Clean database
     await env.DB.prepare("DELETE FROM video_likes WHERE video_id = ?").bind(videoId).run();
     await env.DB.prepare("DELETE FROM video_comments WHERE video_id = ?").bind(videoId).run();
     await env.DB.prepare("DELETE FROM video_saves WHERE video_id = ?").bind(videoId).run();
     await env.DB.prepare("DELETE FROM videos WHERE id = ?").bind(videoId).run();
 
-    return Response.json({ success: true });
+    // Log it
+    try {
+      await env.DB.prepare(`
+        INSERT INTO storage_events (event_type, provider, filename, status, error_message)
+        VALUES (?, ?, ?, ?, ?)
+      `).bind(
+        "admin_delete",
+        "system",
+        video.video_url || String(videoId),
+        "success",
+        JSON.stringify(storageResult).slice(0, 800)
+      ).run();
+    } catch (e) {}
+
+    return Response.json({
+      success: true,
+      message: "Video deleted by admin",
+      storage: storageResult
+    });
+
+  } catch (err) {
+    return Response.json({
+      success: false,
+      error: err.message || "Failed to delete video"
+    }, { status: 500 });
+  }
 }
 
 export async function adminGetVideos(request, env) {
