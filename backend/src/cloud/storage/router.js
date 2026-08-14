@@ -193,6 +193,27 @@ options.role || "video";
 
     }
 
+    async delete(pathOrUrl, env) {
+  // For now we only try Supabase (we can expand later)
+  const provider = StorageManager.getProviderModule("supabase");
+
+  if (!provider || typeof provider.delete !== "function") {
+    return {
+      success: false,
+      error: "No delete method available"
+    };
+  }
+
+  try {
+    return await provider.delete(pathOrUrl, env);
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+    
 async healthCheck(env){
 
     const results = [];

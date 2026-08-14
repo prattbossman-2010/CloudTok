@@ -80,13 +80,71 @@ class SupabaseProvider {
     }
   }
 
-  async delete(path) {
+  async delete(pathOrUrl, env) {
+  try {
+    const credentials = StorageCredentials.getSupabase(env);
+
+    if (!credentials || !credentials.url || !credentials.key) {
+      return {
+        success: false,
+        provider: this.name,
+        error: "Supabase credentials missing"
+      };
+    }
+
+    const baseUrl = credentials.url.replace(/\/$/, "");
+
+    // Accept either a full public URL or a path like "cloudtok-videos/filename.mp4"
+    let path = pathOrUrl;
+
+    if (pathOrUrl.includes("/storage/v1/object/public/")) {
+      path = pathOrUrl.split("/storage/v1/object/public/")[1];
+    } else if (pathOrUrl.includes("/storage/v1/object/")) {
+      path = pathOrUrl.split("/storage/v1/object/")[1];
+    }
+
+    if (!path) {
+      return {
+        success: false,
+        provider: this.name,
+        error: "Could not extract file path"
+      };
+    }
+
+    const deleteUrl = baseUrl + "/storage/v1/object/" + path;
+
+    const response = await fetch(deleteUrl, {
+      method: "DELETE",
+      headers: {
+        "Authorization": "Bearer " + credentials.key,
+        "apikey": credentials.key
+      }
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      return {
+        success: false,
+        provider: this.name,
+        error: "Delete failed – status " + response.status,
+        response: text
+      };
+    }
+
+    return {
+      success: true,
+      provider: this.name,
+      path: path
+    };
+
+  } catch (error) {
     return {
       success: false,
       provider: this.name,
-      error: "Delete not implemented"
+      error: error.message || "Supabase delete failed"
     };
   }
+}
 
   async healthCheck(env) {
     const credentials = StorageCredentials.getSupabase(env);
