@@ -93,12 +93,16 @@ class CloudTokUploader {
 
             // STRICT: only continue if the backend really saved the video
             if (!uploadResult || !uploadResult.success || !uploadResult.videoUrl) {
-              reject(new Error(
-                uploadResult?.error ||
-                "Upload failed. Video was not saved to cloud storage."
-              ));
-              return;
-            }
+  // Show the full error so we can see why Supabase failed
+  const fullError = JSON.stringify(uploadResult, null, 2);
+  console.error("FULL UPLOAD ERROR:", fullError);
+  reject(new Error(
+    (uploadResult && uploadResult.error) 
+      ? uploadResult.error + "\n\n" + fullError
+      : "Upload failed. Video was not saved to cloud storage.\n\n" + fullError
+  ));
+  return;
+}
 
             // Success – use the real cloud URL
             const video = {
