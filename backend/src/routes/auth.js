@@ -5,20 +5,14 @@ import { success, error } from "../utils/response.js";
 export async function login(request, env) {
   try {
     const body = await request.json();
-    const email = (body.email || "").toString().trim().toLowerCase();
-    const password = (body.password || "").toString();
+    const { email, password } = body;
 
-    // Validation
     if (!email || !password) {
       return error("Email and password are required", 400, "MISSING_FIELDS");
     }
 
-    if (!email.includes("@")) {
-      return error("Please enter a valid email address", 400, "INVALID_EMAIL");
-    }
-
     const { results } = await env.DB.prepare(`
-      SELECT id, username, email, display_name, avatar, bio, password_hash, role
+      SELECT id, username, email, display_name, avatar, bio, password_hash, role, status
       FROM users
       WHERE email = ?
     `).bind(email).all();
@@ -28,6 +22,11 @@ export async function login(request, env) {
     }
 
     const user = results[0];
+
+    if (user.status === "banned" || user.status === "suspended") {
+      return error("This account has been suspended", 403, "ACCOUNT_SUSPENDED");
+    }
+
     const passwordHash = await hashPassword(password);
 
     if (passwordHash !== user.password_hash) {
@@ -55,6 +54,6 @@ export async function login(request, env) {
     }, "Login successful");
 
   } catch (err) {
-    return error(err.message || "Login failed", 500, "SERVER_ERROR");
+    return error(err.message || "Login failed", 500, "LOGIN_ERROR");
   }
 }
