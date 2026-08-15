@@ -47,11 +47,11 @@ class CloudTokUploader {
 
       tempVideo.onloadedmetadata = () => {
         const duration = tempVideo.duration;
-        const MAX_DURATION = 180; // 3 minutes
+        const MAX_DURATION = 360; // 6 minutes
 
         if (duration > MAX_DURATION) {
           URL.revokeObjectURL(tempURL);
-          reject(new Error("Video too long. Maximum duration is 3 minutes."));
+          reject(new Error("Video too long. Maximum duration is 6 minutes."));
           return;
         }
 

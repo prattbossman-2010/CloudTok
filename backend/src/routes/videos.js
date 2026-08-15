@@ -106,7 +106,7 @@ export async function createVideo(request, env) {
         ).run();
       } catch (e) {}
 
-      return error(
+            return error(
         "Video upload failed",
         500,
         "UPLOAD_FAILED",
@@ -117,25 +117,131 @@ export async function createVideo(request, env) {
     // ========== Thumbnail ==========
     let thumbnail_url = null;
 
-    if (thumbnail) {
-      try {
-        // Only try to upload if it looks like a real file or remote URL
-        if (typeof thumbnail === "string" && thumbnail.startsWith("http")) {
-          thumbnail_url = thumbnail;
-        } else if (thumbnail instanceof File || thumbnail instanceof Blob) {
-          const thumbResult = await StorageRouter.upload(thumbnail, {
+if (thumbnail) {
+  try {
+
+    // Already a remote thumbnail URL
+    if (
+      typeof thumbnail === "string" &&
+      thumbnail.startsWith("http")
+    ) {
+
+      thumbnail_url = thumbnail;
+
+    }
+
+    // Browser-generated canvas data URL
+    else if (
+      typeof thumbnail === "string" &&
+      thumbnail.startsWith("data:image/")
+    ) {
+
+      const commaIndex = thumbnail.indexOf(",");
+
+      if (commaIndex !== -1) {
+
+        const header = thumbnail.substring(0, commaIndex);
+        const base64Data = thumbnail.substring(commaIndex + 1);
+
+        const mimeMatch =
+          header.match(/^data:(image\/[^;]+);base64$/);
+
+        if (mimeMatch) {
+
+          const mimeType = mimeMatch[1];
+
+          const binaryString =
+            atob(base64Data);
+
+          const bytes =
+            new Uint8Array(binaryString.length);
+
+          for (
+            let i = 0;
+            i < binaryString.length;
+            i++
+          ) {
+            bytes[i] =
+              binaryString.charCodeAt(i);
+          }
+
+          const thumbnailBlob =
+            new Blob(
+              [bytes],
+              { type: mimeType }
+            );
+
+          const thumbResult =
+            await StorageRouter.upload(
+              thumbnailBlob,
+              {
+                role: "thumbnail",
+                userId: auth.user.id,
+                env
+              }
+            );
+
+          if (thumbResult.success && thumbResult.url) {
+
+  thumbnail_url = thumbResult.url;
+
+} else {
+
+  console.error(
+    "THUMBNAIL STORAGE ERROR:",
+    JSON.stringify(thumbResult)
+  );
+
+}
+
+        }
+
+      }
+
+    }
+
+    // File or Blob thumbnail
+    else if (
+      thumbnail instanceof File ||
+      thumbnail instanceof Blob
+    ) {
+
+      const thumbResult =
+        await StorageRouter.upload(
+          thumbnail,
+          {
             role: "thumbnail",
             userId: auth.user.id,
             env
-          });
-          if (thumbResult.success) {
-            thumbnail_url = thumbResult.url;
           }
-        }
-      } catch (e) {
-        // Thumbnail failure should not block the video
-      }
+        );
+
+      if (thumbResult.success && thumbResult.url) {
+
+  thumbnail_url = thumbResult.url;
+
+} else {
+
+  console.error(
+    "THUMBNAIL STORAGE ERROR:",
+    JSON.stringify(thumbResult)
+  );
+
+}
+
     }
+
+ } catch (e) {
+
+  console.error(
+    "THUMBNAIL UPLOAD EXCEPTION:",
+    e?.message || e
+  );
+
+  // Thumbnail failure should not block video upload
+
+}
+}
 
     // ========== Save to database ==========
     const result = await env.DB.prepare(`
