@@ -179,33 +179,117 @@ const video = {
   }
 
   createThumbnail(videoURL) {
-    return new Promise(resolve => {
-      const video = document.createElement("video");
-      video.src = videoURL;
-      video.muted = true;
-      video.playsInline = true;
-      video.preload = "metadata";
+  return new Promise(resolve => {
 
-      video.onloadeddata = () => {
-        video.currentTime = 0.5;
-      };
+    const video = document.createElement("video");
 
-      video.onseeked = () => {
-        try {
-          const canvas = document.createElement("canvas");
-          canvas.width = 360;
-          canvas.height = 640;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(video, 0, 0, 360, 640);
-          resolve(canvas.toDataURL("image/jpeg", 0.8));
-        } catch (e) {
-          resolve("");
+    video.src = videoURL;
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = "metadata";
+
+    let finished = false;
+
+    const finish = (result) => {
+      if (finished) return;
+
+      finished = true;
+
+      video.removeAttribute("src");
+      video.load();
+
+      resolve(result || "");
+    };
+
+    video.onerror = () => {
+      finish("");
+    };
+
+    video.onloadedmetadata = () => {
+
+      const duration = video.duration;
+
+      if (
+        !Number.isFinite(duration) ||
+        duration <= 0
+      ) {
+        finish("");
+        return;
+      }
+
+      // Capture the exact middle of the video.
+      const middle = duration / 2;
+
+      video.currentTime = middle;
+    };
+
+    video.onseeked = () => {
+
+      try {
+
+        const canvas =
+          document.createElement("canvas");
+
+        const videoWidth =
+          video.videoWidth || 360;
+
+        const videoHeight =
+          video.videoHeight || 640;
+
+        // Keep the thumbnail reasonably sized
+        // while preserving the video's aspect ratio.
+        const maxWidth = 360;
+        const maxHeight = 640;
+
+        const scale =
+          Math.min(
+            maxWidth / videoWidth,
+            maxHeight / videoHeight
+          );
+
+        canvas.width =
+          Math.max(1, Math.round(videoWidth * scale));
+
+        canvas.height =
+          Math.max(1, Math.round(videoHeight * scale));
+
+        const ctx =
+          canvas.getContext("2d");
+
+        if (!ctx) {
+          finish("");
+          return;
         }
-      };
 
-      video.onerror = () => resolve("");
-    });
-  }
+        ctx.drawImage(
+          video,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+        const thumbnail =
+          canvas.toDataURL(
+            "image/jpeg",
+            0.85
+          );
+
+        finish(thumbnail);
+
+      } catch (error) {
+
+        console.error(
+          "Thumbnail generation failed:",
+          error
+        );
+
+        finish("");
+      }
+    };
+
+  });
+}
 
   finishUpload(video, progress, options, resolve) {
     if (!CloudTokDatabase.searchIndex) {

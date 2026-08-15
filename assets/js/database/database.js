@@ -221,43 +221,114 @@ return video.likedBy.some(u=>{
 }
 
 
-function toggleVideoLike(videoId){
+async function toggleVideoLike(videoId){
 
-    if(typeof CloudTokAPI!=="undefined"){
-        CloudTokAPI.toggleLike(videoId)
-        .then(result=>{
-            if(result.success){
-                const video=
-                CloudTokDatabase.videos.find(v=>Number(v.id)===Number(videoId));
-                if(video){
-                    if(result.liked){
-                        video.likes++;
-                    }
-                    else{
-                        video.likes=
-                        Math.max(0,video.likes-1);
-                    }
-                }
+    if(typeof CloudTokAPI === "undefined"){
+        return false;
+    }
+
+    const video =
+        CloudTokDatabase.videos.find(
+            v => Number(v.id) === Number(videoId)
+        );
+
+    if(!video){
+        return false;
+    }
+
+    try{
+
+        const result =
+            await CloudTokAPI.toggleLike(videoId);
+
+        if(!result.success){
+            return false;
+        }
+
+        /*
+         * The backend is the source of truth.
+         * Do not manually increment/decrement the
+         * local like count here.
+         */
+
+        if(result.liked){
+
+            video.likedBy =
+                video.likedBy || [];
+
+            const user =
+                getCurrentCloudTokUser();
+
+            if(
+                user &&
+                !video.likedBy.includes(user)
+            ){
+                video.likedBy.push(user);
             }
-        })
-        .catch(e=>{});
+
+        }
+        else{
+
+            const user =
+                getCurrentCloudTokUser();
+
+            if(video.likedBy){
+
+                video.likedBy =
+                    video.likedBy.filter(
+                        u => u !== user
+                    );
+
+            }
+
+        }
+
+        /*
+         * Reload the authoritative like count
+         * from the API instead of guessing it locally.
+         */
+
+        const resultVideos =
+            await CloudTokAPI.getVideos();
+
+        if(
+            resultVideos.videos &&
+            resultVideos.videos.length
+        ){
+
+            const freshVideo =
+                resultVideos.videos.find(
+                    v =>
+                    Number(v.id) ===
+                    Number(videoId)
+                );
+
+            if(freshVideo){
+
+                video.likes =
+                    freshVideo.likes || 0;
+
+                video.liked =
+                    !!freshVideo.liked;
+
+            }
+
+        }
+
+        return result.liked;
+
+    }
+    catch(error){
+
+        console.error(
+            "VIDEO LIKE ERROR:",
+            error
+        );
+
+        return false;
+
     }
 
-    const user=getCurrentCloudTokUser();
-    const video=
-    CloudTokDatabase.videos.find(v=>Number(v.id)===Number(videoId));
-    if(!video)return;
-    if(!video.likedBy)video.likedBy=[];
-    const index=video.likedBy.indexOf(user);
-    if(index===-1){
-        video.likedBy.push(user);
-        video.likes++;
-    }
-    else{
-        video.likedBy.splice(index,1);
-        video.likes=Math.max(0,video.likes-1);
-    }
-    saveCloudTokVideos();
 }
 
 
