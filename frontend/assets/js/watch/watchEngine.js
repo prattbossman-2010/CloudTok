@@ -334,12 +334,14 @@ if(typeof CloudTokAPI!=="undefined"){
                 saves:v.saved?1:0,
                 views:v.views||0
             }));
-            // Add built-in videos if not already present
-            (CloudTokDatabase.videos||[]).forEach(builtin=>{
-                if(!this.videos.some(v=>String(v.id)===String(builtin.id))){
-                    this.videos.push(builtin);
-                }
-            });
+            // Only add built-in videos when NOT filtering by a specific user
+            if(!userParam){
+                (CloudTokDatabase.videos||[]).forEach(builtin=>{
+                    if(!this.videos.some(v=>String(v.id)===String(builtin.id))){
+                        this.videos.push(builtin);
+                    }
+                });
+            }
             // Sync API videos into CloudTokDatabase.videos so loadWatchActions/loadWatchComments can find them
             if(!Array.isArray(CloudTokDatabase.videos)){
                 CloudTokDatabase.videos=[];
