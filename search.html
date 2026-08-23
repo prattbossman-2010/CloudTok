@@ -16,14 +16,14 @@
 <div class="searchPage">
 
 <div class="searchTopBar">
-    <button id="searchBackBtn" class="searchBackBtn"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.back</span></button>
+    <button id="searchBackBtn" class="searchBackBtn">←</button>
     <h2 class="searchTitle">Search</h2>
 </div>
 
 <div class="searchBox">
     <input id="searchInput" placeholder="Search CloudTok...">
     <div id="suggestions"></div>
-    <button id="searchButton"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.search</span> Search</button>
+    <button id="searchButton">🔍 Search</button>
 </div>
 
 </div>
@@ -31,7 +31,6 @@
 <script>
 document.getElementById("searchBackBtn").onclick=()=>{window.location.href="index.html";};
 </script>
-<script src="assets/js/core/icons.js"></script>
 <script src="assets/js/core/theme.js"></script>
 <script src="assets/js/database/database.js"></script>
 <script src="assets/js/search/search.js"></script>

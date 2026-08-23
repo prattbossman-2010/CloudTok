@@ -70,15 +70,15 @@ body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Seg
 </head>
 <body>
 <div class="header">
-    <button class="back" onclick="history.back()"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.back</span></button>
-    <h1><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;color:#ff2d55;">CloudTokIcons.liveDot</span> Live Streams</h1>
+    <button class="back" onclick="history.back()">←</button>
+    <h1>🔴 Live Streams</h1>
 </div>
 <div class="streams" id="streamsGrid"></div>
 
 <div class="viewer" id="viewer">
     <video class="viewerVideo" id="viewerVideo" autoplay playsinline></video>
     <div class="viewerOverlay">
-        <button class="back" onclick="closeViewer()"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.back</span></button>
+        <button class="back" onclick="closeViewer()">←</button>
         <div>
             <div class="viewerTitle" id="viewerTitle"></div>
             <div class="viewerHost" id="viewerHost"></div>
@@ -90,7 +90,7 @@ body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Seg
     <div class="giftPanel" id="giftPanel">
         <div style="display:flex;justify-content:space-between;align-items:center;">
             <div class="giftPanelTitle">Send a Gift</div>
-            <button onclick="document.getElementById('giftPanel').classList.remove('show')" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;padding:4px 8px;"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.xMark</span></button>
+            <button onclick="document.getElementById('giftPanel').classList.remove('show')" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;padding:4px 8px;">✕</button>
         </div>
         <div class="giftBalance" id="giftBalance">Balance: $0.00</div>
         <div class="giftGrid" id="giftGrid"></div>
@@ -98,13 +98,12 @@ body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Seg
     </div>
 
     <div class="viewerBottom">
-        <button class="giftBtn" id="giftToggleBtn"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.gift</span></button>
+        <button class="giftBtn" id="giftToggleBtn">🎁</button>
         <input class="viewerInput" id="chatInput" placeholder="Send a message...">
         <button class="viewerSend" id="chatSendBtn">Send</button>
     </div>
 </div>
 
-<script src="assets/js/core/icons.js"></script>
 <script src="assets/js/database/database.js"></script>
 <script src="assets/js/api/api.js"></script>
 <script src="assets/js/core/webrtc.js"></script>
@@ -285,7 +284,7 @@ async function loadStreams(){
         const result = await CloudTokAPI.request("/live/streams");
         const streams = result.streams || [];
         if(streams.length === 0){
-            grid.innerHTML = '<div class="empty"><div class="icon"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.signal</span></div><p>No live streams right now</p></div>';
+            grid.innerHTML = '<div class="empty"><div class="icon">📡</div><p>No live streams right now</p></div>';
             return;
         }
         grid.innerHTML = "";
@@ -296,7 +295,7 @@ async function loadStreams(){
             const c1 = colors[i % colors.length];
             const c2 = colors[(i+3) % colors.length];
             card.innerHTML = `
-                <div class="streamThumb" style="background:linear-gradient(135deg,${c1},${c2});"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.video</span></div>
+                <div class="streamThumb" style="background:linear-gradient(135deg,${c1},${c2});">🎥</div>
                 <div class="streamLive"><span class="liveDot"></span> LIVE</div>
                 <div class="streamInfo">
                     <div class="streamTitle">${s.title || "Live Stream"}</div>
@@ -307,7 +306,7 @@ async function loadStreams(){
             grid.appendChild(card);
         });
     } catch(e){
-        grid.innerHTML = '<div class="empty"><div class="icon"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.signal</span></div><p>Unable to load streams</p></div>';
+        grid.innerHTML = '<div class="empty"><div class="icon">📡</div><p>Unable to load streams</p></div>';
     }
 }
 
@@ -430,7 +429,7 @@ function startSignalPoll(){
                         setTimeout(closeViewer, 1500);
                     }
                     else if(signal.type === "live-gift"){
-                        showGiftAnimation(signal.data?.emoji || '<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.gift</span>');
+                        showGiftAnimation(signal.data?.emoji || "🎁");
                     }
                     else if(signal.type === "live-chat-streamer" && signal.data){
                         addLiveChatMessage(signal.data.username || "streamer", signal.data.text || "");

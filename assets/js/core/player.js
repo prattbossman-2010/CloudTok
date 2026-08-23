@@ -228,8 +228,8 @@ createCard(){
     "videoControlIcon";
 
 
-    this.controlIcon.innerHTML =
-    '<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.play + '</span>';
+    this.controlIcon.textContent =
+    "▶";
 
 
 
@@ -395,7 +395,7 @@ createAction(
     const comment =
     createAction(
         "commentBtn",
-        '<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.chat + '</span>',
+        "💬",
         this.commentCountValue
     );
 
@@ -1148,7 +1148,7 @@ localStorage.setItem(
             this.play();
 
 
-            this.showControlIcon('<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.play + '</span>');
+            this.showControlIcon("▶");
 
 
         }
@@ -1187,7 +1187,7 @@ localStorage.setItem(
 
 
 
-        this.controlIcon.innerHTML = icon;
+        this.controlIcon.textContent = icon;
 
 
 
@@ -1239,8 +1239,8 @@ localStorage.setItem(
         "doubleHeart";
 
 
-        heart.innerHTML =
-        '<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.heart + '</span>';
+        heart.textContent =
+        "❤️";
 
 
 

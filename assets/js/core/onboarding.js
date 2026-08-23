@@ -23,11 +23,11 @@
     modal.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(5px);";
 
     var steps = [
-      { icon: '<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.video + '</span>', title: "Welcome to CloudTok!", desc: "Discover short videos from creators around the world. Swipe up to see the next video!" },
-      { icon: '<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.heart + '</span>', title: "Like & Save", desc: "Double-tap any video to like it. Tap the bookmark icon to save videos for later." },
-      { icon: '<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.share + '</span>', title: "Upload Videos", desc: "Share your own videos! Tap the + button in the bottom nav to upload." },
-      { icon: '<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.chat + '</span>', title: "Comment & Connect", desc: "Leave comments, follow creators, and send messages to connect with others." },
-      { icon: '<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.signal + '</span>', title: "Go Live", desc: "Start a live stream and interact with your audience in real-time!" }
+      { icon: "🎬", title: "Welcome to CloudTok!", desc: "Discover short videos from creators around the world. Swipe up to see the next video!" },
+      { icon: "❤️", title: "Like & Save", desc: "Double-tap any video to like it. Tap the bookmark icon to save videos for later." },
+      { icon: "📤", title: "Upload Videos", desc: "Share your own videos! Tap the + button in the bottom nav to upload." },
+      { icon: "💬", title: "Comment & Connect", desc: "Leave comments, follow creators, and send messages to connect with others." },
+      { icon: "📡", title: "Go Live", desc: "Start a live stream and interact with your audience in real-time!" }
     ];
 
     var currentStep = 0;
@@ -36,7 +36,7 @@
       var s = steps[currentStep];
       var isLast = currentStep === steps.length - 1;
       modal.innerHTML = '<div style="background:#111;border-radius:20px;padding:40px;max-width:400px;width:90%;text-align:center;position:relative;">' +
-        '<div style="position:absolute;top:16px;right:16px;background:none;border:none;color:#888;font-size:20px;cursor:pointer;" id="onbClose">' + CloudTokIcons.xMark + '</div>' +
+        '<div style="position:absolute;top:16px;right:16px;background:none;border:none;color:#888;font-size:20px;cursor:pointer;" id="onbClose">✕</div>' +
         '<div style="font-size:48px;margin-bottom:16px;">' + s.icon + '</div>' +
         '<h2 style="color:#fff;font-size:22px;margin-bottom:12px;">' + s.title + '</h2>' +
         '<p style="color:rgba(255,255,255,.6);font-size:14px;line-height:1.6;margin-bottom:24px;">' + s.desc + '</p>' +
@@ -86,7 +86,7 @@
 
     var banner = document.createElement("div");
     banner.style.cssText = "position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#00b7ff,#7b2ff2);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;z-index:9998;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,183,255,.3);max-width:90%;animation:onbSlideIn .3s ease;";
-    banner.innerHTML = '<span style="font-size:16px;">' + CloudTokIcons.lightbulb + '</span><span>' + tip.text + '</span><button style="background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:16px;padding:0 0 0 8px;" id="tipClose">' + CloudTokIcons.xMark + '</button>';
+    banner.innerHTML = '<span style="font-size:16px;">💡</span><span>' + tip.text + '</span><button style="background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:16px;padding:0 0 0 8px;" id="tipClose">✕</button>';
 
     var style = document.createElement("style");
     style.textContent = "@keyframes onbSlideIn{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}";

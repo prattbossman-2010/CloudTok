@@ -26,7 +26,7 @@ createSoundController(){
 
     this.soundButton = document.createElement("button");
     this.soundButton.className = "globalSoundButton";
-    this.soundButton.innerHTML = '<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.mute + '</span>';
+    this.soundButton.textContent = "🔇";
 
     this.soundLabel = document.createElement("div");
     this.soundLabel.className = "soundToast";
@@ -47,8 +47,8 @@ createSoundController(){
 
     this.soundEnabled = !this.soundEnabled;
 
-    this.soundButton.innerHTML =
-        this.soundEnabled ? '<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.volume + '</span>' : '<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.mute + '</span>';
+    this.soundButton.textContent =
+        this.soundEnabled ? "🔊" : "🔇";
 
     this.refreshCurrentVideoSound();
 
