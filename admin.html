@@ -154,7 +154,43 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .adminMain{margin-left:60px;padding:15px;}
 .statsGrid{grid-template-columns:repeat(2,1fr);}
 .userDetailStats{grid-template-columns:repeat(2,1fr);}
+.storageProviderGrid{grid-template-columns:1fr;}
 }
+
+/* Storage Provider Cards */
+.storageProviderGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:24px;}
+.storageProviderCard{background:#111;border:1px solid #222;border-radius:12px;padding:16px;transition:border-color .2s;}
+.storageProviderCard:hover{border-color:#333;}
+.storageProviderHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.storageProviderName{font-size:14px;font-weight:600;color:#fff;}
+.storageProviderStatus{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;margin-left:8px;}
+.storageProviderStatus.active{background:rgba(0,204,102,.12);color:#00cc66;}
+.storageProviderStatus.disabled{background:rgba(255,255,255,.06);color:#888;}
+.storageProviderStatus.unhealthy{background:rgba(255,68,68,.12);color:#ff4444;}
+.storageHealthBadge{font-size:13px;font-weight:700;}
+.storageUsageRow{display:flex;justify-content:space-between;color:#aaa;font-size:12px;margin-bottom:4px;}
+.storageUsageBar{background:#1a1a2e;border-radius:6px;height:6px;overflow:hidden;}
+.storageUsageFill{height:100%;border-radius:6px;transition:width .3s ease;}
+.storageUsageFill.low{background:#00cc66;}
+.storageUsageFill.medium{background:#ffaa00;}
+.storageUsageFill.high{background:#ff4444;}
+.storageStatGrid{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:11px;color:#bbb;margin-bottom:8px;}
+.storageStatGrid .label{color:#666;}
+.storageStatGrid .val{font-weight:600;color:#ddd;}
+.storageStatGrid .val.danger{color:#ff4444;}
+.storageStatGrid .val.safe{color:#00cc66;}
+.storageProviderFooter{font-size:10px;color:#555;padding-top:8px;border-top:1px solid #1a1a2e;margin-top:4px;line-height:1.6;}
+.storageProviderFooter .fail{color:#ff4444;}
+.storageSection h3{color:#fff;margin:20px 0 10px;font-size:15px;font-weight:600;}
+.storageEventsTable{margin-top:8px;}
+.storageEventsTable table{width:100%;border-collapse:collapse;background:#111;border-radius:12px;overflow:hidden;}
+.storageEventsTable th,.storageEventsTable td{padding:8px 12px;text-align:left;border-bottom:1px solid #222;font-size:11px;}
+.storageEventsTable th{background:#1a1a1a;color:#666;font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:.5px;}
+.storageEventsTable td{color:#bbb;}
+.storageEventsTable tr:hover td{background:rgba(255,255,255,.03);}
+.storageEventSuccess{color:#00cc66;font-weight:600;}
+.storageEventFail{color:#ff4444;font-weight:600;}
+.storageEventFile{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#777;}
 </style>
 </head>
 <body>
