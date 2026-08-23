@@ -7,8 +7,9 @@ export async function getVideos(request, env) {
     const url = new URL(request.url);
     const limit = Math.min(parseInt(url.searchParams.get("limit") || "50"), 100);
     const offset = parseInt(url.searchParams.get("offset") || "0");
+    const user = (url.searchParams.get("user") || "").trim();
 
-    const { results } = await env.DB.prepare(`
+    let query = `
       SELECT
         videos.id,
         videos.video_url,
@@ -25,9 +26,18 @@ export async function getVideos(request, env) {
         users.avatar
       FROM videos
       JOIN users ON videos.user_id = users.id
-      ORDER BY videos.created_at DESC
-      LIMIT ? OFFSET ?
-    `).bind(limit, offset).all();
+    `;
+    const params = [];
+
+    if (user) {
+      query += ` WHERE users.username = ?`;
+      params.push(user);
+    }
+
+    query += ` ORDER BY videos.created_at DESC LIMIT ? OFFSET ?`;
+    params.push(limit, offset);
+
+    const { results } = await env.DB.prepare(query).bind(...params).all();
 
     const auth = await authenticate(request, env);
     let likedIds = [];

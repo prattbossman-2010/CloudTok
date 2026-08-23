@@ -17,7 +17,11 @@ export async function getTrending(request, env) {
             videos.created_at,
             users.id AS user_id,
             users.username,
-            users.avatar
+            users.avatar,
+            CAST(
+                (videos.likes * 10 + videos.comments * 8 + videos.views * 5)
+                AS REAL
+            ) / (MAX(1, (CAST((julianday('now') - julianday(videos.created_at)) * 24 AS INTEGER)) + 2)) AS score
         FROM videos
         JOIN users ON videos.user_id = users.id
     `;
@@ -30,9 +34,7 @@ export async function getTrending(request, env) {
     }
 
     query += `
-        ORDER BY
-            (videos.likes * 10 + videos.comments * 8 + videos.views * 5) DESC,
-            videos.created_at DESC
+        ORDER BY score DESC, videos.created_at DESC
         LIMIT ?
     `;
     params.push(limit);
@@ -61,7 +63,11 @@ export async function getDiscoverVideos(request, env) {
             videos.created_at,
             users.id AS user_id,
             users.username,
-            users.avatar
+            users.avatar,
+            CAST(
+                (videos.likes * 10 + videos.comments * 8 + videos.views * 5)
+                AS REAL
+            ) / (MAX(1, (CAST((julianday('now') - julianday(videos.created_at)) * 24 AS INTEGER)) + 2)) AS score
         FROM videos
         JOIN users ON videos.user_id = users.id
     `;
@@ -74,9 +80,7 @@ export async function getDiscoverVideos(request, env) {
     }
 
     query += `
-        ORDER BY
-            (videos.likes * 10 + videos.comments * 8 + videos.views * 5) DESC,
-            videos.created_at DESC
+        ORDER BY score DESC, videos.created_at DESC
         LIMIT ?
     `;
     params.push(limit);

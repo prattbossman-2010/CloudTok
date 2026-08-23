@@ -33,6 +33,8 @@ top.innerHTML=`
 
 <button id="searchBtn">🔍</button>
 
+${loggedIn ? `<div id="notifBellTopbar"></div>` : ""}
+
 ${loggedIn ? "" : `
 
 <button id="loginBtn">Login</button>

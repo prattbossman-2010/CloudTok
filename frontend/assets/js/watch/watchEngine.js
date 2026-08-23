@@ -308,10 +308,16 @@ this.togglePlay();
 async init(id){
 
 
+// Parse user param from URL for profile-context filtering
+const urlParams=new URLSearchParams(window.location.search);
+const userParam=(urlParams.get("user")||"").trim();
+
 // Load videos from API if we only have built-in ones
 if(typeof CloudTokAPI!=="undefined"){
     try{
-        const result = await CloudTokAPI.getVideos();
+        const result = userParam
+            ? await CloudTokAPI.getVideos({ user: userParam })
+            : await CloudTokAPI.getVideos();
         if(result.videos && result.videos.length > 0){
             this.videos = result.videos.map(v=>({
                 id:v.id,
