@@ -89,12 +89,12 @@
 <body>
 <div class="conversationPage">
     <div class="conversationHeader">
-        <button id="conversationBackBtn">←</button>
+        <button id="conversationBackBtn"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.back</span></button>
         <img id="conversationAvatar" class="conversationAvatar" src="assets/images/default-avatar.png">
         <h2 id="conversationName">Loading...</h2>
         <div class="callBtns">
-            <button class="callBtn" id="voiceCallBtn">📞</button>
-            <button class="callBtn" id="videoCallBtn">📹</button>
+            <button class="callBtn" id="voiceCallBtn"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.phone</span></button>
+            <button class="callBtn" id="videoCallBtn"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.video</span></button>
         </div>
     </div>
 
@@ -103,7 +103,7 @@
     <div class="messageBar">
         <button class="emojiToggleBtn" id="emojiToggleBtn">😊</button>
         <button class="gifToggleBtn" id="gifToggleBtn">GIF</button>
-        <button class="convGiftBtn" id="convGiftBtn">🎁</button>
+        <button class="convGiftBtn" id="convGiftBtn"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.gift</span></button>
         <input id="messageInput" type="text" placeholder="Type a message...">
         <button id="sendMessageBtn">Send</button>
 
@@ -121,7 +121,7 @@
         <div class="convGiftPanel" id="convGiftPanel">
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <div class="convGiftPanelTitle">Send a Gift</div>
-                <button onclick="document.getElementById('convGiftPanel').classList.remove('show')" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;padding:4px 8px;">✕</button>
+                <button onclick="document.getElementById('convGiftPanel').classList.remove('show')" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;padding:4px 8px;"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.xMark</span></button>
             </div>
             <div class="convGiftBalance" id="convGiftBalance">Balance: $0.00</div>
             <div class="convGiftGrid" id="convGiftGrid"></div>
@@ -145,14 +145,15 @@
         </div>
     </div>
     <div class="callActions">
-        <button class="callActionBtn mute" id="muteBtn">🎤</button>
-        <button class="callActionBtn video-toggle" id="videoToggleBtn">📷</button>
-        <button class="callActionBtn end" id="endCallBtn">📞</button>
+        <button class="callActionBtn mute" id="muteBtn"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.mic</span></button>
+        <button class="callActionBtn video-toggle" id="videoToggleBtn"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.photo</span></button>
+        <button class="callActionBtn end" id="endCallBtn"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.phone</span></button>
     </div>
 </div>
 
 <div class="callStatusBadge disconnected" id="callStatusBadge">Calls unavailable</div>
 
+<script src="assets/js/core/icons.js"></script>
 <script src="assets/js/database/database.js"></script>
 <script src="assets/js/api/api.js"></script>
 <script src="assets/js/core/webrtc.js"></script>
@@ -377,12 +378,12 @@
     document.getElementById("muteBtn").addEventListener("click", function(){
         isMuted = !isMuted;
         if(webrtc.localStream) webrtc.localStream.getAudioTracks().forEach(function(t){ t.enabled = !isMuted; });
-        document.getElementById("muteBtn").textContent = isMuted ? "🔇" : "🎤";
+        document.getElementById("muteBtn").innerHTML = isMuted ? "🔇" : '<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.mic</span>';
     });
     document.getElementById("videoToggleBtn").addEventListener("click", function(){
         isVideoOff = !isVideoOff;
         if(webrtc.localStream) webrtc.localStream.getVideoTracks().forEach(function(t){ t.enabled = !isVideoOff; });
-        document.getElementById("videoToggleBtn").textContent = isVideoOff ? "📷" : "📹";
+        document.getElementById("videoToggleBtn").innerHTML = isVideoOff ? '<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.photo</span>' : "📹";
     });
 
     async function startCall(video){

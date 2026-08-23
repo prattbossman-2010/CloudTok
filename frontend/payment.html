@@ -6,6 +6,7 @@
 <title>Wallet & Payments - CloudTok</title>
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/settings.css">
+<script src="assets/js/core/icons.js"></script>
 <script src="https://js.paystack.co/v1/inline.js"></script>
 <style>
 body{background:#000;}
@@ -134,7 +135,7 @@ body{background:#000;}
 <body>
 
 <div class="walletHeader">
-    <button class="backBtn" onclick="history.back()">←</button>
+    <button class="backBtn" onclick="history.back()"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.back</span></button>
     <h2>Wallet & Payments</h2>
     <div></div>
 </div>
@@ -181,7 +182,7 @@ body{background:#000;}
         <h3 style="margin-top:16px;">Payment Method</h3>
         <div class="paymentMethods">
             <div class="payMethod selected" onclick="selectPayMethod('paystack',this)" data-method="paystack">
-                <div class="payMethodIcon paystack">💳</div>
+                <div class="payMethodIcon paystack"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.creditCard</span></div>
                 <div class="payMethodInfo">
                     <div class="payMethodName">Paystack</div>
                     <div class="payMethodDesc">Card, Bank Transfer, Mobile Money</div>
@@ -197,7 +198,7 @@ body{background:#000;}
                 <div class="payMethodCheck">✓</div>
             </div>
             <div class="payMethod" onclick="selectPayMethod('card',this)" data-method="card">
-                <div class="payMethodIcon visa">💳</div>
+                <div class="payMethodIcon visa"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.creditCard</span></div>
                 <div class="payMethodInfo">
                     <div class="payMethodName">Debit / Credit Card</div>
                     <div class="payMethodDesc">Visa, Mastercard, Verve via Paystack</div>
@@ -205,7 +206,7 @@ body{background:#000;}
                 <div class="payMethodCheck">✓</div>
             </div>
             <div class="payMethod" onclick="selectPayMethod('virtual',this)" data-method="virtual">
-                <div class="payMethodIcon virtual">🌐</div>
+                <div class="payMethodIcon virtual"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.globe</span></div>
                 <div class="payMethodInfo">
                     <div class="payMethodName">Virtual Card</div>
                     <div class="payMethodDesc">Pay with virtual card via Paystack</div>
@@ -608,7 +609,7 @@ async function loadTransactions(){
             const item = document.createElement("div");
             item.style.cssText = "display:flex;align-items:center;gap:14px;padding:16px;background:rgba(255,255,255,.04);border-radius:14px;margin-bottom:8px;";
             item.innerHTML = `
-                <div style="width:40px;height:40px;border-radius:10px;background:rgba(0,200,83,.15);display:flex;align-items:center;justify-content:center;font-size:18px;">💰</div>
+                <div style="width:40px;height:40px;border-radius:10px;background:rgba(0,200,83,.15);display:flex;align-items:center;justify-content:center;font-size:18px;"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.dollar</span></div>
                 <div style="flex:1;">
                     <div style="color:#fff;font-size:15px;font-weight:600;">$${(t.amount || 0).toFixed(2)}</div>
                     <div style="color:rgba(255,255,255,.4);font-size:12px;">${t.reference || ""} • ${new Date(t.created_at).toLocaleDateString()}</div>

@@ -102,7 +102,7 @@ export async function getLiveStreams(request, env) {
 
     try {
         await env.DB.prepare(
-            "UPDATE live_streams SET status = 'ended', ended_at = datetime('now') WHERE status = 'active' AND created_at < datetime('now', '-5 minutes')"
+            "UPDATE live_streams SET status = 'ended', ended_at = datetime('now') WHERE status = 'active' AND created_at < datetime('now', '-8 hours')"
         ).run();
     } catch(e) {}
 
@@ -128,11 +128,39 @@ export async function endLiveStream(request, env) {
     const body = await request.json();
     const { stream_key } = body;
 
-    await env.DB.prepare(
-        "UPDATE live_streams SET status = 'ended' WHERE stream_key = ? AND user_id = ?"
-    ).bind(stream_key, auth.user.id).run();
+    if (!stream_key) {
+        return Response.json({ error: "stream_key required" }, { status: 400 });
+    }
 
-    return Response.json({ success: true });
+    let updated = false;
+    try {
+        const result = await env.DB.prepare(
+            "UPDATE live_streams SET status = 'ended', ended_at = datetime('now') WHERE stream_key = ? AND user_id = ?"
+        ).bind(stream_key, auth.user.id).run();
+        updated = result.meta && result.meta.changes > 0;
+    } catch(e) {
+        console.error("[Live] endLiveStream DB error:", e.message);
+    }
+
+    try {
+        await env.DB.prepare(
+            "UPDATE live_streams SET status = 'ended', ended_at = datetime('now') WHERE status = 'active' AND user_id = ? AND stream_key != ?"
+        ).bind(auth.user.id, stream_key).run();
+    } catch(e) {}
+
+    try {
+        await env.DB.prepare(
+            "DELETE FROM webrtc_signals WHERE from_username = ? OR to_username = ?"
+        ).bind(auth.user.username, auth.user.username).run();
+    } catch(e) {}
+
+    try {
+        await env.DB.prepare(
+            "DELETE FROM live_chat WHERE stream_key = ?"
+        ).bind(stream_key).run();
+    } catch(e) {}
+
+    return Response.json({ success: true, updated: updated });
 }
 
 export async function sendLiveChat(request, env) {

@@ -71,12 +71,12 @@
         overlay.id = "globalCallPopup";
         overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;";
         overlay.innerHTML = `
-            <div style="font-size:80px;animation:bounce 1s infinite;">📞</div>
+            <div style="font-size:80px;animation:bounce 1s infinite;"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">${CloudTokIcons.phone}</span></div>
             <h2 style="color:#fff;font-size:24px;margin:0;">${from}</h2>
             <p style="color:rgba(255,255,255,.5);font-size:16px;">${isVideo ? "Video" : "Voice"} call</p>
             <div style="display:flex;gap:24px;margin-top:20px;">
-                <button id="globalCallDecline" style="width:70px;height:70px;border-radius:50%;background:#ff2d55;color:#fff;border:none;font-size:28px;cursor:pointer;">✕</button>
-                <button id="globalCallAccept" style="width:70px;height:70px;border-radius:50%;background:#00c853;color:#fff;border:none;font-size:28px;cursor:pointer;">📞</button>
+                <button id="globalCallDecline" style="width:70px;height:70px;border-radius:50%;background:#ff2d55;color:#fff;border:none;font-size:28px;cursor:pointer;"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">${CloudTokIcons.xMark}</span></button>
+                <button id="globalCallAccept" style="width:70px;height:70px;border-radius:50%;background:#00c853;color:#fff;border:none;font-size:28px;cursor:pointer;"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">${CloudTokIcons.phone}</span></button>
             </div>
             <p style="color:rgba(255,255,255,.3);font-size:13px;margin-top:10px;">Tap to answer</p>
             <style>@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}</style>
