@@ -307,66 +307,64 @@ class CloudTokAdmin {
         '</div>';
 
       if (providers.length > 0) {
-        html += '<h3 style="color:#fff;margin:24px 0 12px;font-size:16px;">Provider Details</h3>';
-        html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;">';
+        html += '<div class="storageSection"><h3>Provider Details</h3>';
+        html += '<div class="storageProviderGrid">';
         providers.forEach(function(p) {
-          var healthColor = p.health >= 80 ? "#00cc66" : p.health >= 50 ? "#ffaa00" : "#ff4444";
+          var healthClass = p.health >= 80 ? "safe" : p.health >= 50 ? "medium" : "danger";
           var statusLabel = p.healthy ? (p.enabled ? "Active" : "Disabled") : "Unhealthy";
-          var statusColor = p.healthy ? (p.enabled ? "#00cc66" : "#888") : "#ff4444";
+          var statusClass = p.healthy ? (p.enabled ? "active" : "disabled") : "unhealthy";
           var usagePct = p.usagePercent || 0;
-          var usageBarColor = usagePct > 80 ? "#ff4444" : usagePct > 50 ? "#ffaa00" : "#00cc66";
-          html += '<div style="background:#16213e;border-radius:12px;padding:20px;border:1px solid #1a1a3e;">';
+          var barClass = usagePct > 80 ? "high" : usagePct > 50 ? "medium" : "low";
 
-          html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">';
-          html += '<div><strong style="color:#fff;font-size:15px;">' + (p.name || p.id) + '</strong>';
-          html += '<span style="display:inline-block;margin-left:8px;padding:2px 8px;border-radius:4px;font-size:11px;background:' + statusColor + '22;color:' + statusColor + ';">' + statusLabel + '</span></div>';
-          html += '<span style="color:' + healthColor + ';font-weight:600;">' + (p.health || 0) + '%</span>';
+          html += '<div class="storageProviderCard">';
+
+          html += '<div class="storageProviderHeader">';
+          html += '<div><span class="storageProviderName">' + (p.name || p.id) + '</span>';
+          html += '<span class="storageProviderStatus ' + statusClass + '">' + statusLabel + '</span></div>';
+          html += '<span class="storageHealthBadge" style="color:' + (healthClass === "safe" ? "#00cc66" : healthClass === "medium" ? "#ffaa00" : "#ff4444") + ';">' + (p.health || 0) + '%</span>';
           html += '</div>';
 
-          html += '<div style="margin-bottom:12px;">';
-          html += '<div style="display:flex;justify-content:space-between;color:#aaa;font-size:12px;margin-bottom:4px;">';
-          html += '<span>Storage: ' + (p.usedStorage || 0) + ' / ' + (p.freeStorage || 0) + ' ' + (p.storageUnit || "GB") + '</span>';
-          html += '<span>' + usagePct + '%</span></div>';
-          html += '<div style="background:#0d1b2a;border-radius:6px;height:8px;overflow:hidden;">';
-          html += '<div style="background:' + usageBarColor + ';height:100%;width:' + Math.min(usagePct, 100) + '%;border-radius:6px;transition:width 0.3s;"></div>';
-          html += '</div></div>';
-
-          html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;color:#ccc;">';
-          html += '<div>Max File: <strong>' + (p.maxFileSize || "N/A") + '</strong></div>';
-          html += '<div>Priority: <strong>#' + (p.priority || "?") + '</strong></div>';
-          html += '<div>Uploads: <strong>' + (p.uploadCount || 0) + '</strong></div>';
-          html += '<div>Avg Speed: <strong>' + (p.averageUpload ? p.averageUpload.toFixed(1) + "s" : "N/A") + '</strong></div>';
-          html += '<div>Failures: <strong style="color:' + (p.failures > 0 ? "#ff4444" : "#00cc66") + ';">' + (p.failures || 0) + '</strong></div>';
-          html += '<div>Success Rate: <strong>' + (p.successRate || 100) + '%</strong></div>';
-          html += '<div>Events OK: <strong>' + (p.eventsUploaded || 0) + '</strong></div>';
-          html += '<div>Events Fail: <strong style="color:' + (p.eventsFailed > 0 ? "#ff4444" : "#00cc66") + ';">' + (p.eventsFailed || 0) + '</strong></div>';
+          html += '<div style="margin-bottom:10px;">';
+          html += '<div class="storageUsageRow"><span>' + (p.usedStorage || 0) + ' / ' + (p.freeStorage || 0) + ' ' + (p.storageUnit || "GB") + '</span><span>' + usagePct + '%</span></div>';
+          html += '<div class="storageUsageBar"><div class="storageUsageFill ' + barClass + '" style="width:' + Math.min(usagePct, 100) + '%;"></div></div>';
           html += '</div>';
 
-          html += '<div style="margin-top:12px;font-size:11px;color:#666;">';
+          html += '<div class="storageStatGrid">';
+          html += '<div><span class="label">Max File</span> <span class="val">' + (p.maxFileSize || "N/A") + '</span></div>';
+          html += '<div><span class="label">Priority</span> <span class="val">#' + (p.priority || "?") + '</span></div>';
+          html += '<div><span class="label">Uploads</span> <span class="val">' + (p.uploadCount || 0) + '</span></div>';
+          html += '<div><span class="label">Avg Speed</span> <span class="val">' + (p.averageUpload ? p.averageUpload.toFixed(1) + "s" : "N/A") + '</span></div>';
+          html += '<div><span class="label">Failures</span> <span class="val ' + (p.failures > 0 ? "danger" : "safe") + '">' + (p.failures || 0) + '</span></div>';
+          html += '<div><span class="label">Success Rate</span> <span class="val">' + (p.successRate || 100) + '%</span></div>';
+          html += '<div><span class="label">Events OK</span> <span class="val">' + (p.eventsUploaded || 0) + '</span></div>';
+          html += '<div><span class="label">Events Fail</span> <span class="val ' + (p.eventsFailed > 0 ? "danger" : "safe") + '">' + (p.eventsFailed || 0) + '</span></div>';
+          html += '</div>';
+
+          html += '<div class="storageProviderFooter">';
           html += '<div>Roles: ' + (p.roles || []).join(", ") + '</div>';
           if (p.lastSuccess) html += '<div>Last Success: ' + new Date(p.lastSuccess).toLocaleString() + '</div>';
-          if (p.lastFailure) html += '<div>Last Failure: <span style="color:#ff4444;">' + new Date(p.lastFailure).toLocaleString() + '</span></div>';
+          if (p.lastFailure) html += '<div class="fail">Last Failure: ' + new Date(p.lastFailure).toLocaleString() + '</div>';
           html += '</div>';
 
           html += '</div>';
         });
-        html += '</div>';
+        html += '</div></div>';
       }
 
       if (events.length > 0) {
-        html += '<h3 style="color:#fff;margin:24px 0 12px;font-size:16px;">Recent Storage Events</h3>';
-        html += '<table><thead><tr><th>Event</th><th>Provider</th><th>Status</th><th>File</th><th>Time</th></tr></thead><tbody>';
+        html += '<div class="storageSection"><h3>Recent Storage Events</h3>';
+        html += '<div class="storageEventsTable"><table><thead><tr><th>Event</th><th>Provider</th><th>Status</th><th>File</th><th>Time</th></tr></thead><tbody>';
         events.forEach(function(ev) {
-          var statusColor = ev.status === "success" ? "#00cc66" : "#ff4444";
+          var statusClass = ev.status === "success" ? "storageEventSuccess" : "storageEventFail";
           html += '<tr>';
           html += '<td>' + (ev.event_type || "unknown") + '</td>';
           html += '<td>' + (ev.provider || "system") + '</td>';
-          html += '<td style="color:' + statusColor + ';">' + (ev.status || "unknown") + '</td>';
-          html += '<td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (ev.filename || "") + '</td>';
+          html += '<td class="' + statusClass + '">' + (ev.status || "unknown") + '</td>';
+          html += '<td class="storageEventFile">' + (ev.filename || "") + '</td>';
           html += '<td>' + (ev.created_at ? new Date(ev.created_at).toLocaleString() : "") + '</td>';
           html += '</tr>';
         });
-        html += '</tbody></table>';
+        html += '</tbody></table></div></div>';
       }
 
       document.getElementById("storageGrid").innerHTML = html;
