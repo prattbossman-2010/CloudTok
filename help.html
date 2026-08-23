@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Help Center - CloudTok</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<style>
+body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;min-height:100vh;}
+.helpContainer{max-width:800px;margin:0 auto;padding:20px;}
+.helpHeader{text-align:center;padding:40px 0 30px;}
+.helpHeader h1{font-size:28px;font-weight:700;margin-bottom:8px;}
+.helpHeader p{color:rgba(255,255,255,.5);font-size:15px;}
+.helpSearch{width:100%;padding:14px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;font-size:15px;outline:none;margin-bottom:30px;}
+.helpSearch:focus{border-color:#00b7ff;}
+.helpSearch::placeholder{color:rgba(255,255,255,.3);}
+.helpSection{margin-bottom:24px;}
+.helpSection h2{font-size:18px;font-weight:700;margin-bottom:12px;color:#00b7ff;}
+.helpItem{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:14px;margin-bottom:8px;overflow:hidden;}
+.helpItemHeader{padding:16px 20px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background .2s;}
+.helpItemHeader:hover{background:rgba(255,255,255,.04);}
+.helpItemHeader h3{font-size:15px;font-weight:600;}
+.helpItemHeader .arrow{color:#888;font-size:14px;transition:transform .2s;}
+.helpItemHeader.active .arrow{transform:rotate(180deg);}
+.helpItemBody{padding:0 20px 16px;color:rgba(255,255,255,.6);font-size:14px;line-height:1.7;display:none;}
+.helpItemBody.show{display:block;}
+.helpItemBody ul{margin:8px 0;padding-left:20px;}
+.helpItemBody li{margin-bottom:6px;}
+.helpItemBody strong{color:#fff;}
+.helpItemBody a{color:#00b7ff;text-decoration:none;}
+.backLink{display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,.4);font-size:14px;text-decoration:none;margin-bottom:20px;}
+.backLink:hover{color:#fff;}
+.quickLinks{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:30px;}
+.quickLink{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:20px;text-align:center;text-decoration:none;color:#fff;transition:all .2s;}
+.quickLink:hover{background:rgba(0,183,255,.1);border-color:rgba(0,183,255,.3);}
+.quickLink .icon{font-size:28px;margin-bottom:8px;}
+.quickLink h3{font-size:14px;font-weight:600;}
+.quickLink p{font-size:12px;color:rgba(255,255,255,.4);margin-top:4px;}
+</style>
+</head>
+<body>
+<div class="helpContainer">
+  <a href="index.html" class="backLink">← Back to CloudTok</a>
+
+  <div class="helpHeader">
+    <h1>Help Center</h1>
+    <p>Find answers to common questions and learn how to use CloudTok</p>
+  </div>
+
+  <input type="text" class="helpSearch" id="helpSearch" placeholder="Search for help...">
+
+  <div class="quickLinks">
+    <a href="#getting-started" class="quickLink"><div class="icon">🚀</div><h3>Getting Started</h3><p>Create account & first steps</p></a>
+    <a href="#videos" class="quickLink"><div class="icon">🎬</div><h3>Videos</h3><p>Upload, watch & interact</p></a>
+    <a href="#social" class="quickLink"><div class="icon">👥</div><h3>Social</h3><p>Follow, message & connect</p></a>
+    <a href="#account" class="quickLink"><div class="icon">⚙️</div><h3>Account</h3><p>Settings & security</p></a>
+  </div>
+
+  <div class="helpSection" id="getting-started">
+    <h2>🚀 Getting Started</h2>
+    <div class="helpItem"><div class="helpItemHeader" onclick="toggleHelp(this)"><h3>How do I create an account?</h3><span class="arrow">▼</span></div><div class="helpItemBody"><p>To create a CloudTok account:</p><ul><li>Go to the <a href="signup.html">Sign Up</a> page</li><li>Enter your display name, username, email, and password</li><li>Your password must be at least 8 characters with uppercase, lowercase, numbers, and special characters</li><li>Click "Create Account" and you'll be automatically logged in</li></ul></div></div>
+    <div class="helpItem"><div class="helpItemHeader" onclick="toggleHelp(this)"><h3>How do I log in?</h3><span class="arrow">▼</span></div><div class="helpItemBody"><p>Go to the <a href="login.html">Login</a> page and enter your email and password. If you've forgotten your password, click "Forgot Password" to reset it.</p></div></div>
+    <div class="helpItem"><div class="helpItemHeader" onclick="toggleHelp(this)"><h3>What is CloudTok?</h3><span class="arrow">▼</span></div><div class="helpItemBody"><p>CloudTok is a short-video social media platform where you can discover, watch, upload, and interact with short-form video content from creators around the world.</p></div></div>
+  </div>
+
+  <div class="helpSection" id="videos">
+    <h2>🎬 Videos</h2>
+    <div class="helpItem"><div class="helpItemHeader" onclick="toggleHelp(this)"><h3>How do I upload a video?</h3><span class="arrow">▼</span></div><div class="helpItemBody"><p>To upload a video:</p><ul><li>Tap the <strong>+</strong> button in the bottom navigation bar</li><li>Select a video file from your device</li><li>Add a caption describing your video</li><li>Optionally add tags and select a category</li><li>Tap "Upload" to share your video</li></ul></div></div>
+    <div class="helpItem"><div class="helpItemHeader" onclick="toggleHelp(this)"><h3>How do I like a video?</h3><span class="arrow">▼</span></div><div class="helpItemBody"><p>Double-tap on any video or tap the heart icon to like it. You can view all your liked videos from your profile page.</p></div></div>
+    <div class="helpItem"><div class="helpItemHeader" onclick="toggleHelp(this)"><h3>How do I save a video?</h3><span class="arrow">▼</span></div><div class="helpItemBody"><p>Tap the bookmark icon on any video to save it. You can access all saved videos from your profile page under "Saved".</p></div></div>
+    <div class="helpItem"><div class="helpItemHeader" onclick="toggleHelp(this)"><h3>How do I leave a comment?</h3><span class="arrow">▼</span></div><div class="helpItemBody"><p>Tap the comment icon on any video to open the comments panel. Type your comment and tap "Send".</p></div></div>
+    <div class="helpItem"><div class="helpItemHeader" onclick="toggleHelp(this)"><h3>How do I start a live stream?</h3><span class="arrow">▼</span></div><div class="helpItemBody"><p>Go to the Live page and tap "Start Live Stream". You'll need to allow camera and microphone access. Your followers will be notified when you go live!</p></div></div>
+  </div>
+
+  <div class="helpSection" id="social">
+    <h2>👥 Social</h2>
+    <div class="helpItem"><div class="helpItemHeader" onclick="toggleHelp(this)"><h3>How do I follow someone?</h3><span class="arrow">▼</span></div><div class="helpItemBody"><p>Visit any user's profile and tap the "Follow" button. You'll see their videos in your feed and get notified when they post new content.</p></div></div>
+    <div class="helpItem"><div class="helpItemHeader" onclick="toggleHelp(this)"><h3>How do I send a message?</h3><span class="arrow">▼</span></div><div class="helpItemBody"><p>Visit a user's profile and tap the message icon, or go to the Chat tab in the bottom navigation. You can send text messages to anyone who follows you back.</p></div></div>
+    <div class="helpItem"><div class="helpItemHeader" onclick="toggleHelp(this)"><h3>How do I find people to follow?</h3><span class="arrow">▼</span></div><div class="helpItemBody"><p>Use the Discover tab to browse trending content and find new creators. You can also use the Search feature to find specific users by username.</p></div></div>
+    <div class="helpItem"><div class="helpItemHeader" onclick="toggleHelp(this)"><h3>How do gifts work?</h3><span class="arrow">▼</span></div><div class="helpItemBody"><p>You can send virtual gifts to creators during live streams. First, add funds to your wallet via the Payment page. Then, during a live stream, select a gift to send to the streamer.</p></div></div>
+  </div>
+
+  <div class="helpSection" id="account">
+    <h2>⚙️ Account</h2>
+    <div class="helpItem"><div class="helpItemHeader" onclick="toggleHelp(this)"><h3>How do I change my password?</h3><span class="arrow">▼</span></div><div class="helpItemBody"><p>Go to Settings from your profile page. You can update your password from the security section. For security, you'll need to enter your current password.</p></div></div>
+    <div class="helpItem"><div class="helpItemHeader" onclick="toggleHelp(this)"><h3>How do I reset my password?</h3><span class="arrow">▼</span></div><div class="helpItemBody"><p>On the login page, click "Forgot Password". Enter your email address and you'll receive a verification code. Enter the code and create a new password.</p></div></div>
+    <div class="helpItem"><div class="helpItemHeader" onclick="toggleHelp(this)"><h3>How do I update my profile?</h3><span class="arrow">▼</span></div><div class="helpItemBody"><p>Go to your profile page and tap the edit icon. You can update your display name, bio, and avatar photo.</p></div></div>
+    <div class="helpItem"><div class="helpItemHeader" onclick="toggleHelp(this)"><h3>Is my data safe?</h3><span class="arrow">▼</span></div><div class="helpItemBody"><p>Yes! CloudTok uses industry-standard security measures including:</p><ul><li>PBKDF2 password hashing with salt</li><li>JWT token authentication</li><li>Rate limiting to prevent abuse</li><li>CORS protection</li><li>Input validation and XSS prevention</li></ul></div></div>
+    <div class="helpItem"><div class="helpItemHeader" onclick="toggleHelp(this)"><h3>How do I report abuse?</h3><span class="arrow">▼</span></div><div class="helpItemBody"><p>If you see inappropriate content or behavior, please contact the admin team. We take all reports seriously and will investigate promptly.</p></div></div>
+  </div>
+</div>
+
+<script>
+function toggleHelp(header) {
+  var body = header.nextElementSibling;
+  var isOpen = body.classList.contains("show");
+  document.querySelectorAll(".helpItemBody").forEach(function(b) { b.classList.remove("show"); });
+  document.querySelectorAll(".helpItemHeader").forEach(function(h) { h.classList.remove("active"); });
+  if (!isOpen) { body.classList.add("show"); header.classList.add("active"); }
+}
+
+document.getElementById("helpSearch").addEventListener("input", function(e) {
+  var q = e.target.value.toLowerCase();
+  document.querySelectorAll(".helpItem").forEach(function(item) {
+    var text = item.textContent.toLowerCase();
+    item.style.display = text.includes(q) || q === "" ? "" : "none";
+  });
+  document.querySelectorAll(".helpSection").forEach(function(s) {
+    var visible = s.querySelectorAll(".helpItem:not([style*='display: none'])");
+    s.style.display = visible.length > 0 || q === "" ? "" : "none";
+  });
+});
+
+document.querySelectorAll(".quickLink").forEach(function(link) {
+  link.addEventListener("click", function(e) {
+    var target = document.querySelector(this.getAttribute("href"));
+    if (target) { e.preventDefault(); target.scrollIntoView({ behavior: "smooth", block: "start" }); }
+  });
+});
+</script>
+</body>
+</html>

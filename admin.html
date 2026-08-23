@@ -67,6 +67,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .adminBtn.view:hover{background:#00b7ff;color:#fff;}
 .adminBtn.admin{background:rgba(138,43,226,.15);color:#8a2be2;}
 .adminBtn.admin:hover{background:#8a2be2;color:#fff;}
+.adminBtn.danger{background:rgba(255,68,68,.15);color:#ff4444;}
+.adminBtn.danger:hover{background:#ff4444;color:#fff;}
+.adminBtn.primary{background:rgba(0,183,255,.15);color:#00b7ff;}
+.adminBtn.primary:hover{background:#00b7ff;color:#fff;}
 .actionsCell{display:flex;gap:6px;flex-wrap:wrap;}
 
 .statusBadge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:600;}
@@ -98,6 +102,43 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .previewInfo p{color:#888;font-size:13px;margin-bottom:10px;}
 .previewStats{display:flex;gap:16px;font-size:13px;color:#aaa;}
 
+.userDetailModal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.85);z-index:1000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(5px);}
+.userDetailModal.show{display:flex;}
+.userDetailContent{background:#111;border-radius:16px;width:90%;max-width:600px;max-height:80vh;overflow-y:auto;position:relative;}
+.userDetailHeader{padding:24px;border-bottom:1px solid #222;display:flex;gap:16px;align-items:center;}
+.userDetailAvatar{width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #333;}
+.userDetailInfo h2{font-size:20px;margin-bottom:4px;}
+.userDetailInfo p{color:#888;font-size:13px;}
+.userDetailBody{padding:24px;}
+.userDetailStats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.userDetailStat{text-align:center;padding:12px;background:#1a1a1a;border-radius:8px;}
+.userDetailStat .num{font-size:20px;font-weight:700;color:#ff2d55;}
+.userDetailStat .lbl{font-size:11px;color:#888;margin-top:4px;}
+.userDetailActions{display:flex;gap:8px;flex-wrap:wrap;}
+
+.bulkActionBar{background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:none;align-items:center;gap:12px;}
+.bulkActionBar.show{display:flex;}
+.bulkCount{color:#00b7ff;font-size:14px;font-weight:600;}
+
+.settingsSection{background:#111;border:1px solid #222;border-radius:12px;padding:20px;margin-bottom:20px;}
+.settingsSection h3{font-size:16px;margin-bottom:16px;color:#fff;}
+.settingsRow{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #222;}
+.settingsRow:last-child{border-bottom:none;}
+.settingsLabel{color:#ddd;font-size:14px;}
+.settingsDesc{color:#888;font-size:12px;margin-top:2px;}
+.toggle{width:44px;height:24px;background:#333;border-radius:12px;cursor:pointer;position:relative;transition:background .2s;}
+.toggle.on{background:#00b7ff;}
+.toggle::after{content:'';position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;top:2px;left:2px;transition:transform .2s;}
+.toggle.on::after{transform:translateX(20px);}
+
+.chartContainer{background:#111;border:1px solid #222;border-radius:12px;padding:20px;margin-bottom:20px;}
+.chartContainer h3{font-size:16px;margin-bottom:16px;color:#fff;}
+.barChart{display:flex;align-items:flex-end;gap:8px;height:120px;}
+.bar{flex:1;background:linear-gradient(to top,#ff2d55,#ff6b8a);border-radius:4px 4px 0 0;min-height:4px;position:relative;transition:height .3s;}
+.bar:hover{opacity:0.8;}
+.barLabel{text-align:center;font-size:10px;color:#888;margin-top:8px;}
+.barValue{text-align:center;font-size:11px;color:#fff;margin-bottom:4px;}
+
 .emptyState{text-align:center;padding:40px;color:#555;font-size:14px;}
 .emptyState .icon{font-size:40px;margin-bottom:12px;}
 
@@ -112,6 +153,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .adminLogout::before{content:"🚪";font-size:16px;}
 .adminMain{margin-left:60px;padding:15px;}
 .statsGrid{grid-template-columns:repeat(2,1fr);}
+.userDetailStats{grid-template-columns:repeat(2,1fr);}
 }
 </style>
 </head>
@@ -135,6 +177,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <div class="adminLogo">🛡️ Admin</div>
         <nav id="adminNav">
             <button class="adminNav active" data-tab="dashboard"><span class="icon">📊</span><span>Dashboard</span></button>
+            <button class="adminNav" data-tab="analytics"><span class="icon">📈</span><span>Analytics</span></button>
             <button class="adminNav" data-tab="users"><span class="icon">👥</span><span>Users</span></button>
             <button class="adminNav" data-tab="videos"><span class="icon">🎬</span><span>Videos</span></button>
             <button class="adminNav" data-tab="comments"><span class="icon">💬</span><span>Comments</span></button>
@@ -145,6 +188,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             <button class="adminNav" data-tab="giftConfig"><span class="icon">💰</span><span>Gift Prices</span></button>
             <button class="adminNav" data-tab="logs"><span class="icon">📋</span><span>Activity Logs</span></button>
             <button class="adminNav" data-tab="storage"><span class="icon">🗄️</span><span>Storage</span></button>
+            <button class="adminNav" data-tab="settings"><span class="icon">⚙️</span><span>Settings</span></button>
         </nav>
         <button id="adminLogoutBtn" class="adminLogout">🚪 Logout</button>
     </aside>
@@ -155,14 +199,38 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             <div id="statsGrid" class="statsGrid"></div>
         </div>
 
+        <div id="analyticsTab" class="adminTab">
+            <h1>📈 Analytics</h1>
+            <div id="analyticsGrid" class="statsGrid"></div>
+            <div id="userGrowthChart" class="chartContainer">
+                <h3>User Growth (Last 7 Days)</h3>
+                <div class="barChart" id="userGrowthBars"></div>
+            </div>
+            <div id="videoActivityChart" class="chartContainer">
+                <h3>Video Uploads (Last 7 Days)</h3>
+                <div class="barChart" id="videoActivityBars"></div>
+            </div>
+        </div>
+
         <div id="usersTab" class="adminTab">
             <h1>👥 Users</h1>
+            <div class="bulkActionBar" id="usersBulkBar">
+                <span class="bulkCount" id="usersBulkCount">0 selected</span>
+                <button class="adminBtn ban" onclick="admin.bulkBanUsers()">Ban Selected</button>
+                <button class="adminBtn unban" onclick="admin.bulkUnbanUsers()">Unban Selected</button>
+                <button class="adminBtn delete" onclick="admin.bulkDeleteSelected()">Clear Selection</button>
+            </div>
             <div class="searchBar"><input id="usersSearch" placeholder="Search users..."><button class="refreshBtn" onclick="admin.loadUsers()">Refresh</button></div>
             <div id="usersTable" class="adminTable"></div>
         </div>
 
         <div id="videosTab" class="adminTab">
             <h1>🎬 Videos</h1>
+            <div class="bulkActionBar" id="videosBulkBar">
+                <span class="bulkCount" id="videosBulkCount">0 selected</span>
+                <button class="adminBtn danger" onclick="admin.bulkDeleteVideos()">Delete Selected</button>
+                <button class="adminBtn delete" onclick="admin.bulkClearVideoSelection()">Clear Selection</button>
+            </div>
             <div class="searchBar"><input id="videosSearch" placeholder="Search videos..."><button class="refreshBtn" onclick="admin.loadVideos()">Refresh</button></div>
             <div id="videosTable" class="adminTable"></div>
         </div>
@@ -213,6 +281,89 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             <h1>🗄️ Storage Health</h1>
             <div id="storageGrid" class="statsGrid"></div>
         </div>
+
+        <div id="settingsTab" class="adminTab">
+            <h1>⚙️ System Settings</h1>
+            <div class="settingsSection">
+                <h3>Security</h3>
+                <div class="settingsRow">
+                    <div>
+                        <div class="settingsLabel">Require Email Verification</div>
+                        <div class="settingsDesc">Users must verify email before accessing features</div>
+                    </div>
+                    <div class="toggle on" data-setting="requireEmailVerification"></div>
+                </div>
+                <div class="settingsRow">
+                    <div>
+                        <div class="settingsLabel">Two-Factor Authentication</div>
+                        <div class="settingsDesc">Enable 2FA option for user accounts</div>
+                    </div>
+                    <div class="toggle" data-setting="enable2FA"></div>
+                </div>
+                <div class="settingsRow">
+                    <div>
+                        <div class="settingsLabel">Login Notifications</div>
+                        <div class="settingsDesc">Notify users of new login locations</div>
+                    </div>
+                    <div class="toggle on" data-setting="loginNotifications"></div>
+                </div>
+            </div>
+            <div class="settingsSection">
+                <h3>Features</h3>
+                <div class="settingsRow">
+                    <div>
+                        <div class="settingsLabel">Allow Signups</div>
+                        <div class="settingsDesc">Allow new users to create accounts</div>
+                    </div>
+                    <div class="toggle on" data-setting="allowSignups"></div>
+                </div>
+                <div class="settingsRow">
+                    <div>
+                        <div class="settingsLabel">Allow Video Uploads</div>
+                        <div class="settingsDesc">Allow users to upload videos</div>
+                    </div>
+                    <div class="toggle on" data-setting="allowUploads"></div>
+                </div>
+                <div class="settingsRow">
+                    <div>
+                        <div class="settingsLabel">Allow Live Streaming</div>
+                        <div class="settingsDesc">Allow users to start live streams</div>
+                    </div>
+                    <div class="toggle on" data-setting="allowLiveStreaming"></div>
+                </div>
+                <div class="settingsRow">
+                    <div>
+                        <div class="settingsLabel">Allow Gifts</div>
+                        <div class="settingsDesc">Allow users to send virtual gifts</div>
+                    </div>
+                    <div class="toggle on" data-setting="allowGifts"></div>
+                </div>
+                <div class="settingsRow">
+                    <div>
+                        <div class="settingsLabel">Allow Comments</div>
+                        <div class="settingsDesc">Allow users to comment on videos</div>
+                    </div>
+                    <div class="toggle on" data-setting="allowComments"></div>
+                </div>
+                <div class="settingsRow">
+                    <div>
+                        <div class="settingsLabel">Allow Messaging</div>
+                        <div class="settingsDesc">Allow users to send direct messages</div>
+                    </div>
+                    <div class="toggle on" data-setting="allowMessaging"></div>
+                </div>
+            </div>
+            <div class="settingsSection">
+                <h3>Maintenance</h3>
+                <div class="settingsRow">
+                    <div>
+                        <div class="settingsLabel">Maintenance Mode</div>
+                        <div class="settingsDesc">Show maintenance page to all non-admin users</div>
+                    </div>
+                    <div class="toggle" data-setting="maintenanceMode"></div>
+                </div>
+            </div>
+        </div>
     </main>
 </div>
 
@@ -221,6 +372,31 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <button id="closePreviewBtn" class="closePreviewBtn">✕</button>
         <video id="previewVideo" controls playsinline></video>
         <div id="previewInfo" class="previewInfo"></div>
+    </div>
+</div>
+
+<div id="userDetailModal" class="userDetailModal">
+    <div class="userDetailContent">
+        <button onclick="admin.closeUserDetail()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:#888;font-size:20px;cursor:pointer;">✕</button>
+        <div class="userDetailHeader">
+            <img id="detailAvatar" class="userDetailAvatar" src="assets/images/default-avatar.png">
+            <div class="userDetailInfo">
+                <h2 id="detailName"></h2>
+                <p id="detailUsername"></p>
+                <p id="detailEmail" style="color:#666;font-size:12px;"></p>
+                <p id="detailJoined" style="color:#666;font-size:12px;"></p>
+            </div>
+        </div>
+        <div class="userDetailBody">
+            <div class="userDetailStats">
+                <div class="userDetailStat"><div class="num" id="detailVideos">0</div><div class="lbl">Videos</div></div>
+                <div class="userDetailStat"><div class="num" id="detailFollowers">0</div><div class="lbl">Followers</div></div>
+                <div class="userDetailStat"><div class="num" id="detailFollowing">0</div><div class="lbl">Following</div></div>
+                <div class="userDetailStat"><div class="num" id="detailLikes">0</div><div class="lbl">Likes</div></div>
+            </div>
+            <div id="detailBio" style="color:#888;font-size:13px;margin-bottom:16px;"></div>
+            <div class="userDetailActions" id="detailActions"></div>
+        </div>
     </div>
 </div>
 
