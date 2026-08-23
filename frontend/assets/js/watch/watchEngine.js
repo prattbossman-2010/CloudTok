@@ -1079,12 +1079,12 @@ document.getElementById(
 
 if(btn){
 
-btn.innerHTML =
+btn.textContent =
 this.soundEnabled
 ?
-'<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.volume + '</span>'
+"🔊"
 :
-'<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.mute + '</span>';
+"🔇";
 
 }
 

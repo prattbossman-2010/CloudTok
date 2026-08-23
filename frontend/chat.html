@@ -15,9 +15,9 @@
 <div id="chatPage">
 
     <div class="chatHeader">
-        <button id="chatBackBtn"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.back</span></button>
+        <button id="chatBackBtn">←</button>
         <h2>Messages</h2>
-        <button id="newChatBtn" class="newChatFab" onclick="document.getElementById('newChatOverlay').style.display='flex';document.getElementById('newChatUserList').innerHTML='';"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.pencil</span></button>
+        <button id="newChatBtn" class="newChatFab" onclick="document.getElementById('newChatOverlay').style.display='flex';document.getElementById('newChatUserList').innerHTML='';">✏️</button>
     </div>
 
     <div class="chatSearch">
@@ -30,7 +30,7 @@
 
 <div id="newChatOverlay" class="newChatOverlay" style="display:none">
     <div class="newChatHeader">
-        <button onclick="document.getElementById('newChatOverlay').style.display='none';"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.back</span></button>
+        <button onclick="document.getElementById('newChatOverlay').style.display='none';">←</button>
         <h2>New Chat</h2>
     </div>
     <div class="newChatSearch">
@@ -39,7 +39,6 @@
     <div id="newChatUserList" class="newChatUserList"></div>
 </div>
 
-<script src="assets/js/core/icons.js"></script>
 <script src="assets/js/api/api.js"></script>
 <script src="assets/js/database/database.js"></script>
 <script src="assets/js/chat/chat.js"></script>

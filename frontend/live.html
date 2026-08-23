@@ -124,7 +124,6 @@ p{color:#aaa;margin:0 0 30px;font-size:14px}
     <div class="streamChatArea" id="streamChatArea"></div>
 </div>
 
-<script src="assets/js/core/icons.js"></script>
 <script src="assets/js/database/database.js"></script>
 <script src="assets/js/api/api.js"></script>
 <script src="assets/js/core/webrtc.js"></script>
@@ -213,12 +212,6 @@ async function startScreenShare(){
 
 async function switchBackToCamera(){
     try {
-        var localVideo = document.getElementById("streamLocal");
-        if(localVideo._camStream){
-            localVideo._camStream.getTracks().forEach(function(t){ t.stop(); });
-            localVideo._camStream = null;
-        }
-
         if(localStream){
             localStream.getTracks().forEach(function(t){ t.stop(); });
         }
@@ -226,10 +219,8 @@ async function switchBackToCamera(){
             audio: true,
             video: { facingMode: currentFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } }
         });
-        localVideo.srcObject = localStream;
-        localVideo.style.display = "block";
+        document.getElementById("streamLocal").srcObject = localStream;
         document.getElementById("streamMainVideo").srcObject = localStream;
-        document.querySelector(".streamOverlay").style.display = "";
         isScreenSharing = false;
         document.getElementById("streamScreenBtn").classList.remove("active");
         showToast("Switched back to camera");
@@ -466,12 +457,6 @@ async function endStream(){
     viewerConnections.forEach(function(v){ try { v.pc.close(); } catch(e){} });
     viewerConnections = [];
 
-    var localVideo = document.getElementById("streamLocal");
-    if(localVideo._camStream){
-        localVideo._camStream.getTracks().forEach(function(t){ t.stop(); });
-        localVideo._camStream = null;
-    }
-
     if(localStream){
         localStream.getTracks().forEach(function(t){ t.stop(); });
         localStream = null;
@@ -483,14 +468,9 @@ async function endStream(){
 
     document.getElementById("streamView").classList.remove("active");
     document.getElementById("startScreen").style.display = "block";
-    localVideo.style.display = "block";
-    localVideo.srcObject = null;
-    document.getElementById("streamMainVideo").srcObject = null;
-    document.querySelector(".streamOverlay").style.display = "";
+    document.getElementById("streamLocal").style.display = "block";
     document.getElementById("streamScreenBtn").classList.remove("active");
-    document.getElementById("streamMuteBtn").innerHTML = ICONS.micOn;
     document.getElementById("streamMuteBtn").classList.remove("muted");
-    document.getElementById("streamVideoBtn").innerHTML = ICONS.camOn;
     document.getElementById("streamVideoBtn").classList.remove("muted");
     showToast("Stream ended");
     loadActiveStreams();
@@ -526,13 +506,13 @@ document.getElementById("streamScreenBtn").onclick = async function(){
         await switchBackToCamera();
     } else {
         try {
-            var screenStream = await navigator.mediaDevices.getDisplayMedia({
-                video: { cursor: "always", displaySurface: "monitor" },
+            const screenStream = await navigator.mediaDevices.getDisplayMedia({
+                video: { cursor: "always" },
                 audio: false
             });
 
-            var oldVideoTrack = localStream.getVideoTracks()[0];
-            var newVideoTrack = screenStream.getVideoTracks()[0];
+            const oldVideoTrack = localStream.getVideoTracks()[0];
+            const newVideoTrack = screenStream.getVideoTracks()[0];
 
             localStream.removeTrack(oldVideoTrack);
             localStream.addTrack(newVideoTrack);
@@ -543,21 +523,7 @@ document.getElementById("streamScreenBtn").onclick = async function(){
             };
 
             document.getElementById("streamMainVideo").srcObject = localStream;
-
-            var localVideo = document.getElementById("streamLocal");
-            try {
-                var camStream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: currentFacingMode, width: { ideal: 640 }, height: { ideal: 480 } },
-                    audio: false
-                });
-                localVideo.srcObject = camStream;
-                localVideo._camStream = camStream;
-            } catch(e){
-                localVideo.style.display = "none";
-            }
-
-            localVideo.style.display = "block";
-            document.querySelector(".streamOverlay").style.display = "";
+            document.getElementById("streamLocal").style.display = "none";
             isScreenSharing = true;
             document.getElementById("streamScreenBtn").classList.add("active");
             showToast("Screen sharing started");

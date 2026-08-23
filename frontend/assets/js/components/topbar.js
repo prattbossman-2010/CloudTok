@@ -23,15 +23,15 @@ top.innerHTML=`
 
 <div class="logo">
 
-<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">${CloudTokIcons.cloud}</span> CloudTok
+☁ CloudTok
 
 </div>
 
 <div class="topActions">
 
-<button id="liveBtn" style="background:rgba(255,45,85,.15);color:#ff2d55;border:none;padding:6px 12px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;color:#ff2d55;">${CloudTokIcons.liveDot}</span> LIVE</button>
+<button id="liveBtn" style="background:rgba(255,45,85,.15);color:#ff2d55;border:none;padding:6px 12px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;">🔴 LIVE</button>
 
-<button id="searchBtn"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">${CloudTokIcons.search}</span></button>
+<button id="searchBtn">🔍</button>
 
 ${loggedIn ? "" : `
 

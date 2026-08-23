@@ -63,7 +63,7 @@ if(notifications.length===0){
 
     this.list.innerHTML=`
     <div class="emptyNotifications">
-        <div class="emptyNotificationsIcon"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">${CloudTokIcons.bell}</span></div>
+        <div class="emptyNotificationsIcon">🔔</div>
         No notifications yet.
     </div>
     `;
@@ -140,11 +140,11 @@ switch(type){
 
 getIconEmoji(type){
 switch(type){
-    case "like": return '<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">'+CloudTokIcons.heart+'</span>';
-    case "comment": return '<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">'+CloudTokIcons.chat+'</span>';
-    case "follow": return '<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">'+CloudTokIcons.user+'</span>';
-    case "message": return '<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">'+CloudTokIcons.send+'</span>';
-    default: return '<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">'+CloudTokIcons.bell+'</span>';
+    case "like": return "❤️";
+    case "comment": return "💬";
+    case "follow": return "👤";
+    case "message": return "✉️";
+    default: return "🔔";
 }
 }
 

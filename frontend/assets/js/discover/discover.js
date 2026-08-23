@@ -126,7 +126,7 @@ if(videos.length===0){
 if(videos.length===0){
     this.grid.innerHTML=`
     <div class="discoverEmpty">
-        <div class="discoverEmptyIcon"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">${CloudTokIcons.search}</span></div>
+        <div class="discoverEmptyIcon">🔍</div>
         <p>No videos found</p>
     </div>
     `;
@@ -150,9 +150,9 @@ onerror="this.src='assets/images/video-placeholder.png'">
 <div class="discoverOverlay">
     <div class="discoverCaption">${video.caption||"Untitled"}</div>
     <div class="discoverMeta">
-        <span class="views"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">${CloudTokIcons.heart}</span> ${video.likes||0}</span>
-        <span><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">${CloudTokIcons.chat}</span> ${video.comments||0}</span>
-        <span><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">${CloudTokIcons.eye}</span> ${video.views||0}</span>
+        <span class="views">❤️ ${video.likes||0}</span>
+        <span>💬 ${video.comments||0}</span>
+        <span>👁 ${video.views||0}</span>
     </div>
 </div>
 

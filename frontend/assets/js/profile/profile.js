@@ -462,7 +462,7 @@ loading="lazy">
 
 <div class="videoViews">
 
-${'<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.play + '</span>'} ${video.views || 0}
+▶ ${video.views || 0}
 
 </div>
 
