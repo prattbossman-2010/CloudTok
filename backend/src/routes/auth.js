@@ -1,6 +1,32 @@
-import { hashPassword } from "../utils/crypto.js";
+import { verifyPassword, validatePasswordStrength } from "../utils/crypto.js";
 import { createToken } from "../utils/jwt.js";
 import { success, error } from "../utils/response.js";
+
+const loginAttempts = new Map();
+const LOCKOUT_THRESHOLD = 5;
+const LOCKOUT_DURATION = 15 * 60 * 1000;
+
+function isLockedOut(email) {
+  const record = loginAttempts.get(email);
+  if (!record) return false;
+  if (record.count >= LOCKOUT_THRESHOLD) {
+    const elapsed = Date.now() - record.lastAttempt;
+    if (elapsed < LOCKOUT_DURATION) return true;
+    loginAttempts.delete(email);
+  }
+  return false;
+}
+
+function recordFailedAttempt(email) {
+  const record = loginAttempts.get(email) || { count: 0, lastAttempt: 0 };
+  record.count++;
+  record.lastAttempt = Date.now();
+  loginAttempts.set(email, record);
+}
+
+function clearAttempts(email) {
+  loginAttempts.delete(email);
+}
 
 export async function login(request, env) {
   try {
@@ -11,6 +37,10 @@ export async function login(request, env) {
       return error("Email and password are required", 400, "MISSING_FIELDS");
     }
 
+    if (isLockedOut(email)) {
+      return error("Account temporarily locked. Try again in 15 minutes.", 429, "ACCOUNT_LOCKED");
+    }
+
     const { results } = await env.DB.prepare(`
       SELECT id, username, email, display_name, avatar, bio, password_hash, role, status
       FROM users
@@ -18,6 +48,7 @@ export async function login(request, env) {
     `).bind(email).all();
 
     if (results.length === 0) {
+      recordFailedAttempt(email);
       return error("Invalid email or password", 401, "INVALID_CREDENTIALS");
     }
 
@@ -27,11 +58,14 @@ export async function login(request, env) {
       return error("This account has been suspended", 403, "ACCOUNT_SUSPENDED");
     }
 
-    const passwordHash = await hashPassword(password);
+    const passwordValid = await verifyPassword(password, user.password_hash);
 
-    if (passwordHash !== user.password_hash) {
+    if (!passwordValid) {
+      recordFailedAttempt(email);
       return error("Invalid email or password", 401, "INVALID_CREDENTIALS");
     }
+
+    clearAttempts(email);
 
     const token = await createToken({
       id: user.id,

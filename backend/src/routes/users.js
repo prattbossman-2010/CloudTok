@@ -1,4 +1,4 @@
-import { hashPassword } from "../utils/crypto.js";
+import { hashPassword, validatePasswordStrength } from "../utils/crypto.js";
 import { success, error } from "../utils/response.js";
 
 export async function signup(request, env) {
@@ -14,8 +14,17 @@ export async function signup(request, env) {
       return error("Username must be at least 3 characters", 400, "INVALID_USERNAME");
     }
 
-    if (password.length < 6) {
-      return error("Password must be at least 6 characters", 400, "WEAK_PASSWORD");
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      return error("Username can only contain letters, numbers and underscores", 400, "INVALID_USERNAME");
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return error("Invalid email format", 400, "INVALID_EMAIL");
+    }
+
+    const passwordCheck = validatePasswordStrength(password);
+    if (!passwordCheck.valid) {
+      return error("Password too weak: " + passwordCheck.errors.join(", "), 400, "WEAK_PASSWORD");
     }
 
     const passwordHash = await hashPassword(password);

@@ -41,6 +41,9 @@ import {
   listSupabaseVideos
 } from "./routes/supabaseTest.js";
 
+import { forgotPassword, verifyResetCode, resetPassword } from "./routes/passwordReset.js";
+import { authRateLimit, apiRateLimit } from "./middleware/rateLimit.js";
+
 export default {
 
   async fetch(request, env) {
@@ -107,6 +110,22 @@ export default {
 
     if(path === "/api/users/login" && method === "POST"){
       return withCORS(login(request, env));
+    }
+
+    if(path === "/api/auth/forgot-password" && method === "POST"){
+      const rateLimitResponse = authRateLimit(request);
+      if (rateLimitResponse) return withCORS(rateLimitResponse);
+      return withCORS(forgotPassword(request, env));
+    }
+
+    if(path === "/api/auth/verify-code" && method === "POST"){
+      return withCORS(verifyResetCode(request, env));
+    }
+
+    if(path === "/api/auth/reset-password" && method === "POST"){
+      const rateLimitResponse = authRateLimit(request);
+      if (rateLimitResponse) return withCORS(rateLimitResponse);
+      return withCORS(resetPassword(request, env));
     }
 
 

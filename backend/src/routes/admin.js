@@ -1,5 +1,5 @@
 import { authenticate } from "../middleware/auth.js";
-import { hashPassword } from "../utils/crypto.js";
+import { verifyPassword } from "../utils/crypto.js";
 import { createToken } from "../utils/jwt.js";
 
 export async function adminLogin(request, env) {
@@ -20,9 +20,9 @@ export async function adminLogin(request, env) {
     }
 
     const user = results[0];
-    const passwordHash = await hashPassword(password);
+    const passwordValid = await verifyPassword(password, user.password_hash);
 
-    if (passwordHash !== user.password_hash) {
+    if (!passwordValid) {
         return Response.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
