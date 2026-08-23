@@ -37,10 +37,17 @@ document
 
         if(!result.success){
 
-            alert(
-                result.error ||
-                "Login failed"
-            );
+            var errMsg = result.error || "Login failed";
+
+            if(errMsg.toLowerCase().includes("invalid") ||
+               errMsg.toLowerCase().includes("password") ||
+               errMsg.toLowerCase().includes("credential")){
+
+                errMsg = "Invalid email or password. If you recently updated your password, please use your new password. You can also try resetting your password.";
+
+            }
+
+            alert(errMsg);
 
             return;
 

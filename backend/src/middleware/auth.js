@@ -12,7 +12,8 @@ export async function authenticate(request, env) {
     return {
       error: Response.json(
         {
-          error: "Authorization header missing"
+          error: "session_expired",
+          message: "Please log in to continue"
         },
         {
           status: 401
@@ -31,7 +32,8 @@ export async function authenticate(request, env) {
     return {
       error: Response.json(
         {
-          error: "Invalid authorization format"
+          error: "invalid_token",
+          message: "Your session is invalid. Please log out and log back in"
         },
         {
           status: 401
@@ -57,7 +59,8 @@ export async function authenticate(request, env) {
     return {
       error: Response.json(
         {
-          error: "Invalid or expired token"
+          error: "invalid_token",
+          message: "Your session has expired. Please log out and log back in to continue"
         },
         {
           status: 401

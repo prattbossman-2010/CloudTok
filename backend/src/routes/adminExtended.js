@@ -146,18 +146,98 @@ export async function adminGetStorageHealth(request, env) {
         await ensureAllTables(env);
         const auth = await adminAuth(request, env);
         if (auth.error) return auth.error;
+
         let events = await safeQuery(env, "SELECT * FROM storage_events ORDER BY created_at DESC LIMIT 50");
+        let videos = [];
+        try {
+            const r = await env.DB.prepare("SELECT video_url, thumbnail_url FROM videos").all();
+            videos = r.results || [];
+        } catch(e) { videos = []; }
+
         let providers = [];
         try {
             const StorageRouter = (await import("../cloud/storage/router.js")).default;
             const health = await StorageRouter.healthCheck(env);
             providers = health.providers || [];
         } catch (e) {
-            providers = [{ id: "unknown", status: "unavailable" }];
+            providers = [];
         }
-        return Response.json({ storage: { providers, events, totalFiles: events.length } });
+
+        let providerConfig = [];
+        try {
+            const StorageConfigMod = (await import("../cloud/storage/config.js")).default;
+            providerConfig = StorageConfigMod.providers || [];
+        } catch(e) { providerConfig = []; }
+
+        let totalVideoSize = 0;
+        let totalThumbSize = 0;
+        videos.forEach(function(v) {
+            if (v.video_url && v.video_url.length > 10) totalVideoSize++;
+            if (v.thumbnail_url && v.thumbnail_url.length > 10) totalThumbSize++;
+        });
+
+        let totalUploads = 0;
+        let totalStorageEvents = 0;
+        events.forEach(function(e) {
+            if (e.event_type === "upload" || e.event_type === "admin_upload") totalUploads++;
+            totalStorageEvents++;
+        });
+
+        let successEvents = events.filter(function(e) { return e.status === "success"; }).length;
+        let failEvents = events.filter(function(e) { return e.status === "failed" || e.status === "error"; }).length;
+
+        let enrichedProviders = providerConfig.map(function(pc) {
+            var healthInfo = providers.find(function(h) { return h.id === pc.id; }) || {};
+            var matchedEvents = events.filter(function(e) { return e.provider === pc.id; });
+            var matchedSuccess = matchedEvents.filter(function(e) { return e.status === "success"; }).length;
+            var matchedFail = matchedEvents.filter(function(e) { return e.status === "failed" || e.status === "error"; }).length;
+            var usagePercent = pc.freeStorage > 0 ? Math.round((pc.usedStorage / pc.freeStorage) * 100) : 0;
+            return {
+                id: pc.id,
+                name: pc.name,
+                enabled: pc.enabled,
+                apiConfigured: pc.apiConfigured,
+                roles: pc.roles || [],
+                priority: pc.priority,
+                maxFileSize: pc.maxFileSize,
+                freeStorage: pc.freeStorage,
+                usedStorage: pc.usedStorage,
+                storageUnit: pc.storageUnit,
+                usagePercent: usagePercent,
+                health: pc.health,
+                failures: pc.failures,
+                successRate: pc.successRate,
+                latency: pc.latency,
+                uploadCount: pc.uploadCount,
+                averageUpload: pc.averageUpload,
+                lastSuccess: pc.lastSuccess,
+                lastFailure: pc.lastFailure,
+                lastHealthCheck: pc.lastHealthCheck,
+                eventsUploaded: matchedSuccess,
+                eventsFailed: matchedFail,
+                healthy: healthInfo.healthy !== false
+            };
+        });
+
+        return Response.json({
+            storage: {
+                providers: enrichedProviders,
+                events: events.slice(0, 30),
+                summary: {
+                    totalProviders: enrichedProviders.length,
+                    healthyProviders: enrichedProviders.filter(function(p) { return p.healthy && p.enabled; }).length,
+                    totalVideos: totalVideoSize,
+                    totalThumbnails: totalThumbSize,
+                    totalUploads: totalUploads,
+                    totalEvents: totalStorageEvents,
+                    successEvents: successEvents,
+                    failEvents: failEvents,
+                    successRate: totalStorageEvents > 0 ? Math.round((successEvents / totalStorageEvents) * 100) : 100
+                }
+            }
+        });
     } catch (e) {
-        return Response.json({ storage: { providers: [], events: [], totalFiles: 0 } }, { status: 500 });
+        return Response.json({ storage: { providers: [], events: [], summary: {} } }, { status: 500 });
     }
 }
 

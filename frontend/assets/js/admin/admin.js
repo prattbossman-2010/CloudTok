@@ -29,7 +29,13 @@ class CloudTokAdmin {
         const res = await fetch(this.apiBase + "/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
         const data = await res.json();
         if (data.success && data.token) { this.token = data.token; localStorage.setItem("adminToken", data.token); localStorage.setItem("adminUser", JSON.stringify(data.user)); this.showPanel(); }
-        else errEl.textContent = data.error || "Login failed";
+        else {
+          var errMsg = data.error || "Login failed";
+          if (errMsg.toLowerCase().includes("invalid") || errMsg.toLowerCase().includes("password")) {
+            errMsg = "Invalid email or password. If you recently updated your password, please use your new password.";
+          }
+          errEl.textContent = errMsg;
+        }
       } catch (err) { errEl.textContent = "Connection failed. Try again."; }
       btn.textContent = "Login"; btn.disabled = false;
     };
@@ -61,7 +67,32 @@ class CloudTokAdmin {
   async api(path, method = "GET", body = null) {
     const opts = { method, headers: { Authorization: "Bearer " + this.token, "Content-Type": "application/json" } };
     if (body) { if (body instanceof FormData) { delete opts.headers["Content-Type"]; opts.body = body; } else opts.body = JSON.stringify(body); }
-    return await (await fetch(this.apiBase + path, opts)).json();
+    const res = await fetch(this.apiBase + path, opts);
+    const data = await res.json();
+    if (res.status === 401 && (data.error === "invalid_token" || data.error === "session_expired")) {
+      this.showSessionExpired(data.message || "Your admin session has expired. Please log in again.");
+      return data;
+    }
+    return data;
+  }
+  showSessionExpired(msg) {
+    if (document.getElementById("adminSessionExpiredModal")) return;
+    var overlay = document.createElement("div");
+    overlay.id = "adminSessionExpiredModal";
+    overlay.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:center;justify-content:center;";
+    var card = document.createElement("div");
+    card.style.cssText = "background:#1a1a2e;border-radius:16px;padding:32px;max-width:360px;width:90%;text-align:center;border:1px solid #333;";
+    card.innerHTML = '<div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#ff0050,#ff6b35);margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;">&#9888;</div>' +
+      '<h2 style="color:#fff;margin:0 0 12px;font-size:18px;">Session Expired</h2>' +
+      '<p style="color:#aaa;margin:0 0 24px;font-size:14px;line-height:1.5;">' + msg + '</p>' +
+      '<button id="adminSessionExpiredBtn" style="background:linear-gradient(135deg,#ff0050,#ff6b35);color:#fff;border:none;border-radius:8px;padding:12px 32px;font-size:15px;font-weight:600;cursor:pointer;width:100%;">Log In</button>';
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+    document.getElementById("adminSessionExpiredBtn").addEventListener("click", function() {
+      localStorage.removeItem("adminToken");
+      localStorage.removeItem("adminUser");
+      window.location.reload();
+    });
   }
   async loadDashboard() {
     try {
@@ -263,15 +294,85 @@ class CloudTokAdmin {
   async loadStorage() {
     try {
       const result = await this.api("/admin/storage");
-      const s = result.storage || result; const providers = s.providers || []; const events = s.events || [];
-      var html = '<div class="statsGrid"><div class="statCard"><div class="statNumber">' + providers.length + '</div><div class="statLabel">Providers</div></div><div class="statCard"><div class="statNumber">' + events.length + '</div><div class="statLabel">Storage Events</div></div></div>';
+      const s = result.storage || result;
+      const providers = s.providers || [];
+      const events = s.events || [];
+      const summary = s.summary || {};
+
+      var html = '<div class="statsGrid">' +
+        '<div class="statCard"><div class="statNumber">' + (summary.healthyProviders || 0) + "/" + (summary.totalProviders || 0) + '</div><div class="statLabel">Healthy Providers</div></div>' +
+        '<div class="statCard"><div class="statNumber">' + (summary.totalUploads || 0) + '</div><div class="statLabel">Total Uploads</div></div>' +
+        '<div class="statCard"><div class="statNumber">' + (summary.totalVideos || 0) + '</div><div class="statLabel">Videos Stored</div></div>' +
+        '<div class="statCard"><div class="statNumber">' + (summary.successRate || 100) + '%</div><div class="statLabel">Success Rate</div></div>' +
+        '</div>';
+
       if (providers.length > 0) {
-        html += '<table><thead><tr><th>Provider</th><th>Status</th><th>Configured</th></tr></thead><tbody>';
-        providers.forEach(function(p) { html += '<tr><td><strong>' + (p.id || p.name || "Unknown") + '</strong></td><td>' + (p.status || "unknown") + '</td><td>' + (p.configured !== false ? "Yes" : "No") + '</td></tr>'; });
+        html += '<h3 style="color:#fff;margin:24px 0 12px;font-size:16px;">Provider Details</h3>';
+        html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;">';
+        providers.forEach(function(p) {
+          var healthColor = p.health >= 80 ? "#00cc66" : p.health >= 50 ? "#ffaa00" : "#ff4444";
+          var statusLabel = p.healthy ? (p.enabled ? "Active" : "Disabled") : "Unhealthy";
+          var statusColor = p.healthy ? (p.enabled ? "#00cc66" : "#888") : "#ff4444";
+          var usagePct = p.usagePercent || 0;
+          var usageBarColor = usagePct > 80 ? "#ff4444" : usagePct > 50 ? "#ffaa00" : "#00cc66";
+          html += '<div style="background:#16213e;border-radius:12px;padding:20px;border:1px solid #1a1a3e;">';
+
+          html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">';
+          html += '<div><strong style="color:#fff;font-size:15px;">' + (p.name || p.id) + '</strong>';
+          html += '<span style="display:inline-block;margin-left:8px;padding:2px 8px;border-radius:4px;font-size:11px;background:' + statusColor + '22;color:' + statusColor + ';">' + statusLabel + '</span></div>';
+          html += '<span style="color:' + healthColor + ';font-weight:600;">' + (p.health || 0) + '%</span>';
+          html += '</div>';
+
+          html += '<div style="margin-bottom:12px;">';
+          html += '<div style="display:flex;justify-content:space-between;color:#aaa;font-size:12px;margin-bottom:4px;">';
+          html += '<span>Storage: ' + (p.usedStorage || 0) + ' / ' + (p.freeStorage || 0) + ' ' + (p.storageUnit || "GB") + '</span>';
+          html += '<span>' + usagePct + '%</span></div>';
+          html += '<div style="background:#0d1b2a;border-radius:6px;height:8px;overflow:hidden;">';
+          html += '<div style="background:' + usageBarColor + ';height:100%;width:' + Math.min(usagePct, 100) + '%;border-radius:6px;transition:width 0.3s;"></div>';
+          html += '</div></div>';
+
+          html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;color:#ccc;">';
+          html += '<div>Max File: <strong>' + (p.maxFileSize || "N/A") + '</strong></div>';
+          html += '<div>Priority: <strong>#' + (p.priority || "?") + '</strong></div>';
+          html += '<div>Uploads: <strong>' + (p.uploadCount || 0) + '</strong></div>';
+          html += '<div>Avg Speed: <strong>' + (p.averageUpload ? p.averageUpload.toFixed(1) + "s" : "N/A") + '</strong></div>';
+          html += '<div>Failures: <strong style="color:' + (p.failures > 0 ? "#ff4444" : "#00cc66") + ';">' + (p.failures || 0) + '</strong></div>';
+          html += '<div>Success Rate: <strong>' + (p.successRate || 100) + '%</strong></div>';
+          html += '<div>Events OK: <strong>' + (p.eventsUploaded || 0) + '</strong></div>';
+          html += '<div>Events Fail: <strong style="color:' + (p.eventsFailed > 0 ? "#ff4444" : "#00cc66") + ';">' + (p.eventsFailed || 0) + '</strong></div>';
+          html += '</div>';
+
+          html += '<div style="margin-top:12px;font-size:11px;color:#666;">';
+          html += '<div>Roles: ' + (p.roles || []).join(", ") + '</div>';
+          if (p.lastSuccess) html += '<div>Last Success: ' + new Date(p.lastSuccess).toLocaleString() + '</div>';
+          if (p.lastFailure) html += '<div>Last Failure: <span style="color:#ff4444;">' + new Date(p.lastFailure).toLocaleString() + '</span></div>';
+          html += '</div>';
+
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+
+      if (events.length > 0) {
+        html += '<h3 style="color:#fff;margin:24px 0 12px;font-size:16px;">Recent Storage Events</h3>';
+        html += '<table><thead><tr><th>Event</th><th>Provider</th><th>Status</th><th>File</th><th>Time</th></tr></thead><tbody>';
+        events.forEach(function(ev) {
+          var statusColor = ev.status === "success" ? "#00cc66" : "#ff4444";
+          html += '<tr>';
+          html += '<td>' + (ev.event_type || "unknown") + '</td>';
+          html += '<td>' + (ev.provider || "system") + '</td>';
+          html += '<td style="color:' + statusColor + ';">' + (ev.status || "unknown") + '</td>';
+          html += '<td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (ev.filename || "") + '</td>';
+          html += '<td>' + (ev.created_at ? new Date(ev.created_at).toLocaleString() : "") + '</td>';
+          html += '</tr>';
+        });
         html += '</tbody></table>';
       }
+
       document.getElementById("storageGrid").innerHTML = html;
-    } catch (e) { document.getElementById("storageGrid").innerHTML = "<p>Failed to load storage info.</p>"; }
+    } catch (e) {
+      document.getElementById("storageGrid").innerHTML = "<p>Failed to load storage info. " + (e.message || "") + "</p>";
+    }
   }
   previewVideo(url, caption, username, likes, comments, views) {
     document.getElementById("previewVideo").src = url;
