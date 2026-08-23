@@ -134,7 +134,7 @@ class CloudTokAdmin {
       var users = result.users || []; this.allUsers = users;
       const search = (document.getElementById("usersSearch")?.value || "").toLowerCase();
       if (search) users = users.filter(function(u) { return (u.username || "").toLowerCase().includes(search) || (u.email || "").toLowerCase().includes(search) || (u.display_name || "").toLowerCase().includes(search); });
-      if (users.length === 0) { document.getElementById("usersTable").innerHTML = '<div class="emptyState"><div class="icon">👥</div><p>No users found</p></div>'; return; }
+      if (users.length === 0) { document.getElementById("usersTable").innerHTML = '<div class="emptyState"><div class="icon"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.users + '</span></div><p>No users found</p></div>'; return; }
       var html = '<table><thead><tr><th><input type="checkbox" onchange="admin.toggleAllUsers(this)"></th><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody>';
       users.forEach(function(u) {
         const status = u.status || "active"; const role = u.role || "user";
@@ -146,7 +146,7 @@ class CloudTokAdmin {
         html += '<td>' + (u.created_at ? new Date(u.created_at).toLocaleDateString() : "") + '</td>';
         html += '<td class="actionsCell">';
         html += '<button class="adminBtn view" onclick="admin.viewUser(' + u.id + ')">View</button> ';
-        html += '<button class="adminBtn view" onclick="admin.adjustBalance(' + u.id + ')">💰</button> ';
+        html += '<button class="adminBtn view" onclick="admin.adjustBalance(' + u.id + ')"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.dollar + '</span></button> ';
         html += status !== "banned" ? '<button class="adminBtn ban" onclick="admin.banUser(' + u.id + ')">Ban</button> ' : '<button class="adminBtn unban" onclick="admin.unbanUser(' + u.id + ')">Unban</button> ';
         if (role !== "admin") html += '<button class="adminBtn admin" onclick="admin.makeAdmin(' + u.id + ')">Admin</button>';
         html += '</td></tr>';
@@ -184,14 +184,14 @@ class CloudTokAdmin {
       var videos = result.videos || []; this.allVideos = videos;
       const search = (document.getElementById("videosSearch")?.value || "").toLowerCase();
       if (search) videos = videos.filter(function(v) { return (v.caption || "").toLowerCase().includes(search) || (v.username || "").toLowerCase().includes(search); });
-      if (videos.length === 0) { document.getElementById("videosTable").innerHTML = '<div class="emptyState"><div class="icon">🎬</div><p>No videos found</p></div>'; return; }
+      if (videos.length === 0) { document.getElementById("videosTable").innerHTML = '<div class="emptyState"><div class="icon"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.video + '</span></div><p>No videos found</p></div>'; return; }
       var html = '<table><thead><tr><th><input type="checkbox" onchange="admin.toggleAllVideos(this)"></th><th>Preview</th><th>User</th><th>Caption</th><th>Likes</th><th>Views</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
       videos.forEach(function(v) {
         const thumb = v.thumbnail_url || ""; const vidUrl = v.video_url || "";
         const cap = (v.caption || "").substring(0, 35) + ((v.caption || "").length > 35 ? "..." : "");
         html += '<tr><td><input type="checkbox" value="' + v.id + '" onchange="admin.toggleVideoSelect(' + v.id + ',this)"></td>';
         html += '<td><div class="videoPreviewThumb" onclick="admin.previewVideo(\'' + vidUrl.replace(/'/g, "\\'") + "','" + (v.caption || "").replace(/'/g, "\\'") + "',@" + v.username + "," + (v.likes || 0) + "," + (v.comments_count || 0) + "," + (v.views || 0) + ')\">';
-        html += thumb ? '<img src="' + thumb + '" onerror="this.parentElement.innerHTML=\'🎬\'">' : '<span>🎬</span>';
+        html += thumb ? '<img src="' + thumb + '" onerror="this.parentElement.innerHTML=\'<span class=&quot;icon&quot; style=&quot;width:1em;height:1em;display:inline-flex;vertical-align:middle;&quot;>\' + CloudTokIcons.video + \'</span>\'">' : '<span><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.video + '</span></span>';
         html += '</div></td>';
         html += '<td>@' + v.username + '</td><td>' + cap + '</td><td>' + (v.likes || 0) + '</td><td>' + (v.views || 0) + '</td>';
         html += '<td>' + (v.created_at ? new Date(v.created_at).toLocaleDateString() : "") + '</td>';
@@ -210,7 +210,7 @@ class CloudTokAdmin {
       const result = await this.api("/admin/comments");
       if (result.error) { document.getElementById("commentsTable").innerHTML = "<p>" + result.error + "</p>"; return; }
       const comments = result.comments || [];
-      if (comments.length === 0) { document.getElementById("commentsTable").innerHTML = '<div class="emptyState"><div class="icon">💬</div><p>No comments found</p></div>'; return; }
+      if (comments.length === 0) { document.getElementById("commentsTable").innerHTML = '<div class="emptyState"><div class="icon"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.chat + '</span></div><p>No comments found</p></div>'; return; }
       var html = '<table><thead><tr><th>User</th><th>Comment</th><th>Video</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
       comments.forEach(function(c) {
         const vl = c.video_caption ? c.video_caption.substring(0, 30) + (c.video_caption.length > 30 ? "..." : "") : (c.video_id ? "#" + c.video_id : "-");
@@ -225,7 +225,7 @@ class CloudTokAdmin {
       const result = await this.api("/admin/messages");
       if (result.error) { document.getElementById("messagesTable").innerHTML = "<p>" + result.error + "</p>"; return; }
       const messages = result.messages || [];
-      if (messages.length === 0) { document.getElementById("messagesTable").innerHTML = '<div class="emptyState"><div class="icon">✉️</div><p>No messages found</p></div>'; return; }
+      if (messages.length === 0) { document.getElementById("messagesTable").innerHTML = '<div class="emptyState"><div class="icon"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.send + '</span></div><p>No messages found</p></div>'; return; }
       var html = '<table><thead><tr><th>From</th><th>To</th><th>Message</th><th>Date</th></tr></thead><tbody>';
       messages.forEach(function(m) {
         html += '<tr><td>@' + (m.sender_name || m.sender_username || "?") + '</td><td>@' + (m.receiver_name || "?") + '</td><td><span class="msgPreview" title="' + (m.text || m.content || "").replace(/"/g, "&quot;") + '">' + (m.text || m.content || "").substring(0, 60) + ((m.text || m.content || "").length > 60 ? "..." : "") + '</span></td><td>' + (m.created_at ? new Date(m.created_at).toLocaleDateString() : "") + '</td></tr>';
@@ -239,7 +239,7 @@ class CloudTokAdmin {
       const result = await this.api("/admin/streams");
       if (result.error) { document.getElementById("streamsTable").innerHTML = "<p>" + result.error + "</p>"; return; }
       const streams = result.streams || [];
-      if (streams.length === 0) { document.getElementById("streamsTable").innerHTML = '<div class="emptyState"><div class="icon">📡</div><p>No live streams</p></div>'; return; }
+      if (streams.length === 0) { document.getElementById("streamsTable").innerHTML = '<div class="emptyState"><div class="icon"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.signal + '</span></div><p>No live streams</p></div>'; return; }
       var html = '<table><thead><tr><th>Streamer</th><th>Title</th><th>Viewers</th><th>Started</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
       streams.forEach(function(s) {
         const isLive = s.status === "active" || s.status === "live";
@@ -254,7 +254,7 @@ class CloudTokAdmin {
       const result = await this.api("/admin/transactions");
       if (result.error) { document.getElementById("transactionsTable").innerHTML = "<p>" + result.error + "</p>"; return; }
       const txns = result.transactions || [];
-      if (txns.length === 0) { document.getElementById("transactionsTable").innerHTML = '<div class="emptyState"><div class="icon">💰</div><p>No transactions</p></div>'; return; }
+      if (txns.length === 0) { document.getElementById("transactionsTable").innerHTML = '<div class="emptyState"><div class="icon"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.dollar + '</span></div><p>No transactions</p></div>'; return; }
       var html = '<table><thead><tr><th>User</th><th>Amount</th><th>Status</th><th>Reference</th><th>Date</th></tr></thead><tbody>';
       txns.forEach(function(t) {
         html += '<tr><td>@' + (t.username || "?") + '</td><td>$' + (t.amount != null ? Number(t.amount).toFixed(2) : "-") + '</td><td><span class="statusBadge ' + (t.status || "active") + '">' + (t.status || "-") + '</span></td><td><small>' + (t.reference || t.paystack_reference || "-") + '</small></td><td>' + (t.created_at ? new Date(t.created_at).toLocaleDateString() : "") + '</td></tr>';
@@ -268,10 +268,10 @@ class CloudTokAdmin {
       const result = await this.api("/admin/gifts");
       if (result.error) { document.getElementById("giftsTable").innerHTML = "<p>" + result.error + "</p>"; return; }
       const gifts = result.gifts || [];
-      if (gifts.length === 0) { document.getElementById("giftsTable").innerHTML = '<div class="emptyState"><div class="icon">🎁</div><p>No gifts sent yet</p></div>'; return; }
+      if (gifts.length === 0) { document.getElementById("giftsTable").innerHTML = '<div class="emptyState"><div class="icon"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.gift + '</span></div><p>No gifts sent yet</p></div>'; return; }
       var html = '<table><thead><tr><th>From</th><th>To</th><th>Gift</th><th>Amount</th><th>Date</th></tr></thead><tbody>';
       gifts.forEach(function(g) {
-        html += '<tr><td>@' + (g.sender_username || "?") + '</td><td>@' + (g.receiver_username || "?") + '</td><td>' + (g.gift_emoji || "🎁") + " " + (g.gift_name || "Gift") + '</td><td>$' + (g.amount_usd != null ? Number(g.amount_usd).toFixed(2) : "-") + '</td><td>' + (g.created_at ? new Date(g.created_at).toLocaleDateString() : "") + '</td></tr>';
+        html += '<tr><td>@' + (g.sender_username || "?") + '</td><td>@' + (g.receiver_username || "?") + '</td><td>' + (g.gift_emoji || '<span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.gift + '</span>') + " " + (g.gift_name || "Gift") + '</td><td>$' + (g.amount_usd != null ? Number(g.amount_usd).toFixed(2) : "-") + '</td><td>' + (g.created_at ? new Date(g.created_at).toLocaleDateString() : "") + '</td></tr>';
       });
       html += "</tbody></table>";
       document.getElementById("giftsTable").innerHTML = html;
@@ -282,7 +282,7 @@ class CloudTokAdmin {
       const result = await this.api("/admin/logs");
       if (result.error) { document.getElementById("logsTable").innerHTML = "<p>" + result.error + "</p>"; return; }
       const logs = result.logs || [];
-      if (logs.length === 0) { document.getElementById("logsTable").innerHTML = '<div class="emptyState"><div class="icon">📋</div><p>No activity logs</p></div>'; return; }
+      if (logs.length === 0) { document.getElementById("logsTable").innerHTML = '<div class="emptyState"><div class="icon"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.clipboard + '</span></div><p>No activity logs</p></div>'; return; }
       var html = '<table><thead><tr><th>User</th><th>Action</th><th>Details</th><th>Date</th></tr></thead><tbody>';
       logs.forEach(function(l) {
         html += '<tr><td>@' + (l.admin_username || l.username || "system") + '</td><td><span class="statusBadge active">' + (l.action || "-") + '</span></td><td><span class="msgPreview" title="' + (l.details || "").replace(/"/g, "&quot;") + '">' + (l.details || "-").substring(0, 60) + '</span></td><td>' + (l.created_at ? new Date(l.created_at).toLocaleString() : "") + '</td></tr>';
@@ -374,7 +374,7 @@ class CloudTokAdmin {
   }
   previewVideo(url, caption, username, likes, comments, views) {
     document.getElementById("previewVideo").src = url;
-    document.getElementById("previewInfo").innerHTML = '<h3>' + caption + '</h3><p>by ' + username + '</p><div class="previewStats"><span>❤️ ' + likes + '</span><span>💬 ' + comments + '</span><span>👁 ' + views + '</span></div>';
+    document.getElementById("previewInfo").innerHTML = '<h3>' + caption + '</h3><p>by ' + username + '</p><div class="previewStats"><span><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.heart + '</span> ' + likes + '</span><span><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.chat + '</span> ' + comments + '</span><span><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.eye + '</span> ' + views + '</span></div>';
     document.getElementById("videoPreviewModal").classList.add("show");
   }
   async banUser(id, confirmMsg) { if (confirmMsg !== false && !confirm("Ban this user?")) return; await this.api("/admin/users/" + id, "PUT", { status: "banned" }); this.loadUsers(); }

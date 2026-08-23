@@ -96,7 +96,7 @@ if(users.length===0){
 }
 
 if(users.length===0){
-    this.list.innerHTML='<div style="text-align:center;padding:60px 20px;color:#555;"><div style="font-size:48px;margin-bottom:16px;">💬</div>No conversations yet.<br>Tap ✏️ to start chatting.</div>';
+    this.list.innerHTML='<div style="text-align:center;padding:60px 20px;color:#555;"><div style="font-size:48px;margin-bottom:16px;"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.chat + '</span></div>No conversations yet.<br>Tap <span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">' + CloudTokIcons.pencil + '</span> to start chatting.</div>';
     return;
 }
 

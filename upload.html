@@ -15,7 +15,7 @@
 <div class="uploadPage">
 
 <div class="uploadHeader">
-    <button class="uploadBackBtn" onclick="history.back()">←</button>
+    <button class="uploadBackBtn" onclick="history.back()"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.back</span></button>
     <h2>Create</h2>
     <div></div>
 </div>
@@ -33,7 +33,7 @@
 
 <div class="goLiveSection">
     <button class="goLiveBtn" onclick="window.location.href='live.html'">
-        <span class="liveIcon">🔴</span>
+        <span class="liveIcon" style="color:red;"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.liveDot</span></span>
         <span>Go Live</span>
     </button>
     <p class="goLiveHint">Start a live broadcast to your followers</p>
@@ -88,6 +88,7 @@
 
 </div>
 
+<script src="assets/js/core/icons.js"></script>
 <script src="assets/js/database/database.js"></script>
 <script src="assets/js/database/users.js"></script>
 <script src="assets/js/database/userManager.js"></script>

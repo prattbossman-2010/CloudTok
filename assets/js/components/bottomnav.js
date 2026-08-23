@@ -19,17 +19,17 @@ nav.className = "bottomNav";
 
 nav.innerHTML = `
 
-<button id="homeBtn">🏠</button>
+<button id="homeBtn"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">${CloudTokIcons.home}</span></button>
 
-<button id="discoverBtn">🔥</button>
+<button id="discoverBtn"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">${CloudTokIcons.search}</span></button>
 
-<button id="uploadBtn">➕</button>
+<button id="uploadBtn"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">${CloudTokIcons.plus}</span></button>
 
-<button id="messageBtn">💬</button>
+<button id="messageBtn"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">${CloudTokIcons.chat}</span></button>
 
-<button id="settingsBtn">⚙️</button>
+<button id="settingsBtn"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">${CloudTokIcons.settings}</span></button>
 
-<button id="profileBtn">👤</button>
+<button id="profileBtn"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">${CloudTokIcons.user}</span></button>
 
 
 <input 

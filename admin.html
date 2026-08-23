@@ -145,12 +145,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 @media(max-width:768px){
 .adminSidebar{width:60px;padding:10px 0;}
 .adminLogo{font-size:0;padding:0 10px 15px;text-align:center;}
-.adminLogo::before{content:"🛡";font-size:18px;}
+.adminLogo::before{content:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff2d55' stroke-width='2'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/%3E%3C/svg%3E");width:18px;height:18px;display:inline-block;}
 .adminNav{padding:10px;justify-content:center;font-size:0;}
 .adminNav .icon{font-size:18px;}
 .adminNav span:not(.icon){display:none;}
 .adminLogout{padding:10px;font-size:0;text-align:center;}
-.adminLogout::before{content:"🚪";font-size:16px;}
+.adminLogout::before{content:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4'/%3E%3Cpolyline points='16 17 21 12 16 7'/%3E%3Cline x1='21' y1='12' x2='9' y2='12'/%3E%3C/svg%3E");width:16px;height:16px;display:inline-block;}
 .adminMain{margin-left:60px;padding:15px;}
 .statsGrid{grid-template-columns:repeat(2,1fr);}
 .userDetailStats{grid-template-columns:repeat(2,1fr);}
@@ -197,7 +197,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 <div id="adminLoginGate" class="adminLoginGate">
     <div class="adminLoginCard">
-        <div class="adminLoginLogo">🛡️ CloudTok Admin</div>
+        <div class="adminLoginLogo"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.shield</span> CloudTok Admin</div>
         <p class="adminLoginSub">Enter your admin credentials to continue</p>
         <form id="adminLoginForm">
             <input id="adminEmail" type="email" placeholder="Email" required>
@@ -210,33 +210,33 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 <div id="adminPanel" class="adminLayout" style="display:none">
     <aside class="adminSidebar">
-        <div class="adminLogo">🛡️ Admin</div>
+        <div class="adminLogo"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.shield</span> Admin</div>
         <nav id="adminNav">
-            <button class="adminNav active" data-tab="dashboard"><span class="icon">📊</span><span>Dashboard</span></button>
-            <button class="adminNav" data-tab="analytics"><span class="icon">📈</span><span>Analytics</span></button>
-            <button class="adminNav" data-tab="users"><span class="icon">👥</span><span>Users</span></button>
-            <button class="adminNav" data-tab="videos"><span class="icon">🎬</span><span>Videos</span></button>
-            <button class="adminNav" data-tab="comments"><span class="icon">💬</span><span>Comments</span></button>
-            <button class="adminNav" data-tab="messages"><span class="icon">✉️</span><span>Messages</span></button>
-            <button class="adminNav" data-tab="streams"><span class="icon">📡</span><span>Live Streams</span></button>
-            <button class="adminNav" data-tab="transactions"><span class="icon">💰</span><span>Transactions</span></button>
-            <button class="adminNav" data-tab="gifts"><span class="icon">🎁</span><span>Gifts</span></button>
-            <button class="adminNav" data-tab="giftConfig"><span class="icon">💰</span><span>Gift Prices</span></button>
-            <button class="adminNav" data-tab="logs"><span class="icon">📋</span><span>Activity Logs</span></button>
-            <button class="adminNav" data-tab="storage"><span class="icon">🗄️</span><span>Storage</span></button>
-            <button class="adminNav" data-tab="settings"><span class="icon">⚙️</span><span>Settings</span></button>
+            <button class="adminNav active" data-tab="dashboard"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.chart</span><span>Dashboard</span></button>
+            <button class="adminNav" data-tab="analytics"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.chartLine</span><span>Analytics</span></button>
+            <button class="adminNav" data-tab="users"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.users</span><span>Users</span></button>
+            <button class="adminNav" data-tab="videos"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.video</span><span>Videos</span></button>
+            <button class="adminNav" data-tab="comments"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.chat</span><span>Comments</span></button>
+            <button class="adminNav" data-tab="messages"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.send</span><span>Messages</span></button>
+            <button class="adminNav" data-tab="streams"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.signal</span><span>Live Streams</span></button>
+            <button class="adminNav" data-tab="transactions"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.dollar</span><span>Transactions</span></button>
+            <button class="adminNav" data-tab="gifts"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.gift</span><span>Gifts</span></button>
+            <button class="adminNav" data-tab="giftConfig"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.dollar</span><span>Gift Prices</span></button>
+            <button class="adminNav" data-tab="logs"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.clipboard</span><span>Activity Logs</span></button>
+            <button class="adminNav" data-tab="storage"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.database</span><span>Storage</span></button>
+            <button class="adminNav" data-tab="settings"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.settings</span><span>Settings</span></button>
         </nav>
-        <button id="adminLogoutBtn" class="adminLogout">🚪 Logout</button>
+        <button id="adminLogoutBtn" class="adminLogout"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.logout</span> Logout</button>
     </aside>
 
     <main class="adminMain">
         <div id="dashboardTab" class="adminTab active">
-            <h1>📊 Dashboard</h1>
+            <h1><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.chart</span> Dashboard</h1>
             <div id="statsGrid" class="statsGrid"></div>
         </div>
 
         <div id="analyticsTab" class="adminTab">
-            <h1>📈 Analytics</h1>
+            <h1><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.chartLine</span> Analytics</h1>
             <div id="analyticsGrid" class="statsGrid"></div>
             <div id="userGrowthChart" class="chartContainer">
                 <h3>User Growth (Last 7 Days)</h3>
@@ -249,7 +249,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         </div>
 
         <div id="usersTab" class="adminTab">
-            <h1>👥 Users</h1>
+            <h1><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.users</span> Users</h1>
             <div class="bulkActionBar" id="usersBulkBar">
                 <span class="bulkCount" id="usersBulkCount">0 selected</span>
                 <button class="adminBtn ban" onclick="admin.bulkBanUsers()">Ban Selected</button>
@@ -261,7 +261,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         </div>
 
         <div id="videosTab" class="adminTab">
-            <h1>🎬 Videos</h1>
+            <h1><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.video</span> Videos</h1>
             <div class="bulkActionBar" id="videosBulkBar">
                 <span class="bulkCount" id="videosBulkCount">0 selected</span>
                 <button class="adminBtn danger" onclick="admin.bulkDeleteVideos()">Delete Selected</button>
@@ -272,54 +272,54 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         </div>
 
         <div id="commentsTab" class="adminTab">
-            <h1>💬 Comments</h1>
+            <h1><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.chat</span> Comments</h1>
             <div class="searchBar"><button class="refreshBtn" onclick="admin.loadComments()">Refresh</button><button class="refreshBtn" onclick="admin.clearTable('video_comments','comments')" style="margin-left:8px;color:#ff4444;border-color:#ff4444;">Clear All</button></div>
             <div id="commentsTable" class="adminTable"></div>
         </div>
 
         <div id="messagesTab" class="adminTab">
-            <h1>✉️ Messages</h1>
+            <h1><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.send</span> Messages</h1>
             <div class="searchBar"><button class="refreshBtn" onclick="admin.loadMessages()">Refresh</button></div>
             <div id="messagesTable" class="adminTable"></div>
         </div>
 
         <div id="streamsTab" class="adminTab">
-            <h1>📡 Live Streams</h1>
+            <h1><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.signal</span> Live Streams</h1>
             <div class="searchBar"><button class="refreshBtn" onclick="admin.loadStreams()">Refresh</button></div>
             <div id="streamsTable" class="adminTable"></div>
         </div>
 
         <div id="transactionsTab" class="adminTab">
-            <h1>💰 Transactions</h1>
+            <h1><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.dollar</span> Transactions</h1>
             <div class="searchBar"><button class="refreshBtn" onclick="admin.loadTransactions()">Refresh</button><button class="refreshBtn" onclick="admin.clearTable('transactions','transactions')" style="margin-left:8px;color:#ff4444;border-color:#ff4444;">Clear All</button></div>
             <div id="transactionsTable" class="adminTable"></div>
         </div>
 
         <div id="giftsTab" class="adminTab">
-            <h1>🎁 Gifts</h1>
+            <h1><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.gift</span> Gifts</h1>
             <div class="searchBar"><button class="refreshBtn" onclick="admin.loadGifts()">Refresh</button><button class="refreshBtn" onclick="admin.clearTable('gift_transactions','gifts')" style="margin-left:8px;color:#ff4444;border-color:#ff4444;">Clear All</button></div>
             <div id="giftsTable" class="adminTable"></div>
         </div>
 
         <div id="giftConfigTab" class="adminTab">
-            <h1>💰 Gift Prices</h1>
+            <h1><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.dollar</span> Gift Prices</h1>
             <p style="color:#888;font-size:13px;margin-bottom:16px;">Manage the price of each virtual gift. Changes apply to all future gifts.</p>
             <div id="giftConfigTable" class="adminTable"></div>
         </div>
 
         <div id="logsTab" class="adminTab">
-            <h1>📋 Activity Logs</h1>
+            <h1><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.clipboard</span> Activity Logs</h1>
             <div class="searchBar"><button class="refreshBtn" onclick="admin.loadLogs()">Refresh</button><button class="refreshBtn" onclick="admin.clearTable('activity_logs','logs')" style="margin-left:8px;color:#ff4444;border-color:#ff4444;">Clear All</button></div>
             <div id="logsTable" class="adminTable"></div>
         </div>
 
         <div id="storageTab" class="adminTab">
-            <h1>🗄️ Storage Health</h1>
+            <h1><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.database</span> Storage Health</h1>
             <div id="storageGrid" class="statsGrid"></div>
         </div>
 
         <div id="settingsTab" class="adminTab">
-            <h1>⚙️ System Settings</h1>
+            <h1><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.settings</span> System Settings</h1>
             <div class="settingsSection">
                 <h3>Security</h3>
                 <div class="settingsRow">
@@ -405,7 +405,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 <div id="videoPreviewModal" class="videoPreviewModal">
     <div class="videoPreviewContent">
-        <button id="closePreviewBtn" class="closePreviewBtn">✕</button>
+        <button id="closePreviewBtn" class="closePreviewBtn"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.xMark</span></button>
         <video id="previewVideo" controls playsinline></video>
         <div id="previewInfo" class="previewInfo"></div>
     </div>
@@ -413,7 +413,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 <div id="userDetailModal" class="userDetailModal">
     <div class="userDetailContent">
-        <button onclick="admin.closeUserDetail()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:#888;font-size:20px;cursor:pointer;">✕</button>
+        <button onclick="admin.closeUserDetail()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:#888;font-size:20px;cursor:pointer;"><span class="icon" style="width:1em;height:1em;display:inline-flex;vertical-align:middle;">CloudTokIcons.xMark</span></button>
         <div class="userDetailHeader">
             <img id="detailAvatar" class="userDetailAvatar" src="assets/images/default-avatar.png">
             <div class="userDetailInfo">
@@ -436,6 +436,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     </div>
 </div>
 
+<script src="assets/js/core/icons.js"></script>
 <script src="assets/js/admin/admin.js"></script>
 </body>
 </html>
