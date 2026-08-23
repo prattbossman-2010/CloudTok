@@ -169,10 +169,17 @@ window.CloudTokAPI = {
     },
 
 
-    async getVideos(){
+    async getVideos(options={}){
+
+    let url = this.baseURL + "/videos";
+    const params = [];
+    if(options.user) params.push("user=" + encodeURIComponent(options.user));
+    if(options.limit) params.push("limit=" + options.limit);
+    if(options.offset) params.push("offset=" + options.offset);
+    if(params.length) url += "?" + params.join("&");
 
     const response =
-    await fetch(this.baseURL + "/videos");
+    await fetch(url);
 
     const raw =
     await response.json();

@@ -112,12 +112,14 @@ if(videos.length===0){
     }
 
     videos.sort((a,b)=>{
+        const hoursA=Math.max(1,(Date.now()-new Date(a.created_at).getTime())/(1000*60*60)+2);
+        const hoursB=Math.max(1,(Date.now()-new Date(b.created_at).getTime())/(1000*60*60)+2);
         const scoreA=
-        (a.views||0)*5+(a.likes||0)*10+
-        ((a.comments||[]).length||a.comments||0)*8;
+        ((a.views||0)*5+(a.likes||0)*10+
+        ((a.comments||[]).length||a.comments||0)*8)/Math.pow(hoursA,0.3);
         const scoreB=
-        (b.views||0)*5+(b.likes||0)*10+
-        ((b.comments||[]).length||b.comments||0)*8;
+        ((b.views||0)*5+(b.likes||0)*10+
+        ((b.comments||[]).length||b.comments||0)*8)/Math.pow(hoursB,0.3);
         return scoreB-scoreA;
     });
 

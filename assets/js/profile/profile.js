@@ -471,7 +471,7 @@ loading="lazy">
 card.onclick=()=>{
 
 window.location.href=
-"watch.html?id="+video.id;
+"watch.html?id="+video.id+"&user="+encodeURIComponent(this.currentUsername);
 
 };
 
