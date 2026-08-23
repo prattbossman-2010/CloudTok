@@ -91,9 +91,14 @@ async init(){
     this.showPCHint();
 
     // Re-fetch videos when returning to this page (e.g. from watch page)
+    let lastLoadTime = 0;
     document.addEventListener("visibilitychange",()=>{
         if(!document.hidden){
-            this.loadVideos();
+            const now = Date.now();
+            if(now - lastLoadTime > 30000) {
+                lastLoadTime = now;
+                this.loadVideos();
+            }
         }
     });
 

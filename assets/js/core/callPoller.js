@@ -6,6 +6,7 @@
     let lastSignalId = 0;
     let pollInterval = null;
     let activePopup = null;
+    let consecutiveErrors = 0;
 
     function getToken(){
         return localStorage.getItem("CloudTokToken");
@@ -16,13 +17,26 @@
     }
 
     async function pollForCalls(){
-        if(!getToken() || !getCurrentUser()) return;
+        if(!getToken() || !getCurrentUser()) {
+            stopGlobalCallPolling();
+            return;
+        }
 
         try {
             const response = await fetch(
                 "https://cloudtok-api.bossmanp16.workers.dev/api/webrtc/poll?after=" + lastSignalId,
                 { headers: { "Authorization": "Bearer " + getToken() } }
             );
+
+            if(response.status === 401) {
+                consecutiveErrors++;
+                if(consecutiveErrors >= 3) {
+                    stopGlobalCallPolling();
+                }
+                return;
+            }
+
+            consecutiveErrors = 0;
             const result = await response.json();
 
             if(result.error) return;
@@ -40,7 +54,12 @@
                     }
                 }
             }
-        } catch(e){}
+        } catch(e){
+            consecutiveErrors++;
+            if(consecutiveErrors >= 5) {
+                stopGlobalCallPolling();
+            }
+        }
     }
 
     function showCallPopup(from, data){
@@ -99,8 +118,9 @@
 
     function startGlobalCallPolling(){
         if(pollInterval) return;
+        consecutiveErrors = 0;
         pollForCalls();
-        pollInterval = setInterval(pollForCalls, 2000);
+        pollInterval = setInterval(pollForCalls, 5000);
     }
 
     function stopGlobalCallPolling(){
