@@ -81,6 +81,29 @@ window.CloudTokAPI = {
     const raw =
     await response.json();
 
+    if(response.status === 401 &&
+      (raw.error === "invalid_token" ||
+       raw.error === "session_expired")){
+
+      localStorage.removeItem("CloudTokToken");
+      localStorage.removeItem("CloudTokUser");
+      window.dispatchEvent(
+        new CustomEvent("auth:expired", {
+          detail: {
+            message: raw.message ||
+              "Your session has expired. Please log out and log back in"
+          }
+        })
+      );
+
+      return {
+        ...raw,
+        success: false,
+        sessionExpired: true
+      };
+
+    }
+
     return {
         ...raw,
         ...(raw.data || {})
