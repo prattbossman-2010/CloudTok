@@ -46,21 +46,21 @@
         }).join("") +
         '</div>' +
         '<div style="display:flex;gap:12px;">' +
-        (currentStep > 0 ? '<button id="onbPrev" style="flex:1;padding:14px;border:1px solid #333;background:none;color:#888;border-radius:12px;font-size:15px;cursor:pointer;">Back</button>' : '') +
-        '<button id="onbNext" style="flex:2;padding:14px;border:none;background:linear-gradient(135deg,#00b7ff,#7b2ff2);color:#fff;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;">' + (isLast ? "Get Started" : "Next") + '</button>' +
+        (currentStep > 0 ? '<button data-action="prev" style="flex:1;padding:14px;border:1px solid #333;background:none;color:#888;border-radius:12px;font-size:15px;cursor:pointer;">Back</button>' : '') +
+        '<button data-action="next" style="flex:2;padding:14px;border:none;background:linear-gradient(135deg,#00b7ff,#7b2ff2);color:#fff;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;">' + (isLast ? "Get Started" : "Next") + '</button>' +
         '</div>' +
-        '<button id="onbSkip" style="margin-top:12px;background:none;border:none;color:#666;font-size:13px;cursor:pointer;">Skip Tour</button>' +
+        '<button data-action="skip" style="margin-top:12px;background:none;border:none;color:#666;font-size:13px;cursor:pointer;">Skip Tour</button>' +
         '</div>';
 
-      document.getElementById("onbClose").onclick = function() { modal.remove(); };
-      document.getElementById("onbSkip").onclick = function() { state.completed = true; saveOnboardingState(state); modal.remove(); };
-      document.getElementById("onbNext").onclick = function() {
+      modal.querySelector('[data-action="skip"]').onclick = function() { state.completed = true; saveOnboardingState(state); modal.remove(); };
+      modal.querySelector('[data-action="next"]').onclick = function() {
         if (isLast) { state.completed = true; saveOnboardingState(state); modal.remove(); }
         else { currentStep++; renderStep(); }
       };
-      if (document.getElementById("onbPrev")) {
-        document.getElementById("onbPrev").onclick = function() { currentStep--; renderStep(); };
-      }
+      var closeBtn = modal.querySelector('#onbClose');
+      if (closeBtn) closeBtn.onclick = function() { modal.remove(); };
+      var prevBtn = modal.querySelector('[data-action="prev"]');
+      if (prevBtn) prevBtn.onclick = function() { currentStep--; renderStep(); };
     }
 
     renderStep();

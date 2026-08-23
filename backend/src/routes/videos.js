@@ -4,6 +4,10 @@ import { success, error } from "../utils/response.js";
 
 export async function getVideos(request, env) {
   try {
+    const url = new URL(request.url);
+    const limit = Math.min(parseInt(url.searchParams.get("limit") || "50"), 100);
+    const offset = parseInt(url.searchParams.get("offset") || "0");
+
     const { results } = await env.DB.prepare(`
       SELECT
         videos.id,
@@ -22,7 +26,8 @@ export async function getVideos(request, env) {
       FROM videos
       JOIN users ON videos.user_id = users.id
       ORDER BY videos.created_at DESC
-    `).all();
+      LIMIT ? OFFSET ?
+    `).bind(limit, offset).all();
 
     const auth = await authenticate(request, env);
     let likedIds = [];
