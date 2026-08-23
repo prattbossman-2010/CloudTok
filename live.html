@@ -8,13 +8,24 @@
 <style>
 body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;margin:0;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh}
 .live-container{max-width:420px;width:100%;padding:20px;text-align:center}
-.live-icon{font-size:80px;margin-bottom:20px}
+.live-icon{width:80px;height:80px;margin:0 auto 20px;background:rgba(255,45,85,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.live-icon svg{width:40px;height:40px;fill:#ff2d55;}
 h1{font-size:24px;margin:0 0 8px}
 p{color:#aaa;margin:0 0 30px;font-size:14px}
+
+/* Mode Selector */
+.modeSelector{display:flex;gap:8px;margin-bottom:16px;background:rgba(255,255,255,.04);border-radius:12px;padding:4px;}
+.modeOption{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 8px;border-radius:10px;border:none;background:none;color:#888;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
+.modeOption.active{background:rgba(255,45,85,.15);color:#ff2d55;}
+.modeOption svg{width:18px;height:18px;fill:currentColor;}
+.modeOption:hover:not(.active){color:#ccc;}
+
 .live-btn{background:#ff2d55;color:#fff;border:none;border-radius:50%;width:120px;height:120px;font-size:18px;font-weight:700;cursor:pointer;transition:transform .2s,box-shadow .2s;box-shadow:0 0 30px rgba(255,45,85,.4)}
 .live-btn:hover{transform:scale(1.08);box-shadow:0 0 50px rgba(255,45,85,.6)}
 .live-btn:active{transform:scale(.95)}
-.back{position:fixed;top:20px;left:20px;background:rgba(255,255,255,.1);border:none;color:#fff;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;z-index:10}
+.back{position:fixed;top:20px;left:20px;background:rgba(255,255,255,.1);border:none;color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;}
+.back svg{width:20px;height:20px;fill:#fff;}
+
 .streamView{display:none;width:100%;height:100vh;flex-direction:column;position:relative;}
 .streamView.active{display:flex;}
 .streamVideo{width:100%;height:100%;object-fit:cover;background:#000;}
@@ -25,11 +36,17 @@ p{color:#aaa;margin:0 0 30px;font-size:14px}
 .streamViewers{display:flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(255,45,85,.9);border-radius:20px;font-size:12px;font-weight:600;}
 .liveDot{width:8px;height:8px;border-radius:50%;background:#fff;animation:pulse 1.5s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.streamControls{position:absolute;bottom:20px;left:0;right:0;display:flex;justify-content:center;gap:16px;z-index:6;}
-.streamCtrlBtn{width:50px;height:50px;border-radius:50%;border:none;font-size:20px;cursor:pointer;backdrop-filter:blur(10px);}
-.streamCtrlBtn.end{background:rgba(255,45,85,.9);color:#fff;}
-.streamCtrlBtn.mute{background:rgba(255,255,255,.2);color:#fff;}
-.streamCtrlBtn.video{background:rgba(255,255,255,.2);color:#fff;}
+.streamControls{position:absolute;bottom:20px;left:0;right:0;display:flex;justify-content:center;gap:12px;z-index:6;}
+.streamCtrlBtn{width:50px;height:50px;border-radius:50%;border:none;cursor:pointer;backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.streamCtrlBtn svg{width:22px;height:22px;fill:#fff;}
+.streamCtrlBtn.end{background:rgba(255,45,85,.9);}
+.streamCtrlBtn.mute{background:rgba(255,255,255,.2);}
+.streamCtrlBtn.video{background:rgba(255,255,255,.2);}
+.streamCtrlBtn.screenShare{background:rgba(255,255,255,.2);}
+.streamCtrlBtn.cameraFlip{background:rgba(255,255,255,.2);}
+.streamCtrlBtn.active{background:rgba(255,45,85,.4);}
+.streamCtrlBtn.muted svg{fill:#ff4444;}
+
 .activeStreams{width:100%;max-width:600px;margin-top:30px;}
 .activeStreams h3{color:rgba(255,255,255,.5);font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
 .streamCard{display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,.04);border-radius:12px;margin-bottom:8px;cursor:pointer;}
@@ -41,17 +58,38 @@ p{color:#aaa;margin:0 0 30px;font-size:14px}
 .floatingMsg{position:fixed;bottom:120px;padding:6px 14px;background:rgba(0,0,0,.55);border-radius:20px;font-size:13px;color:#fff;max-width:70%;pointer-events:none;animation:floatUp 5s ease-out forwards;white-space:nowrap;}
 .floatingMsg .chatUser{color:#00b7ff;font-weight:600;margin-right:6px;}
 @keyframes floatUp{0%{opacity:1;bottom:120px;}80%{opacity:1;}100%{opacity:0;bottom:calc(100vh - 60px);}}
+
+/* Screen share preview */
+.screenShareHint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.6);padding:16px 24px;border-radius:12px;font-size:13px;color:#aaa;text-align:center;pointer-events:none;z-index:4;}
 </style>
 </head>
 <body>
-<button class="back" onclick="history.back()">&#8592;</button>
+<button class="back" onclick="history.back()">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.0303 3.96967C11.3232 4.26256 11.3232 4.73744 11.0303 5.03033L4.81066 11.25H21C21.4142 11.25 21.75 11.5858 21.75 12C21.75 12.4142 21.4142 12.75 21 12.75H4.81066L11.0303 18.9697C11.3232 19.2626 11.3232 19.7374 11.0303 20.0303C10.7374 20.3232 10.2626 20.3232 9.96967 20.0303L2.46967 12.5303C2.17678 12.2374 2.17678 11.7626 2.46967 11.4697L9.96967 3.96967C10.2626 3.67678 10.7374 3.67678 11.0303 3.96967Z" fill="#fff"/></svg>
+</button>
 
 <div class="live-container" id="startScreen">
-    <div class="live-icon">&#128248;</div>
+    <div class="live-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.5 4.5C2.84315 4.5 1.5 5.84315 1.5 7.5V16.5C1.5 18.1569 2.84315 19.5 4.5 19.5H12.75C14.4069 19.5 15.75 18.1569 15.75 16.5V7.5C15.75 5.84315 14.4069 4.5 12.75 4.5H4.5Z" fill="#ff2d55"/><path d="M19.9393 18.75L17.25 16.0606V7.93931L19.9393 5.24996C20.8843 4.30501 22.5 4.97427 22.5 6.31063V17.6893C22.5 19.0257 20.8843 19.6949 19.9393 18.75Z" fill="#ff2d55"/></svg>
+    </div>
     <h1>Go Live</h1>
     <p>Start a live stream and connect with your audience in real-time</p>
+
+    <div class="modeSelector" id="modeSelector">
+        <button class="modeOption active" data-mode="camera" onclick="setMode('camera')">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.5 4.5C2.84315 4.5 1.5 5.84315 1.5 7.5V16.5C1.5 18.1569 2.84315 19.5 4.5 19.5H12.75C14.4069 19.5 15.75 18.1569 15.75 16.5V7.5C15.75 5.84315 14.4069 4.5 12.75 4.5H4.5Z"/><path d="M19.9393 18.75L17.25 16.0606V7.93931L19.9393 5.24996C20.8843 4.30501 22.5 4.97427 22.5 6.31063V17.6893C22.5 19.0257 20.8843 19.6949 19.9393 18.75Z"/></svg>
+            Camera
+        </button>
+        <button class="modeOption" data-mode="screen" onclick="setMode('screen')">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.25 5.25C2.25 3.59315 3.59315 2.25 5.25 2.25H18.75C20.4069 2.25 21.75 3.59315 21.75 5.25V15C21.75 16.6569 20.4069 18 18.75 18H15.75V18.2574C15.75 18.8541 15.9871 19.4264 16.409 19.8483L17.0303 20.4697C17.2448 20.6842 17.309 21.0068 17.1929 21.287C17.0768 21.5673 16.8033 21.75 16.5 21.75H7.5C7.19665 21.75 6.92318 21.5673 6.80709 21.287C6.691 21.0068 6.75517 20.6842 6.96967 20.4697L7.59099 19.8484C8.01295 19.4264 8.25 18.8541 8.25 18.2574V18H5.25C3.59315 18 2.25 16.6569 2.25 15V5.25ZM3.75 5.25V12.75C3.75 13.5784 4.42157 14.25 5.25 14.25H18.75C19.5784 14.25 20.25 13.5784 20.25 12.75V5.25C20.25 4.42157 19.5784 3.75 18.75 3.75H5.25C4.42157 3.75 3.75 4.42157 3.75 5.25Z"/></svg>
+            Screen Share
+        </button>
+    </div>
+
     <input id="streamTitleInput" type="text" placeholder="Stream title..." style="width:100%;padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:#fff;font-size:15px;outline:none;margin-bottom:16px;text-align:center;">
-    <button class="live-btn" id="goLiveBtn">GO LIVE</button>
+    <button class="live-btn" id="goLiveBtn">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;"><path d="M5.63604 4.57538C5.92893 4.86828 5.92893 5.34315 5.63604 5.63604C2.12132 9.15076 2.12132 14.8492 5.63604 18.364C5.92893 18.6569 5.92893 19.1317 5.63604 19.4246C5.34315 19.7175 4.86827 19.7175 4.57538 19.4246C0.474874 15.3241 0.474873 8.67589 4.57538 4.57538C4.86827 4.28249 5.34315 4.28249 5.63604 4.57538ZM18.364 4.57538C18.6569 4.28249 19.1317 4.28249 19.4246 4.57538C23.5251 8.67589 23.5251 15.3241 19.4246 19.4246C19.1317 19.7175 18.6569 19.7175 18.364 19.4246C18.0711 19.1317 18.0711 18.6569 18.364 18.364C21.8787 14.8492 21.8787 9.15076 18.364 5.63604C18.0711 5.34315 18.0711 4.86828 18.364 4.57538ZM7.75736 6.6967C8.05025 6.9896 8.05025 7.46447 7.75736 7.75736C5.41421 10.1005 5.41421 13.8995 7.75736 16.2426C8.05025 16.5355 8.05025 17.0104 7.75736 17.3033C7.46447 17.5962 6.98959 17.5962 6.6967 17.3033C3.76777 14.3744 3.76777 9.62564 6.6967 6.6967C6.98959 6.40381 7.46447 6.40381 7.75736 6.6967ZM16.2426 6.6967C16.5355 6.40381 17.0104 6.40381 17.3033 6.6967C20.2322 9.62564 20.2322 14.3744 17.3033 17.3033C17.0104 17.5962 16.5355 17.5962 16.2426 17.3033C15.9497 17.0104 15.9497 16.5355 16.2426 16.2426C18.5858 13.8995 18.5858 10.1005 16.2426 7.75736C15.9497 7.46447 15.9497 6.9896 16.2426 6.6967ZM9.87868 8.81802C10.1716 9.11092 10.1716 9.58579 9.87868 9.87868C8.70711 11.0503 8.70711 12.9498 9.87868 14.1213C10.1716 14.4142 10.1716 14.8891 9.87868 15.182C9.58579 15.4749 9.11091 15.4749 8.81802 15.182C7.06066 13.4246 7.06066 10.5754 8.81802 8.81802C9.11091 8.52513 9.58579 8.52513 9.87868 8.81802ZM14.1213 8.81802C14.4142 8.52513 14.8891 8.52513 15.182 8.81802C16.9393 10.5754 16.9393 13.4246 15.182 15.182C14.8891 15.4749 14.4142 15.4749 14.1213 15.182C13.8284 14.8891 13.8284 14.4142 14.1213 14.1213C15.2929 12.9498 15.2929 11.0503 14.1213 9.87868C13.8284 9.58579 13.8284 9.11092 14.1213 8.81802ZM10.875 12C10.875 11.3787 11.3787 10.875 12 10.875C12.6213 10.875 13.125 11.3787 13.125 12C13.125 12.6213 12.6213 13.125 12 13.125C11.3787 13.125 10.875 12.6213 10.875 12Z" fill="#fff"/></svg>
+    </button>
     <div class="activeStreams" id="activeStreams"></div>
 </div>
 
@@ -59,15 +97,29 @@ p{color:#aaa;margin:0 0 30px;font-size:14px}
     <video class="streamVideo" id="streamMainVideo" autoplay playsinline></video>
     <video class="streamLocal" id="streamLocal" autoplay playsinline muted></video>
     <div class="streamOverlay">
-        <button class="back" onclick="endStream()">←</button>
+        <button class="back" onclick="endStream()">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.0303 3.96967C11.3232 4.26256 11.3232 4.73744 11.0303 5.03033L4.81066 11.25H21C21.4142 11.25 21.75 11.5858 21.75 12C21.75 12.4142 21.4142 12.75 21 12.75H4.81066L11.0303 18.9697C11.3232 19.2626 11.3232 19.7374 11.0303 20.0303C10.7374 20.3232 10.2626 20.3232 9.96967 20.0303L2.46967 12.5303C2.17678 12.2374 2.17678 11.7626 2.46967 11.4697L9.96967 3.96967C10.2626 3.67678 10.7374 3.67678 11.0303 3.96967Z" fill="#fff"/></svg>
+        </button>
         <div class="liveDot"></div>
         <div class="streamTitleDisplay" id="streamTitleDisplay">Live Stream</div>
         <div class="streamViewers" id="streamViewers">0 viewers</div>
     </div>
     <div class="streamControls">
-        <button class="streamCtrlBtn mute" id="streamMuteBtn">🎤</button>
-        <button class="streamCtrlBtn video" id="streamVideoBtn">📹</button>
-        <button class="streamCtrlBtn end" id="streamEndBtn">⏹</button>
+        <button class="streamCtrlBtn mute" id="streamMuteBtn" title="Toggle Microphone">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.25 4.5C8.25 2.42893 9.92893 0.75 12 0.75C14.0711 0.75 15.75 2.42893 15.75 4.5V12.75C15.75 14.8211 14.0711 16.5 12 16.5C9.92893 16.5 8.25 14.8211 8.25 12.75V4.5Z"/><path d="M6 10.5C6.41421 10.5 6.75 10.8358 6.75 11.25V12.75C6.75 15.6495 9.1005 18 12 18C14.8995 18 17.25 15.6495 17.25 12.75V11.25C17.25 10.8358 17.5858 10.5 18 10.5C18.4142 10.5 18.75 10.8358 18.75 11.25V12.75C18.75 16.2244 16.125 19.0857 12.75 19.4588V21.75H15.75C16.1642 21.75 16.5 22.0858 16.5 22.5C16.5 22.9142 16.1642 23.25 15.75 23.25H8.25C7.83579 23.25 7.5 22.9142 7.5 22.5C7.5 22.0858 7.83579 21.75 8.25 21.75H11.25V19.4588C7.87504 19.0857 5.25 16.2244 5.25 12.75V11.25C5.25 10.8358 5.58579 10.5 6 10.5Z"/></svg>
+        </button>
+        <button class="streamCtrlBtn video" id="streamVideoBtn" title="Toggle Camera">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.5 4.5C2.84315 4.5 1.5 5.84315 1.5 7.5V16.5C1.5 18.1569 2.84315 19.5 4.5 19.5H12.75C14.4069 19.5 15.75 18.1569 15.75 16.5V7.5C15.75 5.84315 14.4069 4.5 12.75 4.5H4.5Z"/><path d="M19.9393 18.75L17.25 16.0606V7.93931L19.9393 5.24996C20.8843 4.30501 22.5 4.97427 22.5 6.31063V17.6893C22.5 19.0257 20.8843 19.6949 19.9393 18.75Z"/></svg>
+        </button>
+        <button class="streamCtrlBtn screenShare" id="streamScreenBtn" title="Share Screen">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.25 5.25C2.25 3.59315 3.59315 2.25 5.25 2.25H18.75C20.4069 2.25 21.75 3.59315 21.75 5.25V15C21.75 16.6569 20.4069 18 18.75 18H15.75V18.2574C15.75 18.8541 15.9871 19.4264 16.409 19.8483L17.0303 20.4697C17.2448 20.6842 17.309 21.0068 17.1929 21.287C17.0768 21.5673 16.8033 21.75 16.5 21.75H7.5C7.19665 21.75 6.92318 21.5673 6.80709 21.287C6.691 21.0068 6.75517 20.6842 6.96967 20.4697L7.59099 19.8484C8.01295 19.4264 8.25 18.8541 8.25 18.2574V18H5.25C3.59315 18 2.25 16.6569 2.25 15V5.25ZM3.75 5.25V12.75C3.75 13.5784 4.42157 14.25 5.25 14.25H18.75C19.5784 14.25 20.25 13.5784 20.25 12.75V5.25C20.25 4.42157 19.5784 3.75 18.75 3.75H5.25C4.42157 3.75 3.75 4.42157 3.75 5.25Z"/></svg>
+        </button>
+        <button class="streamCtrlBtn cameraFlip" id="streamFlipBtn" title="Flip Camera">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M15.9697 2.46967C16.2626 2.17678 16.7374 2.17678 17.0303 2.46967L21.5303 6.96967C21.671 7.11032 21.75 7.30109 21.75 7.5C21.75 7.69891 21.671 7.88968 21.5303 8.03033L17.0303 12.5303C16.7374 12.8232 16.2626 12.8232 15.9697 12.5303C15.6768 12.2374 15.6768 11.7626 15.9697 11.4697L19.1893 8.25L7.5 8.25C7.08579 8.25 6.75 7.91421 6.75 7.5C6.75 7.08579 7.08579 6.75 7.5 6.75L19.1893 6.75L15.9697 3.53033C15.6768 3.23744 15.6768 2.76256 15.9697 2.46967ZM8.03033 11.4697C8.32322 11.7626 8.32322 12.2374 8.03033 12.5303L4.81066 15.75H16.5C16.9142 15.75 17.25 16.0858 17.25 16.5C17.25 16.9142 16.9142 17.25 16.5 17.25H4.81066L8.03033 20.4697C8.32322 20.7626 8.32322 21.2374 8.03033 21.5303C7.73744 21.8232 7.26256 21.8232 6.96967 21.5303L2.46967 17.0303C2.17678 16.7374 2.17678 16.2626 2.46967 15.9697L6.96967 11.4697C7.26256 11.1768 7.73744 11.1768 8.03033 11.4697Z" fill="#fff"/></svg>
+        </button>
+        <button class="streamCtrlBtn end" id="streamEndBtn" title="End Stream">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.25 12C2.25 6.61522 6.61522 2.25 12 2.25C17.3848 2.25 21.75 6.61522 21.75 12C21.75 17.3848 17.3848 21.75 12 21.75C6.61522 21.75 2.25 17.3848 2.25 12ZM8.25 9.5625C8.25 8.83763 8.83763 8.25 9.5625 8.25H14.4375C15.1624 8.25 15.75 8.83763 15.75 9.5625V14.4375C15.75 15.1624 15.1624 15.75 14.4375 15.75H9.5625C8.83763 15.75 8.25 15.1624 8.25 14.4375V9.5625Z" fill="#fff"/></svg>
+        </button>
     </div>
     <div class="streamChatArea" id="streamChatArea"></div>
 </div>
@@ -82,6 +134,9 @@ let streamKey = null;
 let signalPollInterval = null;
 let isMuted = false;
 let isVideoOff = false;
+let isScreenSharing = false;
+let currentFacingMode = "user";
+let currentMode = "camera";
 let viewerConnections = [];
 let viewerIceQueues = {};
 let lastStreamChatId = 0;
@@ -94,6 +149,13 @@ const ICE_SERVERS = [
     { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" }
 ];
 
+const ICONS = {
+    micOn: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.25 4.5C8.25 2.42893 9.92893 0.75 12 0.75C14.0711 0.75 15.75 2.42893 15.75 4.5V12.75C15.75 14.8211 14.0711 16.5 12 16.5C9.92893 16.5 8.25 14.8211 8.25 12.75V4.5Z"/><path d="M6 10.5C6.41421 10.5 6.75 10.8358 6.75 11.25V12.75C6.75 15.6495 9.1005 18 12 18C14.8995 18 17.25 15.6495 17.25 12.75V11.25C17.25 10.8358 17.5858 10.5 18 10.5C18.4142 10.5 18.75 10.8358 18.75 11.25V12.75C18.75 16.2244 16.125 19.0857 12.75 19.4588V21.75H15.75C16.1642 21.75 16.5 22.0858 16.5 22.5C16.5 22.9142 16.1642 23.25 15.75 23.25H8.25C7.83579 23.25 7.5 22.9142 7.5 22.5C7.5 22.0858 7.83579 21.75 8.25 21.75H11.25V19.4588C7.87504 19.0857 5.25 16.2244 5.25 12.75V11.25C5.25 10.8358 5.58579 10.5 6 10.5Z"/></svg>',
+    micOff: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 0.75C9.92893 0.75 8.25 2.42893 8.25 4.5V12C8.25 12.4142 8.58579 12.75 9 12.75C9.41421 12.75 9.75 12.4142 9.75 12V4.5C9.75 3.25736 10.7574 2.25 12 2.25C13.2426 2.25 14.25 3.25736 14.25 4.5V6C14.25 6.41421 14.5858 6.75 15 6.75C15.4142 6.75 15.75 6.41421 15.75 6V4.5C15.75 2.42893 14.0711 0.75 12 0.75Z"/><path d="M18 10.5C18.4142 10.5 18.75 10.8358 18.75 11.25V12.75C18.75 16.2244 16.125 19.0857 12.75 19.4588V21.75H15.75C16.1642 21.75 16.5 22.0858 16.5 22.5C16.5 22.9142 16.1642 23.25 15.75 23.25H8.25C7.83579 23.25 7.5 22.9142 7.5 22.5C7.5 22.0858 7.83579 21.75 8.25 21.75H11.25V19.4588C7.87504 19.0857 5.25 16.2244 5.25 12.75V11.25C5.25 10.8358 5.58579 10.5 6 10.5C6.41421 10.5 6.75 10.8358 6.75 11.25V12.75C6.75 15.6495 9.1005 18 12 18C14.8995 18 17.25 15.6495 17.25 12.75V11.25C17.25 10.8358 17.5858 10.5 18 10.5Z"/></svg>',
+    camOn: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.5 4.5C2.84315 4.5 1.5 5.84315 1.5 7.5V16.5C1.5 18.1569 2.84315 19.5 4.5 19.5H12.75C14.4069 19.5 15.75 18.1569 15.75 16.5V7.5C15.75 5.84315 14.4069 4.5 12.75 4.5H4.5Z"/><path d="M19.9393 18.75L17.25 16.0606V7.93931L19.9393 5.24996C20.8843 4.30501 22.5 4.97427 22.5 6.31063V17.6893C22.5 19.0257 20.8843 19.6949 19.9393 18.75Z"/></svg>',
+    camOff: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0.96967 3.96967C1.26256 3.67678 1.73744 3.67678 2.03033 3.96967L17.0303 18.9697C17.3232 19.2626 17.3232 19.7374 17.0303 20.0303C16.7374 20.3232 16.2626 20.3232 15.9697 20.0303L0.96967 5.03033C0.676777 4.73744 0.676777 4.26256 0.96967 3.96967Z" fill="#fff"/><path d="M17.25 16.0606L19.9393 18.75C20.8843 19.6949 22.5 19.0257 22.5 17.6893V6.31063C22.5 4.97427 20.8843 4.30501 19.9393 5.24996L17.25 7.93931V16.0606Z" fill="#fff"/><path d="M15.75 7.5V15.568L4.68198 4.5H12.75C14.4069 4.5 15.75 5.84315 15.75 7.5Z" fill="#fff"/><path d="M1.5 16.5V7.68198L13.2727 19.4546C13.1029 19.4845 12.9283 19.5 12.75 19.5H4.5C2.84315 19.5 1.5 18.1569 1.5 16.5Z" fill="#fff"/></svg>'
+};
+
 function showToast(msg, type="success"){
     const t=document.createElement("div");
     t.className="toast "+type;
@@ -102,7 +164,95 @@ function showToast(msg, type="success"){
     setTimeout(()=>t.remove(),3000);
 }
 
-document.getElementById("goLiveBtn").onclick = async ()=>{
+function setMode(mode){
+    currentMode = mode;
+    document.querySelectorAll(".modeOption").forEach(function(btn){
+        btn.classList.toggle("active", btn.dataset.mode === mode);
+    });
+}
+
+function getStreamConstraints(){
+    if(currentMode === "screen"){
+        return null;
+    }
+    return {
+        audio: true,
+        video: { facingMode: currentFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } }
+    };
+}
+
+async function startScreenShare(){
+    try {
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({
+            video: { cursor: "always" },
+            audio: false
+        });
+
+        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true }).catch(function(){ return null; });
+
+        const tracks = screenStream.getVideoTracks();
+        if(audioStream){
+            audioStream.getAudioTracks().forEach(function(t){ tracks.push(t); });
+        }
+
+        localStream = new MediaStream(tracks);
+
+        screenStream.getVideoTracks()[0].onended = function(){
+            if(isStreaming){
+                switchBackToCamera();
+            }
+        };
+
+        return true;
+    } catch(e){
+        showToast("Screen share cancelled or not supported", "error");
+        return false;
+    }
+}
+
+async function switchBackToCamera(){
+    try {
+        if(localStream){
+            localStream.getTracks().forEach(function(t){ t.stop(); });
+        }
+        localStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: { facingMode: currentFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+        document.getElementById("streamLocal").srcObject = localStream;
+        document.getElementById("streamMainVideo").srcObject = localStream;
+        isScreenSharing = false;
+        document.getElementById("streamScreenBtn").classList.remove("active");
+        showToast("Switched back to camera");
+    } catch(e){
+        showToast("Failed to switch camera", "error");
+    }
+}
+
+async function getCameraStream(){
+    try {
+        localStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: { facingMode: currentFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+    } catch(e){
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: currentFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } } });
+            showToast("Microphone unavailable, streaming video only","error");
+        } catch(e2){
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                showToast("Camera unavailable, streaming audio only","error");
+            } catch(e3){
+                showToast("Camera/microphone access required","error");
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+document.getElementById("goLiveBtn").onclick = async function(){
     try {
     if(!localStorage.getItem("CloudTokToken")){
         showToast("Please login first","error");
@@ -116,34 +266,27 @@ document.getElementById("goLiveBtn").onclick = async ()=>{
 
     const title = document.getElementById("streamTitleInput").value.trim() || "Live Stream";
 
-    try {
-        localStream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-            video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }
-        });
-    } catch(e) {
-        console.error("[Live] getUserMedia failed:", e.name, e.message);
-        try {
-            localStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } });
-            showToast("Microphone unavailable, streaming video only","error");
-        } catch(e2) {
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                showToast("Camera unavailable, streaming audio only","error");
-            } catch(e3) {
-                showToast("Camera/microphone access required","error");
-                return;
-            }
-        }
+    if(currentMode === "screen"){
+        const ok = await startScreenShare();
+        if(!ok) return;
+    } else {
+        const ok = await getCameraStream();
+        if(!ok) return;
     }
 
     document.getElementById("streamLocal").srcObject = localStream;
     document.getElementById("streamMainVideo").srcObject = localStream;
 
+    if(currentMode === "screen"){
+        document.getElementById("streamLocal").style.display = "none";
+    } else {
+        document.getElementById("streamLocal").style.display = "block";
+    }
+
     const result = await CloudTokAPI.request("/live/create", {
         method: "POST",
         headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({title})
+        body: JSON.stringify({title: title, mode: currentMode})
     });
 
     if(result && result.success){
@@ -177,25 +320,22 @@ function startSignalPoll(){
             if(result && result.signals){
                 for(const signal of result.signals){
                     if(signal.id > lastSignalId) lastSignalId = signal.id;
-                    console.log("[Live] Signal:", signal.type, "from:", signal.from);
 
                     if(signal.type === "live-join"){
                         await handleViewerJoin(signal.from, signal.data);
                     } else if(signal.type === "live-leave"){
                         handleViewerLeave(signal.from);
                     } else if(signal.type === "live-ice-viewer"){
-                        const viewer = viewerConnections.find(v => v.username === signal.from);
+                        const viewer = viewerConnections.find(function(v){ return v.username === signal.from; });
                         if(viewer && signal.data && signal.data.candidate){
                             try {
                                 if(viewer.pc.remoteDescription){
                                     await viewer.pc.addIceCandidate(new RTCIceCandidate(signal.data.candidate));
-                                    console.log("[Live] Added viewer ICE candidate");
                                 } else {
-                                    console.log("[Live] Queuing viewer ICE (no remoteDescription yet)");
                                     if(!viewerIceQueues[signal.from]) viewerIceQueues[signal.from] = [];
                                     viewerIceQueues[signal.from].push(signal.data.candidate);
                                 }
-                            } catch(e){console.error("[Live] ICE error:",e);}
+                            } catch(e){}
                         }
                     } else if(signal.type === "live-chat-viewer" && signal.data){
                         addStreamChatMessage(signal.data.username || signal.from || "viewer", signal.data.text || "");
@@ -214,7 +354,7 @@ function startSignalPoll(){
                     });
                 }
             } catch(e){}
-        } catch(e){console.error("[Live] Poll error:",e);}
+        } catch(e){}
 
         if(isStreaming){
             signalPollInterval = setTimeout(poll, 800);
@@ -225,16 +365,14 @@ function startSignalPoll(){
 
 async function handleViewerJoin(viewerUsername, data){
     if(!localStream) return;
-    console.log("[Live] Viewer joining:", viewerUsername);
 
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
 
-    localStream.getTracks().forEach(track => {
-        console.log("[Live] Adding track to viewer PC:", track.kind);
+    localStream.getTracks().forEach(function(track){
         pc.addTrack(track, localStream);
     });
 
-    pc.onicecandidate = async (e) => {
+    pc.onicecandidate = async function(e){
         if(e.candidate){
             try {
                 await CloudTokAPI.request("/webrtc/signal", {
@@ -246,19 +384,14 @@ async function handleViewerJoin(viewerUsername, data){
                         signal_data: { candidate: e.candidate.toJSON() }
                     })
                 });
-            } catch(err) { console.error("[Live] Failed to send ICE:", err); }
+            } catch(err) {}
         }
     };
 
-    pc.onconnectionstatechange = () => {
-        console.log("[Live] Viewer", viewerUsername, "connection:", pc.connectionState);
+    pc.onconnectionstatechange = function(){
         if(pc.connectionState === "disconnected" || pc.connectionState === "failed"){
             handleViewerLeave(viewerUsername);
         }
-    };
-
-    pc.oniceconnectionstatechange = () => {
-        console.log("[Live] Viewer", viewerUsername, "ICE:", pc.iceConnectionState);
     };
 
     viewerConnections.push({ username: viewerUsername, pc: pc });
@@ -267,10 +400,8 @@ async function handleViewerJoin(viewerUsername, data){
     if(data && data.offer){
         try {
             await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-            console.log("[Live] Set remote description, creating answer...");
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
-            console.log("[Live] Answer created, SDP length:", pc.localDescription.sdp.length);
 
             await CloudTokAPI.request("/webrtc/signal", {
                 method: "POST",
@@ -281,10 +412,8 @@ async function handleViewerJoin(viewerUsername, data){
                     signal_data: { sdp: pc.localDescription.sdp, type: pc.localDescription.type }
                 })
             });
-            console.log("[Live] Sent answer to", viewerUsername);
 
             if(viewerIceQueues[viewerUsername] && viewerIceQueues[viewerUsername].length > 0){
-                console.log("[Live] Draining", viewerIceQueues[viewerUsername].length, "queued viewer ICE");
                 for(const c of viewerIceQueues[viewerUsername]){
                     try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
                 }
@@ -297,7 +426,7 @@ async function handleViewerJoin(viewerUsername, data){
 }
 
 function handleViewerLeave(viewerUsername){
-    const idx = viewerConnections.findIndex(v => v.username === viewerUsername);
+    const idx = viewerConnections.findIndex(function(v){ return v.username === viewerUsername; });
     if(idx !== -1){
         try { viewerConnections[idx].pc.close(); } catch(e){}
         viewerConnections.splice(idx, 1);
@@ -325,19 +454,24 @@ async function endStream(){
         } catch(e){}
     }
 
-    viewerConnections.forEach(v => { try { v.pc.close(); } catch(e){} });
+    viewerConnections.forEach(function(v){ try { v.pc.close(); } catch(e){} });
     viewerConnections = [];
 
     if(localStream){
-        localStream.getTracks().forEach(t=>t.stop());
+        localStream.getTracks().forEach(function(t){ t.stop(); });
         localStream = null;
     }
     if(signalPollInterval){ clearTimeout(signalPollInterval); signalPollInterval = null; }
     isStreaming = false;
+    isScreenSharing = false;
     streamKey = null;
 
     document.getElementById("streamView").classList.remove("active");
     document.getElementById("startScreen").style.display = "block";
+    document.getElementById("streamLocal").style.display = "block";
+    document.getElementById("streamScreenBtn").classList.remove("active");
+    document.getElementById("streamMuteBtn").classList.remove("muted");
+    document.getElementById("streamVideoBtn").classList.remove("muted");
     showToast("Stream ended");
     loadActiveStreams();
 }
@@ -348,19 +482,87 @@ function addStreamChatMessage(username, text){
     el.innerHTML = '<span class="chatUser">@'+username+'</span>'+text;
     el.style.left = (12 + Math.random() * 40) + 'px';
     document.body.appendChild(el);
-    setTimeout(()=>el.remove(), 5000);
+    setTimeout(function(){ el.remove(); }, 5000);
 }
 
-document.getElementById("streamMuteBtn").onclick = ()=>{
+document.getElementById("streamMuteBtn").onclick = function(){
     isMuted = !isMuted;
-    if(localStream) localStream.getAudioTracks().forEach(t=>t.enabled=!isMuted);
-    document.getElementById("streamMuteBtn").textContent = isMuted ? "🔇" : "🎤";
+    if(localStream) localStream.getAudioTracks().forEach(function(t){ t.enabled = !isMuted; });
+    document.getElementById("streamMuteBtn").innerHTML = isMuted ? ICONS.micOff : ICONS.micOn;
+    document.getElementById("streamMuteBtn").classList.toggle("muted", isMuted);
 };
 
-document.getElementById("streamVideoBtn").onclick = ()=>{
+document.getElementById("streamVideoBtn").onclick = function(){
     isVideoOff = !isVideoOff;
-    if(localStream) localStream.getVideoTracks().forEach(t=>t.enabled=!isVideoOff);
-    document.getElementById("streamVideoBtn").textContent = isVideoOff ? "📷" : "📹";
+    if(localStream) localStream.getVideoTracks().forEach(function(t){ t.enabled = !isVideoOff; });
+    document.getElementById("streamVideoBtn").innerHTML = isVideoOff ? ICONS.camOff : ICONS.camOn;
+    document.getElementById("streamVideoBtn").classList.toggle("muted", isVideoOff);
+};
+
+document.getElementById("streamScreenBtn").onclick = async function(){
+    if(!isStreaming) return;
+
+    if(isScreenSharing){
+        await switchBackToCamera();
+    } else {
+        try {
+            const screenStream = await navigator.mediaDevices.getDisplayMedia({
+                video: { cursor: "always" },
+                audio: false
+            });
+
+            const oldVideoTrack = localStream.getVideoTracks()[0];
+            const newVideoTrack = screenStream.getVideoTracks()[0];
+
+            localStream.removeTrack(oldVideoTrack);
+            localStream.addTrack(newVideoTrack);
+            oldVideoTrack.stop();
+
+            newVideoTrack.onended = function(){
+                if(isStreaming) switchBackToCamera();
+            };
+
+            document.getElementById("streamMainVideo").srcObject = localStream;
+            document.getElementById("streamLocal").style.display = "none";
+            isScreenSharing = true;
+            document.getElementById("streamScreenBtn").classList.add("active");
+            showToast("Screen sharing started");
+        } catch(e){
+            showToast("Screen share cancelled", "error");
+        }
+    }
+};
+
+document.getElementById("streamFlipBtn").onclick = async function(){
+    if(currentMode === "screen" || !isStreaming) return;
+
+    currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
+
+    try {
+        const newStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: { facingMode: currentFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+
+        const oldTrack = localStream.getVideoTracks()[0];
+        const newTrack = newStream.getVideoTracks()[0];
+
+        localStream.removeTrack(oldTrack);
+        localStream.addTrack(newTrack);
+        oldTrack.stop();
+
+        viewerConnections.forEach(function(v){
+            const sender = v.pc.getSenders().find(function(s){ return s.track && s.track.kind === "video"; });
+            if(sender) sender.replaceTrack(newTrack);
+        });
+
+        document.getElementById("streamMainVideo").srcObject = localStream;
+        document.getElementById("streamLocal").srcObject = localStream;
+        showToast("Camera flipped");
+    } catch(e){
+        showToast("Failed to flip camera", "error");
+        currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
+    }
 };
 
 async function loadActiveStreams(){
@@ -373,16 +575,14 @@ async function loadActiveStreams(){
             return;
         }
         container.innerHTML = '<h3>Live Now</h3>';
-        streams.forEach(s=>{
+        streams.forEach(function(s){
             const card = document.createElement("div");
             card.className = "streamCard";
-            card.innerHTML = `
-                <div class="liveDot" style="background:#ff2d55;"></div>
-                <div style="flex:1;">
-                    <div style="font-weight:600;font-size:14px;">${s.display_name||s.username}</div>
-                    <div style="color:rgba(255,255,255,.4);font-size:12px;">${s.title||"Live"}</div>
-                </div>
-            `;
+            card.innerHTML = '<div class="liveDot" style="background:#ff2d55;"></div>' +
+                '<div style="flex:1;">' +
+                    '<div style="font-weight:600;font-size:14px;">' + (s.display_name||s.username) + '</div>' +
+                    '<div style="color:rgba(255,255,255,.4);font-size:12px;">' + (s.title||"Live") + '</div>' +
+                '</div>';
             container.appendChild(card);
         });
     } catch(e){
