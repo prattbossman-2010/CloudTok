@@ -25,9 +25,7 @@ document
 
     if(!username || !email || !password){
 
-        alert(
-            "Please fill in all fields"
-        );
+        if(typeof showToast==="function"){ showToast("Please fill in all fields", "warning"); } else { alert("Please fill in all fields"); }
 
         return;
 
@@ -59,10 +57,7 @@ document
 
         if(!result.success){
 
-            alert(
-                result.error ||
-                "Signup failed"
-            );
+            if(typeof showToast==="function"){ showToast(result.error || "Signup failed", "error"); } else { alert(result.error || "Signup failed"); }
 
             return;
 
@@ -85,9 +80,7 @@ document
 
         if(!loginResult.success){
 
-            alert(
-                "Account created. Please login."
-            );
+            if(typeof showToast==="function"){ showToast("Account created. Please login.", "success"); } else { alert("Account created. Please login."); }
 
             window.location.replace(
                 "login.html"
@@ -105,9 +98,7 @@ document
 
         if(!user){
 
-            alert(
-                "Account created, but automatic login failed. Please login."
-            );
+            if(typeof showToast==="function"){ showToast("Account created, but automatic login failed. Please login.", "error"); } else { alert("Account created, but automatic login failed. Please login."); }
 
             window.location.replace(
                 "login.html"
@@ -132,9 +123,7 @@ document
     }
     catch(e){
 
-        alert(
-            "Signup failed. Please try again."
-        );
+        if(typeof showToast==="function"){ showToast("Signup failed. Please try again.", "error"); } else { alert("Signup failed. Please try again."); }
 
         console.log(
             "Signup error:",

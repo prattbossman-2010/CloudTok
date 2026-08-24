@@ -90,6 +90,8 @@ async init(){
 
     this.showPCHint();
 
+    this.setupInfiniteScroll();
+
     // Re-fetch videos when returning to this page (e.g. from watch page)
     let lastLoadTime = 0;
     document.addEventListener("visibilitychange",()=>{
@@ -232,9 +234,9 @@ this.videoList.sort((a,b)=>{
 
             console.error(error);
 
-            alert(
-                "VIDEO ERROR: " + error.message
-            );
+            if(typeof showToast==="function"){
+                showToast("VIDEO ERROR: " + error.message, "error");
+            }
 
         }
 
@@ -709,6 +711,35 @@ generateShareURL(type,id){
         return window.location.origin+window.location.pathname+"#/video/"+id;
     }
     return window.location.href;
+}
+
+setupInfiniteScroll(){
+    const container = document.getElementById("feedContainer");
+    if(!container) return;
+    
+    let loading = false;
+    window.addEventListener("scroll", async ()=>{
+        if(loading) return;
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const scrollHeight = document.documentElement.scrollHeight;
+        const clientHeight = window.innerHeight;
+        
+        if(scrollTop + clientHeight >= scrollHeight - 300){
+            loading = true;
+            try{
+                const offset = this.videoList.length;
+                const result = await CloudTokAPI.getVideos({offset: offset, limit: 10});
+                if(result.videos && result.videos.length > 0){
+                    const newVideos = result.videos.filter(v => !this.videoList.some(existing => existing.id === v.id));
+                    if(newVideos.length > 0){
+                        this.videoList.push(...newVideos);
+                        this.feed.appendVideos(newVideos);
+                    }
+                }
+            } catch(e){}
+            loading = false;
+        }
+    }, {passive: true});
 }
 
 

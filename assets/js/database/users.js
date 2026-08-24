@@ -121,8 +121,8 @@ this.users=[{
     showOnlineStatus:true
 },
 id:1,
-username:"PrattBossman",
-displayName:"Pratt Bossman",
+username:"cloudtok_user",
+displayName:"CloudTok User",
 email:"",
 password:"",
 bio:"Welcome to CloudTok",

@@ -13,7 +13,7 @@ class CloudTokUploader {
     if (!this.currentUser) {
       this.currentUser = {
         displayName: "CloudTok User",
-        username: "PrattBossman",
+        username: localStorage.getItem("CloudTokCurrentUser") || "user",
         avatar: "assets/images/default-avatar.png"
       };
     }

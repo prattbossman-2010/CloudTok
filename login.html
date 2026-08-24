@@ -29,10 +29,14 @@ id="email"
 type="email"
 placeholder="Email">
 
+<div style="position:relative;">
 <input
 id="password"
 type="password"
-placeholder="Password">
+placeholder="Password"
+style="width:100%;box-sizing:border-box;padding-right:45px;">
+<button type="button" id="togglePassword" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:18px;padding:5px;">👁</button>
+</div>
 
 <a href="forgot-password.html" class="forgotLink">Forgot password?</a>
 
@@ -84,6 +88,15 @@ localStorage.getItem(
 
 </script>
 		
+<script>
+document.getElementById("togglePassword")?.addEventListener("click", function(){
+    const input = document.getElementById("password");
+    if(input.type === "password"){ input.type = "text"; this.textContent = "🙈"; }
+    else { input.type = "password"; this.textContent = "👁"; }
+});
+</script>
+
+<script src="assets/js/components/toast.js"></script>
 <script src="assets/js/sign/login.js"></script>
 		
 		

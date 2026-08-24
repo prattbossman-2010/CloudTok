@@ -18,7 +18,7 @@ document
 
     if(!email || !password){
 
-        alert("Please fill in all fields");
+        if(typeof showToast==="function"){ showToast("Please fill in all fields", "warning"); } else { alert("Please fill in all fields"); }
 
         return;
 
@@ -47,7 +47,7 @@ document
 
             }
 
-            alert(errMsg);
+            if(typeof showToast==="function"){ showToast(errMsg, "error"); } else { alert(errMsg); }
 
             return;
 
@@ -72,9 +72,7 @@ document
 
         if(!user){
 
-            alert(
-                "Login succeeded, but user data was not returned."
-            );
+            if(typeof showToast==="function"){ showToast("Login succeeded, but user data was not returned.", "error"); } else { alert("Login succeeded, but user data was not returned."); }
 
             return;
 
@@ -117,9 +115,7 @@ document
     }
     catch(e){
 
-        alert(
-            "Login failed. Please try again."
-        );
+        if(typeof showToast==="function"){ showToast("Login failed. Please try again.", "error"); } else { alert("Login failed. Please try again."); }
 
         console.log(
             "Login error:",

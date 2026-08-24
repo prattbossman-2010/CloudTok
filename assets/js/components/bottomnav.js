@@ -82,7 +82,7 @@ const newVideo={
 
 id:Date.now(),
 
-username:"PrattBossman",
+username: localStorage.getItem("CloudTokCurrentUser") || "user",
 
 caption:"",
 
