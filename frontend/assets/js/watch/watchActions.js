@@ -150,9 +150,12 @@ if(this.followBtn){
 const videoArea = document.getElementById("videoArea");
 if(videoArea){
     let longPressTimer = null;
-    videoArea.addEventListener("touchstart", (e)=>{
+    let longPressTriggered = false;
+    const startLongPress = (e) => {
         if(e.target.closest(".watchActions") || e.target.closest("#commentsPanel")) return;
+        longPressTriggered = false;
         longPressTimer = setTimeout(()=>{
+            longPressTriggered = true;
             if(!CloudTokAuthGuard.requireLogin()) return;
             const reason = prompt("Report reason (spam, inappropriate, other):");
             if(reason){
@@ -161,9 +164,14 @@ if(videoArea){
                 }).catch(()=>{ showToast("Report failed", "error"); });
             }
         }, 600);
-    }, {passive: true});
-    videoArea.addEventListener("touchend", ()=>{ clearTimeout(longPressTimer); }, {passive: true});
-    videoArea.addEventListener("touchmove", ()=>{ clearTimeout(longPressTimer); }, {passive: true});
+    };
+    const cancelLongPress = () => { clearTimeout(longPressTimer); };
+    videoArea.addEventListener("touchstart", startLongPress, {passive: true});
+    videoArea.addEventListener("touchend", cancelLongPress, {passive: true});
+    videoArea.addEventListener("touchmove", cancelLongPress, {passive: true});
+    videoArea.addEventListener("mousedown", startLongPress);
+    videoArea.addEventListener("mouseup", cancelLongPress);
+    videoArea.addEventListener("mouseleave", cancelLongPress);
 }
 
 }
@@ -175,6 +183,20 @@ if(!CloudTokAuthGuard.requireLogin()){
     return;
 }
 
+const wasLiked = this.isLiked;
+
+if(this.isLiked){
+    this.video.likedBy = this.video.likedBy.filter(u=>u!==this.currentUser);
+    this.video.likes = Math.max(0,(this.video.likes||0)-1);
+}
+else{
+    this.video.likedBy.push(this.currentUser);
+    this.video.likes = (this.video.likes||0)+1;
+}
+this.isLiked = !this.isLiked;
+this.saveDatabase();
+this.updateUI();
+
 if(typeof CloudTokAPI!=="undefined"){
     try{
         const result=await CloudTokAPI.request(
@@ -183,38 +205,33 @@ if(typeof CloudTokAPI!=="undefined"){
         );
         if(result.success){
             this.isLiked=result.liked;
-            if(result.liked){
+            if(result.liked && !wasLiked){
                 this.video.likes=(this.video.likes||0)+1;
-            }else{
+            }else if(!result.liked && wasLiked){
                 this.video.likes=Math.max(0,(this.video.likes||0)-1);
             }
             if(result.liked){
-                this.video.likedBy.push(this.currentUser);
+                if(!this.video.likedBy.includes(this.currentUser)) this.video.likedBy.push(this.currentUser);
             }else{
                 this.video.likedBy=this.video.likedBy.filter(u=>u!==this.currentUser);
             }
             this.saveDatabase();
             this.updateUI();
-            return;
         }
     }
     catch(e){
-        console.log("Like API failed, using local");
+        this.isLiked = wasLiked;
+        if(wasLiked){
+            this.video.likedBy.push(this.currentUser);
+            this.video.likes = (this.video.likes||0)+1;
+        } else {
+            this.video.likedBy = this.video.likedBy.filter(u=>u!==this.currentUser);
+            this.video.likes = Math.max(0,(this.video.likes||0)-1);
+        }
+        this.saveDatabase();
+        this.updateUI();
     }
 }
-
-if(this.isLiked){
-    this.video.likedBy = this.video.likedBy.filter(user=>user!==this.currentUser);
-    this.video.likes = Math.max(0,(this.video.likes||0)-1);
-}
-else{
-    this.video.likedBy.push(this.currentUser);
-    this.video.likes = (this.video.likes||0)+1;
-}
-
-this.isLiked = !this.isLiked;
-this.saveDatabase();
-this.updateUI();
 
 }
 

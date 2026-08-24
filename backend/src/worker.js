@@ -21,7 +21,13 @@ import {
 import {
   getConversations,
   getMessages,
-  sendMessage
+  sendMessage,
+  deleteMessage,
+  archiveMessage,
+  lockMessage,
+  bulkDeleteMessages,
+  bulkArchiveMessages,
+  bulkLockMessages
 } from "./routes/messages.js";
 import { search } from "./routes/search.js";
 import { getTrending, getDiscoverVideos } from "./routes/discover.js";
@@ -195,6 +201,26 @@ export default {
       return withCORS(getConversations(request, env));
     }
 
+    if(path === "/api/messages/bulk-delete" && method === "POST"){
+      return withCORS(bulkDeleteMessages(request, env));
+    }
+    if(path === "/api/messages/bulk-archive" && method === "POST"){
+      return withCORS(bulkArchiveMessages(request, env));
+    }
+    if(path === "/api/messages/bulk-lock" && method === "POST"){
+      return withCORS(bulkLockMessages(request, env));
+    }
+
+    const msgMatch = path.match(/^\/api\/messages\/(\d+)(\/archive|\/lock)?$/);
+    if(msgMatch && method === "DELETE"){
+      return withCORS(deleteMessage(request, env, msgMatch[1]));
+    }
+    if(msgMatch && msgMatch[2] === "/archive" && method === "POST"){
+      return withCORS(archiveMessage(request, env, msgMatch[1]));
+    }
+    if(msgMatch && msgMatch[2] === "/lock" && method === "POST"){
+      return withCORS(lockMessage(request, env, msgMatch[1]));
+    }
 
     if(
       path.startsWith("/api/messages/") &&

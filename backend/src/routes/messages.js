@@ -264,3 +264,110 @@ export async function sendMessage(request, env, otherUsername){
   });
 
 }
+
+
+export async function deleteMessage(request, env, messageId){
+  const auth = await authenticate(request, env);
+  if(auth.error) return auth.error;
+
+  const msg = await env.DB.prepare(
+    `SELECT m.id, m.sender_id, m.conversation_id, c.user1_id, c.user2_id
+     FROM messages m JOIN conversations c ON m.conversation_id = c.id
+     WHERE m.id = ?`
+  ).bind(messageId).first();
+
+  if(!msg) return Response.json({error:"Message not found"},{status:404});
+  if(msg.sender_id !== auth.user.id) return Response.json({error:"Not authorized"},{status:403});
+
+  await env.DB.prepare(`DELETE FROM messages WHERE id = ?`).bind(messageId).run();
+  return Response.json({success:true});
+}
+
+
+export async function archiveMessage(request, env, messageId){
+  const auth = await authenticate(request, env);
+  if(auth.error) return auth.error;
+
+  try { await env.DB.prepare(`ALTER TABLE messages ADD COLUMN archived INTEGER DEFAULT 0`).run(); } catch(e){}
+
+  const msg = await env.DB.prepare(
+    `SELECT m.id, m.sender_id, m.conversation_id, c.user1_id, c.user2_id
+     FROM messages m JOIN conversations c ON m.conversation_id = c.id
+     WHERE m.id = ?`
+  ).bind(messageId).first();
+
+  if(!msg) return Response.json({error:"Message not found"},{status:404});
+  if(msg.sender_id !== auth.user.id) return Response.json({error:"Not authorized"},{status:403});
+
+  await env.DB.prepare(`UPDATE messages SET archived = CASE WHEN archived=1 THEN 0 ELSE 1 END WHERE id = ?`).bind(messageId).run();
+  return Response.json({success:true});
+}
+
+
+export async function lockMessage(request, env, messageId){
+  const auth = await authenticate(request, env);
+  if(auth.error) return auth.error;
+
+  try { await env.DB.prepare(`ALTER TABLE messages ADD COLUMN locked INTEGER DEFAULT 0`).run(); } catch(e){}
+  try { await env.DB.prepare(`ALTER TABLE messages ADD COLUMN lock_password TEXT`).run(); } catch(e){}
+
+  const body = await request.json();
+
+  const msg = await env.DB.prepare(
+    `SELECT m.id, m.sender_id FROM messages m WHERE m.id = ?`
+  ).bind(messageId).first();
+
+  if(!msg) return Response.json({error:"Message not found"},{status:404});
+  if(msg.sender_id !== auth.user.id) return Response.json({error:"Not authorized"},{status:403});
+
+  if(body.locked && body.password){
+    await env.DB.prepare(`UPDATE messages SET locked = 1, lock_password = ? WHERE id = ?`).bind(body.password, messageId).run();
+  } else {
+    await env.DB.prepare(`UPDATE messages SET locked = 0, lock_password = NULL WHERE id = ?`).bind(messageId).run();
+  }
+  return Response.json({success:true});
+}
+
+
+export async function bulkDeleteMessages(request, env){
+  const auth = await authenticate(request, env);
+  if(auth.error) return auth.error;
+
+  const {ids} = await request.json();
+  if(!ids || !ids.length) return Response.json({error:"No messages"},{status:400});
+
+  const placeholders = ids.map(()=>"?").join(",");
+  await env.DB.prepare(`DELETE FROM messages WHERE id IN (${placeholders}) AND sender_id = ?`).bind(...ids, auth.user.id).run();
+  return Response.json({success:true, deleted:ids.length});
+}
+
+
+export async function bulkArchiveMessages(request, env){
+  const auth = await authenticate(request, env);
+  if(auth.error) return auth.error;
+
+  try { await env.DB.prepare(`ALTER TABLE messages ADD COLUMN archived INTEGER DEFAULT 0`).run(); } catch(e){}
+
+  const {ids} = await request.json();
+  if(!ids || !ids.length) return Response.json({error:"No messages"},{status:400});
+
+  const placeholders = ids.map(()=>"?").join(",");
+  await env.DB.prepare(`UPDATE messages SET archived = 1 WHERE id IN (${placeholders}) AND sender_id = ?`).bind(...ids, auth.user.id).run();
+  return Response.json({success:true, archived:ids.length});
+}
+
+
+export async function bulkLockMessages(request, env){
+  const auth = await authenticate(request, env);
+  if(auth.error) return auth.error;
+
+  try { await env.DB.prepare(`ALTER TABLE messages ADD COLUMN locked INTEGER DEFAULT 0`).run(); } catch(e){}
+  try { await env.DB.prepare(`ALTER TABLE messages ADD COLUMN lock_password TEXT`).run(); } catch(e){}
+
+  const {ids, password} = await request.json();
+  if(!ids || !ids.length || !password) return Response.json({error:"Missing data"},{status:400});
+
+  const placeholders = ids.map(()=>"?").join(",");
+  await env.DB.prepare(`UPDATE messages SET locked = 1, lock_password = ? WHERE id IN (${placeholders}) AND sender_id = ?`).bind(password, ...ids, auth.user.id).run();
+  return Response.json({success:true, locked:ids.length});
+}

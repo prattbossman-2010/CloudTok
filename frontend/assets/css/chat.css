@@ -582,3 +582,72 @@ font-size:13px;
 .conversation{padding:12px;}
 .messageBar{padding:10px;}
 }
+
+.msgContextMenu{
+position:fixed;
+background:#1a1a1a;
+border:1px solid #333;
+border-radius:12px;
+padding:6px 0;
+z-index:999;
+min-width:160px;
+box-shadow:0 8px 30px rgba(0,0,0,.6);
+animation:ctxFadeIn .15s ease;
+}
+@keyframes ctxFadeIn{from{opacity:0;transform:scale(.95);}to{opacity:1;transform:scale(1);}}
+.msgCtxItem{
+display:flex;
+align-items:center;
+gap:10px;
+padding:11px 16px;
+color:#fff;
+font-size:14px;
+cursor:pointer;
+transition:background .15s;
+border:none;
+background:none;
+width:100%;
+text-align:left;
+}
+.msgCtxItem:hover{background:rgba(255,255,255,.08);}
+.msgCtxItem.danger{color:#ff4466;}
+.msgCtxItem.danger:hover{background:rgba(255,68,102,.12);}
+.msgCtxItem .ctxIcon{font-size:16px;width:20px;text-align:center;}
+.msgCtxSep{height:1px;background:#333;margin:4px 0;}
+
+.msgSelectBar{
+display:none;
+position:fixed;
+bottom:0;left:0;right:0;
+background:#111;
+border-top:1px solid #333;
+padding:10px 16px;
+z-index:100;
+align-items:center;
+justify-content:space-between;
+}
+.msgSelectBar.show{display:flex;}
+.msgSelectBar .selCount{color:rgba(255,255,255,.6);font-size:13px;}
+.msgSelectActions{display:flex;gap:8px;}
+.msgSelectActions button{
+background:none;border:none;color:#fff;font-size:12px;
+padding:8px 12px;border-radius:8px;cursor:pointer;
+background:rgba(255,255,255,.08);font-weight:600;
+}
+.msgSelectActions button:hover{background:rgba(255,255,255,.14);}
+.msgSelectActions button.danger{color:#ff4466;}
+.msgSelectActions button.danger:hover{background:rgba(255,68,102,.12);}
+
+.message.selected{
+outline:2px solid #fe2c55;
+outline-offset:2px;
+opacity:.7;
+}
+
+.lockedOverlay{
+display:flex;align-items:center;justify-content:center;gap:6px;
+padding:10px 16px;color:rgba(255,255,255,.4);font-size:13px;
+background:rgba(255,255,255,.03);border-radius:12px;
+align-self:center;cursor:pointer;
+}
+.lockedOverlay:hover{background:rgba(255,255,255,.06);}
