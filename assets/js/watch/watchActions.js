@@ -146,67 +146,24 @@ if(this.followBtn){
     };
 }
 
-// Download button
-const downloadBtn = document.getElementById("watchDownloadBtn");
-if(downloadBtn){
-    downloadBtn.onclick = async ()=>{
-        if(!CloudTokAuthGuard.requireLogin()) return;
-        try{
-            const result = await CloudTokAPI.downloadVideo(this.video.id);
-            if(result.video_url){
-                const a = document.createElement("a");
-                a.href = result.video_url;
-                a.download = result.filename || "cloudtok_video.mp4";
-                a.target = "_blank";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                showToast("Download started!", "success");
-            }
-        } catch(e){
-            showToast("Download failed", "error");
-        }
-    };
-}
-
-// More menu (report/block)
-const moreBtn = document.getElementById("watchMoreBtn");
-const moreMenu = document.getElementById("watchMoreMenu");
-if(moreBtn && moreMenu){
-    moreBtn.onclick = (e)=>{
-        e.stopPropagation();
-        moreMenu.style.display = moreMenu.style.display === "none" ? "block" : "none";
-    };
-    document.addEventListener("click", ()=>{ moreMenu.style.display = "none"; });
-    
-    moreMenu.querySelectorAll(".watchMoreOption").forEach(opt=>{
-        opt.onclick = async (e)=>{
-            e.stopPropagation();
-            const action = opt.dataset.action;
-            moreMenu.style.display = "none";
-            
+// Long-press to report
+const videoArea = document.getElementById("videoArea");
+if(videoArea){
+    let longPressTimer = null;
+    videoArea.addEventListener("touchstart", (e)=>{
+        if(e.target.closest(".watchActions") || e.target.closest("#commentsPanel")) return;
+        longPressTimer = setTimeout(()=>{
             if(!CloudTokAuthGuard.requireLogin()) return;
-            
-            if(action === "report"){
-                const reason = prompt("Report reason (spam, inappropriate, other):");
-                if(reason){
-                    try{
-                        await CloudTokAPI.reportVideo(this.video.id, reason);
-                        showToast("Video reported. Thank you!", "success");
-                    } catch(e){ showToast("Report failed", "error"); }
-                }
+            const reason = prompt("Report reason (spam, inappropriate, other):");
+            if(reason){
+                CloudTokAPI.reportVideo(this.video.id, reason).then(()=>{
+                    showToast("Video reported. Thank you!", "success");
+                }).catch(()=>{ showToast("Report failed", "error"); });
             }
-            if(action === "block"){
-                if(confirm("Block this user? You won't see their content anymore.")){
-                    try{
-                        await CloudTokAPI.blockUser(this.video.username);
-                        showToast("User blocked", "success");
-                        history.back();
-                    } catch(e){ showToast("Block failed", "error"); }
-                }
-            }
-        };
-    });
+        }, 600);
+    }, {passive: true});
+    videoArea.addEventListener("touchend", ()=>{ clearTimeout(longPressTimer); }, {passive: true});
+    videoArea.addEventListener("touchmove", ()=>{ clearTimeout(longPressTimer); }, {passive: true});
 }
 
 }
