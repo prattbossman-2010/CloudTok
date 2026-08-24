@@ -131,28 +131,28 @@
 
 <div class="settingsSection">
     <h3>Support</h3>
-    <div class="settingItem">
+    <a href="help.html" class="settingItem" style="text-decoration:none;color:inherit;">
         <span class="settingIcon">❓</span>
         <div class="settingInfo">
             <span class="settingLabel">Help Center</span>
             <span class="settingDesc">FAQ and support</span>
         </div>
         <span class="settingArrow">›</span>
-    </div>
-    <div class="settingItem">
+    </a>
+    <a href="help.html" class="settingItem" style="text-decoration:none;color:inherit;">
         <span class="settingIcon">📋</span>
         <div class="settingInfo">
             <span class="settingLabel">Terms of Service</span>
         </div>
         <span class="settingArrow">›</span>
-    </div>
-    <div class="settingItem">
+    </a>
+    <a href="help.html" class="settingItem" style="text-decoration:none;color:inherit;">
         <span class="settingIcon">🛡</span>
         <div class="settingInfo">
             <span class="settingLabel">Privacy Policy</span>
         </div>
         <span class="settingArrow">›</span>
-    </div>
+    </a>
 </div>
 
 <div class="settingsSection">
@@ -219,6 +219,12 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     document.getElementById("deleteAccountBtn").addEventListener("click", async ()=>{
         if(confirm("Are you sure you want to delete your account? This action cannot be undone.")){
             if(confirm("This will permanently delete all your data. Are you really sure?")){
+                try {
+                    const token = localStorage.getItem("CloudTokToken");
+                    if(token && typeof CloudTokAPI !== "undefined"){
+                        await CloudTokAPI.request("/users/profile", { method:"PUT", headers:{"Content-Type":"application/json"}, body: JSON.stringify({status:"deleted"}) }).catch(()=>{});
+                    }
+                } catch(e) {}
                 localStorage.clear();
                 window.location.href = "login.html";
             }

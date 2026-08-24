@@ -1,0 +1,15 @@
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #1a1a1a 25%, #252525 50%, #1a1a1a 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+.skeletonCircle { border-radius: 50%; }
+.skeletonText { height: 14px; margin-bottom: 8px; }
+.skeletonTextShort { height: 14px; width: 60%; margin-bottom: 8px; }
+.skeletonVideo { width: 100%; aspect-ratio: 9/16; max-height: 70vh; border-radius: 12px; }
+.skeletonCard { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); }

@@ -22,7 +22,8 @@ CloudTok Watch
 
 <link rel="stylesheet"
 href="assets/css/watch.css">
-<link rel="stylesheet" href="assets/css/theme.css">		
+<link rel="stylesheet" href="assets/css/theme.css">
+<link rel="stylesheet" href="assets/css/skeleton.css">		
 
 </head>
 
@@ -121,7 +122,17 @@ class="actionIcon">
 
 </button>
 
+<button id="watchDownloadBtn" title="Download">
+<img src="assets/icons/solid/share.svg" class="actionIcon" style="transform:scaleX(-1);">
+</button>
 
+<button id="watchMoreBtn" title="More" style="position:relative;">
+<span style="font-size:1.2em;">⋯</span>
+<div id="watchMoreMenu" style="display:none;position:absolute;bottom:100%;right:0;background:#1a1a1a;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:8px 0;min-width:140px;z-index:20;box-shadow:0 4px 20px rgba(0,0,0,0.5);">
+<div class="watchMoreOption" data-action="report" style="padding:10px 16px;cursor:pointer;color:#fe2c55;font-size:13px;">Report</div>
+<div class="watchMoreOption" data-action="block" style="padding:10px 16px;cursor:pointer;color:#fe2c55;font-size:13px;">Block User</div>
+</div>
+</button>
 
 <button id="watchSaveBtn">
 
@@ -152,6 +163,10 @@ class="actionIcon">
 </div>
 
 
+
+<div id="videoProgress" style="position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.15);z-index:10;">
+<div id="videoProgressFill" style="height:100%;background:linear-gradient(90deg,#00b7ff,#7b2ff2);width:0%;transition:width 0.15s linear;border-radius:0 2px 2px 0;"></div>
+</div>
 
 </div>
 
@@ -222,6 +237,7 @@ Send
 
 
 
+<script src="assets/js/components/toast.js"></script>
 <script src="assets/js/watch/watchActions.js"></script>
 
 <script src="assets/js/watch/watchComments.js"></script>

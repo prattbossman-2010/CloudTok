@@ -10,7 +10,7 @@ import {
   getUserVideos
 } from "./routes/profile.js";
 import { toggleLike, getLikedVideos } from "./routes/interactions.js";
-import { getVideos, createVideo, incrementViews } from "./routes/videos.js";
+import { getVideos, createVideo, incrementViews, downloadVideo } from "./routes/videos.js";
 import { followUser, getFollowers, getFollowing } from "./routes/follows.js";
 import {
   getNotifications,
@@ -29,7 +29,7 @@ import { toggleSave, getSavedVideos } from "./routes/saves.js";
 import { deleteVideo } from "./routes/videoDelete.js";
 import { handleCORS, withCORS } from "./middleware/cors.js";
 import { adminLogin, adminGetStats, adminGetUsers, adminUpdateUser, adminDeleteVideo, adminGetVideos, adminRunMigration } from "./routes/admin.js";
-import { initializePayment, verifyPayment, getTransactions } from "./routes/payments.js";
+import { initializePayment, verifyPayment, getTransactions, getPaystackConfig } from "./routes/payments.js";
 import { sendSignal, pollSignals, createLiveStream, getLiveStreams, endLiveStream, sendLiveChat, getLiveChat } from "./routes/webrtc.js";
 
 
@@ -41,6 +41,8 @@ import {
   listSupabaseVideos
 } from "./routes/supabaseTest.js";
 
+import { blockUser, getBlockedUsers } from "./routes/blocks.js";
+import { reportVideo, reportUser } from "./routes/reports.js";
 import { forgotPassword, verifyResetCode, resetPassword } from "./routes/passwordReset.js";
 import { authRateLimit, apiRateLimit } from "./middleware/rateLimit.js";
 
@@ -437,6 +439,10 @@ testSupabaseUpload(request, env)
       return withCORS(adminRunMigration(request, env));
     }
 
+    if(path === "/api/payments/config" && method === "GET"){
+      return withCORS(getPaystackConfig(request, env));
+    }
+
     if(path === "/api/payments/initialize" && method === "POST"){
       return withCORS(initializePayment(request, env));
     }
@@ -539,6 +545,31 @@ testSupabaseUpload(request, env)
       return withCORS(adminClearTable(request, env, table));
     }
 
+
+    // Block routes
+    if(path.match(/^\/api\/users\/[^\/]+\/block$/) && method === "POST"){
+      const username = path.split("/")[3];
+      return withCORS(blockUser(request, env, username));
+    }
+    if(path === "/api/users/blocked" && method === "GET"){
+      return withCORS(getBlockedUsers(request, env));
+    }
+
+    // Report routes
+    if(path.match(/^\/api\/videos\/\d+\/report$/) && method === "POST"){
+      const videoId = path.split("/")[3];
+      return withCORS(reportVideo(request, env, videoId));
+    }
+    if(path.match(/^\/api\/users\/[^\/]+\/report$/) && method === "POST"){
+      const username = path.split("/")[3];
+      return withCORS(reportUser(request, env, username));
+    }
+
+    // Download route
+    if(path.match(/^\/api\/videos\/\d+\/download$/) && method === "GET"){
+      const videoId = path.split("/")[3];
+      return withCORS(downloadVideo(request, env, videoId));
+    }
 
     return withCORS(
       new Response("404 - Endpoint Not Found", {

@@ -370,7 +370,7 @@ function toggleVideoSave(videoId){
     const currentUser=
     localStorage.getItem("CloudTokCurrentUser");
     if(!currentUser){
-        alert("Please login to save videos.");
+        if(typeof showToast==="function"){ showToast("Please login to save videos.", "warning"); } else { alert("Please login to save videos."); }
         return;
     }
 

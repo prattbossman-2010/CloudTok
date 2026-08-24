@@ -1140,6 +1140,36 @@ this.toggleFollow();
 };
 
 }
+
+// Report/Block dropdown for other users
+const isOwnProfile = this.currentUsername === (
+    (localStorage.getItem("CloudTokCurrentUser")||"").replace(/^@+/,"").trim().toLowerCase()
+);
+if(!isOwnProfile && this.user && this.user.username){
+    const actionsContainer = document.querySelector(".profileButtons");
+    if(actionsContainer){
+        const moreBtn = document.createElement("div");
+        moreBtn.style.cssText = "cursor:pointer;font-size:20px;padding:8px;color:rgba(255,255,255,0.5);";
+        moreBtn.textContent = "⋯";
+        moreBtn.onclick = async (e)=>{
+            e.stopPropagation();
+            const action = prompt("Type 'report' to report this user, or 'block' to block them:");
+            if(!action) return;
+            if(action.toLowerCase() === "report"){
+                const reason = prompt("Reason for report:");
+                if(reason){
+                    try{ await CloudTokAPI.reportUser(this.user.username, reason); showToast("User reported", "success"); } catch(e){ showToast("Report failed", "error"); }
+                }
+            }
+            if(action.toLowerCase() === "block"){
+                if(confirm("Block this user?")){
+                    try{ await CloudTokAPI.blockUser(this.user.username); showToast("User blocked", "success"); history.back(); } catch(e){ showToast("Block failed", "error"); }
+                }
+            }
+        };
+        actionsContainer.appendChild(moreBtn);
+    }
+}
     
 this.setupAvatarButtons();
 
@@ -1587,9 +1617,7 @@ link
 );
 
 
-alert(
-"Profile link copied"
-);
+if(typeof showToast==="function"){ showToast("Profile link copied", "success"); } else { alert("Profile link copied"); }
 
 
 }

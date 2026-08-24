@@ -9,6 +9,31 @@ export async function getVideos(request, env) {
     const offset = parseInt(url.searchParams.get("offset") || "0");
     const user = (url.searchParams.get("user") || "").trim();
 
+    const auth = await authenticate(request, env);
+    let likedIds = [];
+    let savedIds = [];
+    let blockedIds = [];
+
+    if (!auth.error && auth.user) {
+      const { results: likes } = await env.DB
+        .prepare("SELECT video_id FROM video_likes WHERE user_id = ?")
+        .bind(auth.user.id)
+        .all();
+      likedIds = likes.map(l => l.video_id);
+
+      const { results: saves } = await env.DB
+        .prepare("SELECT video_id FROM video_saves WHERE user_id = ?")
+        .bind(auth.user.id)
+        .all();
+      savedIds = saves.map(s => s.video_id);
+
+      try {
+        await env.DB.prepare("CREATE TABLE IF NOT EXISTS user_blocks (id INTEGER PRIMARY KEY AUTOINCREMENT, blocker_id INTEGER NOT NULL, blocked_id INTEGER NOT NULL, created_at TEXT DEFAULT (datetime('now')), UNIQUE(blocker_id, blocked_id))").run();
+        const { results: blocks } = await env.DB.prepare("SELECT blocked_id FROM user_blocks WHERE blocker_id = ?").bind(auth.user.id).all();
+        blockedIds = blocks.map(b => b.blocked_id);
+      } catch(e) {}
+    }
+
     let query = `
       SELECT
         videos.id,
@@ -34,28 +59,17 @@ export async function getVideos(request, env) {
       params.push(user);
     }
 
+    if (blockedIds.length > 0) {
+      const blockClause = user ? " AND" : " WHERE";
+      const placeholders = blockedIds.map(() => "?").join(",");
+      query += ` ${blockClause} videos.user_id NOT IN (${placeholders})`;
+      params.push(...blockedIds);
+    }
+
     query += ` ORDER BY videos.created_at DESC LIMIT ? OFFSET ?`;
     params.push(limit, offset);
 
     const { results } = await env.DB.prepare(query).bind(...params).all();
-
-    const auth = await authenticate(request, env);
-    let likedIds = [];
-    let savedIds = [];
-
-    if (!auth.error && auth.user) {
-      const { results: likes } = await env.DB
-        .prepare("SELECT video_id FROM video_likes WHERE user_id = ?")
-        .bind(auth.user.id)
-        .all();
-      likedIds = likes.map(l => l.video_id);
-
-      const { results: saves } = await env.DB
-        .prepare("SELECT video_id FROM video_saves WHERE user_id = ?")
-        .bind(auth.user.id)
-        .all();
-      savedIds = saves.map(s => s.video_id);
-    }
 
     const videos = results.map(v => ({
       ...v,
@@ -309,4 +323,17 @@ export async function incrementViews(request, env, videoId) {
   } catch (err) {
     return error(err.message || "Failed to update views", 500, "VIEW_ERROR");
   }
+}
+
+export async function downloadVideo(request, env, videoId) {
+  const auth = await authenticate(request, env);
+  if (auth.error) return auth.error;
+
+  const { results } = await env.DB.prepare("SELECT video_url, caption FROM videos WHERE id = ?").bind(videoId).all();
+  if (!results.length) return Response.json({ error: "Video not found" }, { status: 404 });
+
+  return Response.json({
+    video_url: results[0].video_url,
+    filename: (results[0].caption || "cloudtok-video").replace(/[^a-zA-Z0-9]/g, "_").substring(0, 50) + ".mp4"
+  });
 }

@@ -25,6 +25,11 @@ const PAYSTACK_CURRENCY_MAP = {
     ZAR: "NGN"
 };
 
+export function getPaystackConfig(request, env) {
+  const publicKey = env.PAYSTACK_PUBLIC_KEY || "";
+  return Response.json({ publicKey });
+}
+
 export async function initializePayment(request, env) {
     await ensurePaymentTables(env);
     const auth = await authenticate(request, env);

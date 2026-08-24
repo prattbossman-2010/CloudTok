@@ -94,7 +94,7 @@ comments.forEach(comment=>{
     <img class="commentAvatar" src="${avatar}" onerror="this.src='assets/images/default-avatar.png'">
     <div class="commentContent">
     <h4>@${comment.username}</h4>
-    <p>${comment.text}</p>
+    <p>${(comment.text||"").replace(/(#\w+)/g,'<a href="search.html?q=$1" style="color:#00b7ff;text-decoration:none;">$1')}</p>
     <span>${new Date(comment.time).toLocaleString()}</span>
     </div>
     </div>

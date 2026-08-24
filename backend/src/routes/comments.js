@@ -1,4 +1,5 @@
 import { authenticate } from "../middleware/auth.js";
+import { sanitizeInput } from "../utils/sanitize.js";
 
 export async function getComments(request, env, videoId) {
 
@@ -35,7 +36,7 @@ export async function addComment(request, env, videoId) {
 
     const body = await request.json();
 
-    const comment = (body.comment || "").trim();
+    const comment = sanitizeInput((body.comment || "").trim());
 
     if (!comment) {
 

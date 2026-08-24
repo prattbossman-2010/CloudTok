@@ -190,6 +190,25 @@ window.CloudTokAPI = {
     };
 },
 
+    async blockUser(username){
+    return this.request("/users/"+encodeURIComponent(username)+"/block",{method:"POST"});
+},
+
+    async reportVideo(videoId, reason, details){
+    return this.request("/videos/"+videoId+"/report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({reason,details})});
+},
+
+    async reportUser(username, reason){
+    return this.request("/users/"+encodeURIComponent(username)+"/report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({reason})});
+},
+
+    async downloadVideo(videoId){
+    return this.request("/videos/"+videoId+"/download");
+},
+
+    async getPaystackConfig(){
+    return this.request("/payments/config");
+},
 
     async uploadVideo(file, caption="", thumbnail="", tags="[]", category="General"){
 

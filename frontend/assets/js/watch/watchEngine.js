@@ -446,6 +446,19 @@ error
 
 );
 
+if(!this._progressSetup){
+    const bar = document.getElementById("videoProgressFill");
+    if(bar){
+        this.video.addEventListener("timeupdate", ()=>{
+            if(this.video.duration){
+                bar.style.width = ((this.video.currentTime / this.video.duration) * 100) + "%";
+            }
+        });
+        this.video.addEventListener("ended", ()=>{ bar.style.width = "0%"; });
+    }
+    this._progressSetup = true;
+}
+
 if(typeof CloudTokAPI!=="undefined"&&data.id){
     CloudTokAPI.incrementViews(data.id).catch(()=>{});
 }
@@ -1189,8 +1202,8 @@ this.currentVideo.username;
 if(caption){
 
 
-caption.textContent =
-this.currentVideo.caption;
+const raw = this.currentVideo.caption || "";
+caption.innerHTML = raw.replace(/(#\w+)/g, '<a href="search.html?q=$1" style="color:#00b7ff;text-decoration:none;">$1</a>');
 
 
 }

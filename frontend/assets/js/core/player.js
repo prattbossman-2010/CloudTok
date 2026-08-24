@@ -857,7 +857,7 @@ localStorage.setItem(
 
                 await navigator.clipboard.writeText(link);
 
-                alert("Video link copied.");
+                if(typeof showToast==="function"){ showToast("Video link copied.", "success"); } else { alert("Video link copied."); }
 
             }
 
