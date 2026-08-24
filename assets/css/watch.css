@@ -165,6 +165,8 @@ max-width:70%;
 
 z-index:25;
 
+text-align:left;
+
 }
 
 
@@ -942,7 +944,7 @@ overflow:visible;
     .watchActions span{font-size:14px;}
     .watchAvatar{width:50px;height:50px;}
     .followPlus{width:22px;height:22px;font-size:18px;line-height:22px;}
-    #videoInfo{left:14px;bottom:90px;max-width:65%;}
+    #videoInfo{left:14px;bottom:90px;max-width:65%;text-align:left;}
     #videoInfo h3{font-size:17px;margin-bottom:6px;}
     #videoInfo p{font-size:14px;}
     #videoInfo span{font-size:12px;}
@@ -957,7 +959,7 @@ overflow:visible;
     .watchActions img.actionIcon{width:36px;height:36px;}
     .watchAvatar{width:46px;height:46px;}
     .followPlus{width:20px;height:20px;font-size:17px;line-height:20px;}
-    #videoInfo{max-width:58%;left:10px;bottom:75px;}
+    #videoInfo{max-width:58%;left:10px;bottom:75px;text-align:left;}
     #videoInfo h3{font-size:15px;}
     #videoInfo p{font-size:12px;}
 }
