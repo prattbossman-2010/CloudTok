@@ -185,8 +185,20 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     const emailEl = document.getElementById("currentEmail");
 
     const user = CloudTokUsers.getCurrentUser();
-    if(user && user.email){
-        emailEl.textContent = user.email;
+    const email = (user && user.email) || localStorage.getItem("CloudTokUserEmail") || "";
+    if(email){
+        emailEl.textContent = email;
+    }
+
+    if(localStorage.getItem("CloudTokToken") && typeof CloudTokAPI !== "undefined"){
+        try {
+            const username = localStorage.getItem("CloudTokCurrentUser") || "";
+            const profileResult = await CloudTokAPI.getProfile(username);
+            if(profileResult && profileResult.email){
+                emailEl.textContent = profileResult.email;
+                localStorage.setItem("CloudTokUserEmail", profileResult.email);
+            }
+        } catch(e){}
     }
 
     try {
@@ -242,8 +254,12 @@ document.addEventListener("DOMContentLoaded", async ()=>{
         window.location.href = "forgot-password.html";
     });
 
+    document.getElementById("changeEmailBtn").addEventListener("click", ()=>{
+        window.location.href = "profile.html?user=" + (user?.username || "") + "&edit=true";
+    });
+
     document.getElementById("editProfileBtn").addEventListener("click", ()=>{
-        window.location.href = "profile.html?user=" + (user?.username || "");
+        window.location.href = "profile.html?user=" + (user?.username || "") + "&edit=true";
     });
 
     if(localStorage.getItem("CloudTokToken") && typeof CloudTokAPI !== "undefined"){
