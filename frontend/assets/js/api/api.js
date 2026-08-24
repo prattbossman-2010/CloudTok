@@ -202,10 +202,6 @@ window.CloudTokAPI = {
     return this.request("/users/"+encodeURIComponent(username)+"/report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({reason})});
 },
 
-    async downloadVideo(videoId){
-    return this.request("/videos/"+videoId+"/download");
-},
-
     async getPaystackConfig(){
     return this.request("/payments/config");
 },
