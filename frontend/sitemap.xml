@@ -21,6 +21,21 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://prattbossman-2010.github.io/CloudTok/search.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://prattbossman-2010.github.io/CloudTok/help.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://prattbossman-2010.github.io/CloudTok/login.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://prattbossman-2010.github.io/CloudTok/signup.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -29,5 +44,10 @@
     <loc>https://prattbossman-2010.github.io/CloudTok/payment.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://prattbossman-2010.github.io/CloudTok/watch.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>

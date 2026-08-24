@@ -93,6 +93,15 @@ try{ this.setupButtons(); }catch(e){}
 try{ this.setupTabs(); }catch(e){}
 try{ this.loadTheme(); }catch(e){}
 
+if(params.get("edit") === "true"){
+    const ownCheck = this.currentUsername === (
+        (localStorage.getItem("CloudTokCurrentUser")||"").replace(/^@+/,"").trim().toLowerCase()
+    );
+    if(ownCheck){
+        setTimeout(()=>{ this.openAccountSheet(); }, 300);
+    }
+}
+
 }
 
 

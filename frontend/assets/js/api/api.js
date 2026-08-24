@@ -56,6 +56,34 @@ window.CloudTokAPI = {
             result.user.username
         );
 
+        if(result.user.email){
+            localStorage.setItem(
+                "CloudTokUserEmail",
+                result.user.email
+            );
+        }
+
+        if(result.user.displayName){
+            localStorage.setItem(
+                "CloudTokUserDisplayName",
+                result.user.displayName
+            );
+        }
+
+        if(result.user.avatar){
+            localStorage.setItem(
+                "CloudTokUserAvatar",
+                result.user.avatar
+            );
+        }
+
+        if(result.user.bio){
+            localStorage.setItem(
+                "CloudTokUserBio",
+                result.user.bio
+            );
+        }
+
     }
 
     return result;
