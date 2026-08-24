@@ -1078,10 +1078,11 @@ localStorage.setItem(
                 );
 
 
-                this.toggleLike();
-
-
-                this.showHeart();
+                this.toggleLike().then(()=>{
+                    if(this.isLiked){
+                        this.showHeart();
+                    }
+                });
 
 
                 lastTap = 0;
@@ -1489,6 +1490,17 @@ showSavedMessage(text){
         return;
     }
 
+    const wasLiked = this.isLiked;
+
+    if(this.isLiked){
+        this.isLiked = false;
+        this.likes = Math.max(0, this.likes - 1);
+    } else {
+        this.isLiked = true;
+        this.likes++;
+    }
+    this.updateLike();
+    this.syncLikeToDatabase(this.isLiked);
 
     try{
 
@@ -1510,30 +1522,19 @@ showSavedMessage(text){
             result.success
         ){
 
+            this.isLiked = result.liked;
 
-            this.isLiked =
-            result.liked;
-
-
-
-            if(result.liked){
-
+            if(result.liked && !wasLiked){
                 this.likes++;
-
+            } else if(!result.liked && wasLiked){
+                this.likes = Math.max(0, this.likes - 1);
+            } else if(result.liked && wasLiked){
+                // no change
+            } else {
+                // both unlike - no change
             }
-            else{
-
-                this.likes =
-                Math.max(
-                    0,
-                    this.likes - 1
-                );
-
-            }
-
 
             this.updateLike();
-
             this.syncLikeToDatabase(result.liked);
 
 
@@ -1549,6 +1550,13 @@ showSavedMessage(text){
             error
         );
 
+        this.isLiked = wasLiked;
+        if(wasLiked){
+            this.likes++;
+        } else {
+            this.likes = Math.max(0, this.likes - 1);
+        }
+        this.updateLike();
 
     }
 

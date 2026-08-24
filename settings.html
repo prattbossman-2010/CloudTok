@@ -189,6 +189,13 @@ document.addEventListener("DOMContentLoaded", async ()=>{
         emailEl.textContent = user.email;
     }
 
+    try {
+        const walletResult = await CloudTokAPI.request("/wallet/balance");
+        if(walletResult && typeof walletResult.balance !== "undefined"){
+            document.getElementById("walletBalance").textContent = "$" + walletResult.balance.toFixed(2);
+        }
+    } catch(e){}
+
     const allowMsgSelect = document.getElementById("allowMessagesSelect");
     const allowMsgDesc = document.getElementById("allowMessagesDesc");
     const savedPreference = localStorage.getItem("CloudTokAllowMessages") || "everyone";
@@ -238,6 +245,12 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     document.getElementById("editProfileBtn").addEventListener("click", ()=>{
         window.location.href = "profile.html?user=" + (user?.username || "");
     });
+
+    if(localStorage.getItem("CloudTokToken") && typeof CloudTokAPI !== "undefined"){
+        CloudTokAPI.request("/wallet/balance").then(result => {
+            document.getElementById("walletBalance").textContent = "$" + (result.balance || 0).toFixed(2);
+        }).catch(()=>{});
+    }
 });
 </script>
 <script src="assets/js/core/webrtc.js"></script>

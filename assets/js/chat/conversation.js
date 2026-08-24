@@ -1,33 +1,269 @@
 class CloudTokConversation{
 
-
 constructor(){
-
-    const params=
-    new URLSearchParams(window.location.search);
-
+    const params=new URLSearchParams(window.location.search);
     this.username=params.get("user");
-
-    this.name=
-    document.getElementById("conversationName");
-
-    this.avatar=
-    document.getElementById("conversationAvatar");
-
-    this.messages=
-    document.getElementById("messageList");
-
-    this.input=
-    document.getElementById("messageInput");
-
-    this.sendBtn=
-    document.getElementById("sendMessageBtn");
-
+    this.name=document.getElementById("conversationName");
+    this.avatar=document.getElementById("conversationAvatar");
+    this.messages=document.getElementById("messageList");
+    this.input=document.getElementById("messageInput");
+    this.sendBtn=document.getElementById("sendMessageBtn");
     this.lastMessageCount=0;
     this.pollInterval=null;
-
+    this.selectMode=false;
+    this.selectedMsgIds=new Set();
+    this.allMessages=[];
+    this.archivedIds=new Set();
+    this.lockedIds=new Set();
+    this.lockedTexts={};
+    this.ctxMenu=null;
+    this.longPressTimer=null;
+    this.longPressMsgId=null;
     this.setup();
+    this.setupSelectBar();
+}
 
+setupSelectBar(){
+    const bar=document.getElementById("msgSelectBar");
+    document.getElementById("selCancelBtn").onclick=()=>this.exitSelectMode();
+    document.getElementById("selDeleteBtn").onclick=()=>this.bulkDelete();
+    document.getElementById("selArchiveBtn").onclick=()=>this.bulkArchive();
+    document.getElementById("selLockBtn").onclick=()=>this.bulkLock();
+}
+
+enterSelectMode(){
+    this.selectMode=true;
+    document.getElementById("msgSelectBar").classList.add("show");
+}
+
+exitSelectMode(){
+    this.selectMode=false;
+    this.selectedMsgIds.clear();
+    document.getElementById("msgSelectBar").classList.remove("show");
+    this.messages.querySelectorAll(".message.selected").forEach(m=>m.classList.remove("selected"));
+}
+
+toggleSelect(msgId,el){
+    if(this.selectedMsgIds.has(msgId)){
+        this.selectedMsgIds.delete(msgId);
+        el.classList.remove("selected");
+    } else {
+        this.selectedMsgIds.add(msgId);
+        el.classList.add("selected");
+    }
+    document.getElementById("selCount").textContent=this.selectedMsgIds.size+" selected";
+}
+
+showContextMenu(msgId,text,el){
+    this.removeContextMenu();
+    const menu=document.createElement("div");
+    menu.className="msgContextMenu";
+    const isMine=el.classList.contains("sent");
+    const isLocked=this.lockedIds.has(msgId);
+    const isArchived=this.archivedIds.has(msgId);
+
+    const items=[
+        {icon:"📋",text:"Copy",action:()=>{navigator.clipboard.writeText(text).catch(()=>{});}},
+        {icon:"✅",text:"Select",action:()=>{this.enterSelectMode();this.toggleSelect(msgId,el);}},
+    ];
+
+    if(isLocked){
+        items.push({icon:"🔓",text:"Unlock",action:()=>this.toggleLock(msgId)});
+    } else {
+        items.push({icon:"🔒",text:"Lock with password",action:()=>this.toggleLock(msgId)});
+    }
+
+    if(isArchived){
+        items.push({icon:"📤",text:"Unarchive",action:()=>this.toggleArchive(msgId)});
+    } else {
+        items.push({icon:"📦",text:"Archive",action:()=>this.toggleArchive(msgId)});
+    }
+
+    if(isMine){
+        items.push({sep:true});
+        items.push({icon:"🗑",text:"Delete",danger:true,action:()=>this.deleteMessage(msgId,el)});
+    }
+
+    items.forEach(item=>{
+        if(item.sep){
+            const s=document.createElement("div");s.className="msgCtxSep";menu.appendChild(s);return;
+        }
+        const btn=document.createElement("button");
+        btn.className="msgCtxItem"+(item.danger?" danger":"");
+        btn.innerHTML='<span class="ctxIcon">'+item.icon+'</span>'+item.text;
+        btn.onclick=(e)=>{e.stopPropagation();this.removeContextMenu();item.action();};
+        menu.appendChild(btn);
+    });
+
+    document.body.appendChild(menu);
+    this.ctxMenu=menu;
+
+    const rect=el.getBoundingClientRect();
+    let top=rect.top-10;
+    let left=rect.left;
+    if(top+menu.offsetHeight>window.innerHeight) top=window.innerHeight-menu.offsetHeight-10;
+    if(left+menu.offsetWidth>window.innerWidth) left=window.innerWidth-menu.offsetWidth-10;
+    menu.style.top=top+"px";
+    menu.style.left=left+"px";
+}
+
+removeContextMenu(){
+    if(this.ctxMenu){this.ctxMenu.remove();this.ctxMenu=null;}
+}
+
+setupMessageEvents(){
+    this.messages.querySelectorAll(".message").forEach(el=>{
+        const msgId=parseInt(el.dataset.msgId);
+        if(!msgId) return;
+
+        el.addEventListener("mousedown",(e)=>{
+            if(this.selectMode){e.preventDefault();this.toggleSelect(msgId,el);return;}
+            this.longPressMsgId=msgId;
+            this.longPressTimer=setTimeout(()=>{
+                this.showContextMenu(msgId,el.textContent,el);
+            },500);
+        });
+        el.addEventListener("mouseup",()=>{clearTimeout(this.longPressTimer);});
+        el.addEventListener("mouseleave",()=>{clearTimeout(this.longPressTimer);});
+
+        el.addEventListener("touchstart",(e)=>{
+            if(this.selectMode){this.toggleSelect(msgId,el);return;}
+            this.longPressMsgId=msgId;
+            this.longPressTimer=setTimeout(()=>{
+                this.showContextMenu(msgId,el.textContent,el);
+            },500);
+        },{passive:true});
+        el.addEventListener("touchend",()=>{clearTimeout(this.longPressTimer);},{passive:true});
+        el.addEventListener("touchmove",()=>{clearTimeout(this.longPressTimer);},{passive:true});
+
+        el.addEventListener("click",()=>{
+            if(this.selectMode) this.toggleSelect(msgId,el);
+        });
+
+        if(this.archivedIds.has(msgId)){
+            el.style.opacity="0.4";
+            el.style.position="relative";
+        }
+        if(this.lockedIds.has(msgId)){
+            el.innerHTML='<div class="lockedOverlay">🔒 This message is password protected. Tap to view.</div>';
+            el.onclick=()=>{
+                const pass=prompt("Enter password to view message:");
+                if(pass && this.lockedTexts[msgId]===pass){
+                    el.textContent=text||"Message";
+                    el.style.opacity="1";
+                } else if(pass){
+                    showToast("Wrong password","error");
+                }
+            };
+        }
+    });
+}
+
+async deleteMessage(msgId,el){
+    el.style.transition="all .3s";
+    el.style.maxHeight="0";
+    el.style.padding="0";
+    el.style.margin="0";
+    el.style.opacity="0";
+    setTimeout(()=>el.remove(),300);
+
+    if(typeof CloudTokAPI!=="undefined"){
+        try{await CloudTokAPI.request("/messages/"+msgId,{method:"DELETE"});}catch(e){}
+    }
+    this.allMessages=this.allMessages.filter(m=>m.id!==msgId);
+}
+
+async toggleArchive(msgId){
+    if(this.archivedIds.has(msgId)){
+        this.archivedIds.delete(msgId);
+        showToast("Message unarchived","success");
+    } else {
+        this.archivedIds.add(msgId);
+        showToast("Message archived","success");
+    }
+    const el=this.messages.querySelector('[data-msg-id="'+msgId+'"]');
+    if(el){
+        el.style.opacity=this.archivedIds.has(msgId)?"0.4":"1";
+    }
+    if(typeof CloudTokAPI!=="undefined"){
+        try{await CloudTokAPI.request("/messages/"+msgId+"/archive",{method:"POST"});}catch(e){}
+    }
+}
+
+async toggleLock(msgId){
+    if(this.lockedIds.has(msgId)){
+        this.lockedIds.delete(msgId);
+        delete this.lockedTexts[msgId];
+        showToast("Message unlocked","success");
+        const el=this.messages.querySelector('[data-msg-id="'+msgId+'"]');
+        if(el){
+            const msg=this.allMessages.find(m=>m.id===msgId);
+            el.textContent=msg?msg.text:"Message";
+            el.style.opacity="1";
+        }
+    } else {
+        const pass=prompt("Set a password for this message:");
+        if(!pass)return;
+        this.lockedIds.add(msgId);
+        this.lockedTexts[msgId]=pass;
+        showToast("Message locked","success");
+        const el=this.messages.querySelector('[data-msg-id="'+msgId+'"]');
+        if(el){
+            el.innerHTML='<div class="lockedOverlay">🔒 This message is password protected. Tap to view.</div>';
+            el.style.opacity="1";
+        }
+    }
+    if(typeof CloudTokAPI!=="undefined"){
+        try{await CloudTokAPI.request("/messages/"+msgId+"/lock",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({locked:!this.lockedIds.has(msgId)})});}catch(e){}
+    }
+}
+
+async bulkDelete(){
+    const ids=[...this.selectedMsgIds];
+    ids.forEach(id=>{
+        const el=this.messages.querySelector('[data-msg-id="'+id+'"]');
+        if(el){el.style.transition="all .3s";el.style.maxHeight="0";el.style.padding="0";el.style.opacity="0";setTimeout(()=>el.remove(),300);}
+        this.allMessages=this.allMessages.filter(m=>m.id!==id);
+    });
+    this.exitSelectMode();
+    if(typeof CloudTokAPI!=="undefined"){
+        try{await CloudTokAPI.request("/messages/bulk-delete",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ids})});}catch(e){}
+    }
+    showToast(ids.length+" messages deleted","success");
+}
+
+async bulkArchive(){
+    const ids=[...this.selectedMsgIds];
+    ids.forEach(id=>{
+        this.archivedIds.add(id);
+        const el=this.messages.querySelector('[data-msg-id="'+id+'"]');
+        if(el){el.style.opacity="0.4";}
+    });
+    this.exitSelectMode();
+    if(typeof CloudTokAPI!=="undefined"){
+        try{await CloudTokAPI.request("/messages/bulk-archive",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ids})});}catch(e){}
+    }
+    showToast(ids.length+" messages archived","success");
+}
+
+async bulkLock(){
+    const pass=prompt("Set a password to lock these messages:");
+    if(!pass)return;
+    const ids=[...this.selectedMsgIds];
+    ids.forEach(id=>{
+        this.lockedIds.add(id);
+        this.lockedTexts[id]=pass;
+        const el=this.messages.querySelector('[data-msg-id="'+id+'"]');
+        if(el){
+            el.innerHTML='<div class="lockedOverlay">🔒 This message is password protected. Tap to view.</div>';
+            el.style.opacity="1";
+        }
+    });
+    this.exitSelectMode();
+    if(typeof CloudTokAPI!=="undefined"){
+        try{await CloudTokAPI.request("/messages/bulk-lock",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ids,password:pass})});}catch(e){}
+    }
+    showToast(ids.length+" messages locked","success");
 }
 
 
@@ -121,6 +357,7 @@ async loadMessages(isPoll=false){
                 }
 
                 this.lastMessageCount=result.messages.length;
+                this.allMessages=result.messages;
                 this.messages.innerHTML="";
 
                 const currentUsername=
@@ -136,11 +373,14 @@ async loadMessages(isPoll=false){
                     ?"message sent"
                     :"message received";
 
+                    bubble.dataset.msgId=msg.id;
                     bubble.textContent=msg.text;
 
                     this.messages.appendChild(bubble);
 
                 });
+
+                this.setupMessageEvents();
 
                 this.messages.scrollTop=
                 this.messages.scrollHeight;
@@ -165,7 +405,7 @@ async loadMessages(isPoll=false){
 
     this.messages.innerHTML="";
 
-    messages.forEach(msg=>{
+    messages.forEach((msg,idx)=>{
 
         const bubble=
         document.createElement("div");
@@ -175,11 +415,14 @@ async loadMessages(isPoll=false){
         ?"message sent"
         :"message received";
 
+        bubble.dataset.msgId=msg.time||idx;
         bubble.textContent=msg.text;
 
         this.messages.appendChild(bubble);
 
     });
+
+    this.setupMessageEvents();
 
     this.messages.scrollTop=this.messages.scrollHeight;
 

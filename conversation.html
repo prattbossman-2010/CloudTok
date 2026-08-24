@@ -153,8 +153,19 @@
 
 <div class="callStatusBadge disconnected" id="callStatusBadge">Calls unavailable</div>
 
+<div class="msgSelectBar" id="msgSelectBar">
+    <span class="selCount" id="selCount">0 selected</span>
+    <div class="msgSelectActions">
+        <button id="selDeleteBtn" class="danger">🗑 Delete</button>
+        <button id="selArchiveBtn">📦 Archive</button>
+        <button id="selLockBtn">🔒 Lock</button>
+        <button id="selCancelBtn">✕ Cancel</button>
+    </div>
+</div>
+
 <script src="assets/js/database/database.js"></script>
 <script src="assets/js/api/api.js"></script>
+<script src="assets/js/components/toast.js"></script>
 <script src="assets/js/core/webrtc.js"></script>
 <script src="assets/js/chat/conversation.js"></script>
 <script>
