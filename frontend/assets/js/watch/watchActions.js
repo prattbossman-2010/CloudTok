@@ -146,23 +146,15 @@ if(this.followBtn){
     };
 }
 
-// Long-press to report
+// Long-press action sheet
 const videoArea = document.getElementById("videoArea");
 if(videoArea){
     let longPressTimer = null;
-    let longPressTriggered = false;
     const startLongPress = (e) => {
         if(e.target.closest(".watchActions") || e.target.closest("#commentsPanel")) return;
-        longPressTriggered = false;
         longPressTimer = setTimeout(()=>{
-            longPressTriggered = true;
             if(!CloudTokAuthGuard.requireLogin()) return;
-            const reason = prompt("Report reason (spam, inappropriate, other):");
-            if(reason){
-                CloudTokAPI.reportVideo(this.video.id, reason).then(()=>{
-                    showToast("Video reported. Thank you!", "success");
-                }).catch(()=>{ showToast("Report failed", "error"); });
-            }
+            this.showActionSheet();
         }, 600);
     };
     const cancelLongPress = () => { clearTimeout(longPressTimer); };
@@ -174,6 +166,136 @@ if(videoArea){
     videoArea.addEventListener("mouseleave", cancelLongPress);
 }
 
+}
+
+showActionSheet(){
+    const existing = document.querySelector(".actionSheetOverlay");
+    if(existing) existing.remove();
+
+    const overlay = document.createElement("div");
+    overlay.className = "actionSheetOverlay";
+
+    const sheet = document.createElement("div");
+    sheet.className = "actionSheet";
+
+    const videoUrl = window.location.origin + "/CloudTok/watch.html?id=" + this.video.id;
+    const shareText = (this.video.caption || "Check this out on CloudTok") + " " + videoUrl;
+
+    const items = [
+        {icon:"🔗", text:"Copy link", action:()=>{
+            navigator.clipboard.writeText(videoUrl).catch(()=>{});
+            showToast("Link copied!", "success");
+        }},
+        {icon:"📤", text:"Share", action:async()=>{
+            try{
+                if(navigator.share){
+                    await navigator.share({title:"CloudTok", text:this.video.caption, url:videoUrl});
+                } else {
+                    navigator.clipboard.writeText(videoUrl).catch(()=>{});
+                    showToast("Link copied!", "success");
+                }
+            }catch(e){}
+        }},
+        {icon:"👥", text:"Share with users", action:()=>{ this.showShareToUsers(); }},
+        {sep:true},
+        {icon:"⚠️", text:"Report video", danger:true, action:()=>{ this.showReportPrompt("video"); }},
+        {icon:"🚫", text:"Report user", danger:true, action:()=>{ this.showReportPrompt("user"); }},
+    ];
+
+    items.forEach(item=>{
+        if(item.sep){
+            const s = document.createElement("div"); s.className="actionSheetSep"; sheet.appendChild(s); return;
+        }
+        const btn = document.createElement("button");
+        btn.className = "actionSheetItem" + (item.danger ? " danger" : "");
+        btn.innerHTML = '<span class="sheetIcon">' + item.icon + '</span>' + item.text;
+        btn.onclick = (e)=>{ e.stopPropagation(); overlay.remove(); item.action(); };
+        sheet.appendChild(btn);
+    });
+
+    const cancel = document.createElement("button");
+    cancel.className = "actionSheetCancel";
+    cancel.textContent = "Cancel";
+    cancel.onclick = ()=> overlay.remove();
+    sheet.appendChild(cancel);
+
+    overlay.appendChild(sheet);
+    overlay.onclick = (e)=>{ if(e.target === overlay) overlay.remove(); };
+    document.body.appendChild(overlay);
+}
+
+showReportPrompt(type){
+    const reason = prompt(type === "video" ? "Report reason (spam, inappropriate, other):" : "Report reason for this user:");
+    if(!reason) return;
+
+    if(type === "video"){
+        CloudTokAPI.reportVideo(this.video.id, reason).then(()=>{
+            showToast("Video reported. Thank you!", "success");
+        }).catch(()=>{ showToast("Report failed", "error"); });
+    } else {
+        CloudTokAPI.reportUser(this.video.username, reason).then(()=>{
+            showToast("User reported. Thank you!", "success");
+        }).catch(()=>{ showToast("Report failed", "error"); });
+    }
+}
+
+showShareToUsers(){
+    const existing = document.querySelector(".actionSheetOverlay");
+    if(existing) existing.remove();
+
+    const overlay = document.createElement("div");
+    overlay.className = "actionSheetOverlay";
+
+    const sheet = document.createElement("div");
+    sheet.className = "actionSheet";
+
+    sheet.innerHTML = '<div class="actionSheetHandle"></div>' +
+        '<div style="padding:8px 20px 12px;color:rgba(255,255,255,.5);font-size:13px;text-transform:uppercase;letter-spacing:1px;">Share with</div>' +
+        '<div id="shareUserList" style="max-height:300px;overflow-y:auto;"></div>';
+
+    const cancel = document.createElement("button");
+    cancel.className = "actionSheetCancel";
+    cancel.textContent = "Cancel";
+    cancel.onclick = ()=> overlay.remove();
+    sheet.appendChild(cancel);
+
+    overlay.appendChild(sheet);
+    overlay.onclick = (e)=>{ if(e.target === overlay) overlay.remove(); };
+    document.body.appendChild(overlay);
+
+    const list = document.getElementById("shareUserList");
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,.3);">Loading...</div>';
+
+    const videoUrl = window.location.origin + "/CloudTok/watch.html?id=" + this.video.id;
+    const shareMsg = "Check this out: " + videoUrl;
+
+    if(typeof CloudTokAPI !== "undefined"){
+        CloudTokAPI.getConversations().then(result=>{
+            const convos = result.conversations || [];
+            list.innerHTML = "";
+            if(convos.length === 0){
+                list.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,.3);">No conversations yet</div>';
+                return;
+            }
+            convos.forEach(c=>{
+                const card = document.createElement("div");
+                card.style.cssText = "display:flex;align-items:center;gap:12px;padding:12px 20px;cursor:pointer;transition:background .15s;";
+                card.innerHTML = '<img src="' + (c.other_avatar || "assets/images/default-avatar.png") + '" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" onerror="this.src=\'assets/images/default-avatar.png\'">' +
+                    '<span style="color:#fff;font-size:14px;">' + (c.other_display_name || c.other_username) + '</span>';
+                card.onmouseenter = ()=> card.style.background = "rgba(255,255,255,.06)";
+                card.onmouseleave = ()=> card.style.background = "none";
+                card.onclick = ()=>{
+                    CloudTokAPI.sendMessage(c.other_username, shareMsg).then(()=>{
+                        showToast("Shared with " + (c.other_display_name || c.other_username), "success");
+                    }).catch(()=>{ showToast("Failed to share", "error"); });
+                    overlay.remove();
+                };
+                list.appendChild(card);
+            });
+        }).catch(()=>{
+            list.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,.3);">Failed to load</div>';
+        });
+    }
 }
 
 

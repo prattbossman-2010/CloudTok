@@ -983,3 +983,35 @@ overflow:visible;
     }
     .commentAvatar{width:42px;height:42px;}
 }
+
+.actionSheetOverlay{
+position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;
+display:flex;align-items:flex-end;justify-content:center;
+animation:fadeSheetIn .2s ease;
+}
+@keyframes fadeSheetIn{from{opacity:0;}to{opacity:1;}}
+.actionSheet{
+width:100%;max-width:500px;background:#1a1a1a;border-radius:20px 20px 0 0;
+padding:8px 0 20px;animation:slideSheetUp .25s ease;
+}
+@keyframes slideSheetUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.actionSheetHandle{
+width:40px;height:4px;background:rgba(255,255,255,.2);border-radius:2px;
+margin:8px auto 12px;
+}
+.actionSheetItem{
+display:flex;align-items:center;gap:14px;padding:14px 20px;
+color:#fff;font-size:15px;cursor:pointer;transition:background .15s;
+border:none;background:none;width:100%;text-align:left;
+}
+.actionSheetItem:hover{background:rgba(255,255,255,.06);}
+.actionSheetItem .sheetIcon{font-size:20px;width:24px;text-align:center;}
+.actionSheetItem.danger{color:#ff4466;}
+.actionSheetItem.danger:hover{background:rgba(255,68,102,.08);}
+.actionSheetSep{height:1px;background:rgba(255,255,255,.08);margin:4px 0;}
+.actionSheetCancel{
+display:block;width:100%;padding:14px;background:none;border:none;
+color:rgba(255,255,255,.5);font-size:15px;font-weight:600;cursor:pointer;
+border-top:1px solid rgba(255,255,255,.08);margin-top:4px;
+}
+.actionSheetCancel:hover{color:#fff;}
