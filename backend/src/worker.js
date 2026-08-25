@@ -27,7 +27,9 @@ import {
   lockMessage,
   bulkDeleteMessages,
   bulkArchiveMessages,
-  bulkLockMessages
+  bulkLockMessages,
+  deleteConversation,
+  deleteConversations
 } from "./routes/messages.js";
 import { search, getHashtagVideos } from "./routes/search.js";
 import { getTrending, getDiscoverVideos } from "./routes/discover.js";
@@ -40,7 +42,7 @@ import { sendSignal, pollSignals, createLiveStream, getLiveStreams, endLiveStrea
 
 
 import { sendGift, getGiftHistory, getWalletBalance } from "./routes/gifts.js";
-import { adminGetLiveStreams, adminStopStream, adminGetTransactions, adminGetGifts, adminGetMessages, adminGetActivityLogs, adminGetStorageHealth, adminDeleteComment, adminGetComments, adminAdjustBalance, adminUpdateGiftPrice, adminGetGiftConfig, adminClearTable } from "./routes/adminExtended.js";
+import { adminGetLiveStreams, adminStopStream, adminGetTransactions, adminGetGifts, adminGetMessages, adminGetReports, adminUpdateReport, adminGetActivityLogs, adminGetStorageHealth, adminDeleteComment, adminGetComments, adminAdjustBalance, adminUpdateGiftPrice, adminGetGiftConfig, adminClearTable } from "./routes/adminExtended.js";
 
 import {
   testSupabaseUpload,
@@ -218,6 +220,14 @@ export default {
     }
     if(path === "/api/messages/bulk-lock" && method === "POST"){
       return withCORS(bulkLockMessages(request, env));
+    }
+    if(path === "/api/messages/delete-conversations" && method === "POST"){
+      return withCORS(deleteConversations(request, env));
+    }
+
+    const convMatch = path.match(/^\/api\/conversations\/(\d+)$/);
+    if(convMatch && method === "DELETE"){
+      return withCORS(deleteConversation(request, env, parseInt(convMatch[1], 10)));
     }
 
     const msgMatch = path.match(/^\/api\/messages\/(\d+)(\/archive|\/lock)?$/);
@@ -551,6 +561,13 @@ testSupabaseUpload(request, env)
     }
     if(path === "/api/admin/messages" && method === "GET"){
       return withCORS(adminGetMessages(request, env));
+    }
+    if(path === "/api/admin/reports" && method === "GET"){
+      return withCORS(adminGetReports(request, env));
+    }
+    if(path.match(/^\/api\/admin\/reports\/\d+$/) && method === "PUT"){
+      const reportId = path.split("/")[4];
+      return withCORS(adminUpdateReport(request, env, reportId));
     }
     if(path === "/api/admin/comments" && method === "GET"){
       return withCORS(adminGetComments(request, env));

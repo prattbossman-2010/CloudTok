@@ -389,6 +389,18 @@ color:white;
 
 position:relative;
 
+cursor:pointer;
+
+transition:background .2s;
+
+}
+
+.chatCard:active{background:#1a1a1a;}
+
+.chatCard.selected{
+outline:2px solid #fe2c55;
+outline-offset:-2px;
+opacity:.7;
 }
 
 

@@ -128,6 +128,40 @@ export async function adminGetMessages(request, env) {
     }
 }
 
+export async function adminGetReports(request, env) {
+    try {
+        await ensureAllTables(env);
+        const auth = await adminAuth(request, env);
+        if (auth.error) return auth.error;
+        const results = await safeQuery(env,
+            `SELECT cr.*, ru.username as reported_username, rr.username as reporter_username,
+                    vu.username as reported_video_user
+             FROM content_reports cr
+             LEFT JOIN users ru ON cr.reported_user_id = ru.id
+             LEFT JOIN users rr ON cr.reporter_id = rr.id
+             LEFT JOIN videos vv ON cr.video_id = vv.id
+             LEFT JOIN users vu ON vv.user_id = vu.id
+             ORDER BY cr.created_at DESC LIMIT 200`);
+        return Response.json({ reports: results });
+    } catch (e) {
+        return Response.json({ reports: [] }, { status: 500 });
+    }
+}
+
+export async function adminUpdateReport(request, env, reportId) {
+    try {
+        await ensureAllTables(env);
+        const auth = await adminAuth(request, env);
+        if (auth.error) return auth.error;
+        const body = await request.json();
+        const status = body.status || "reviewed";
+        await env.DB.prepare("UPDATE content_reports SET status = ? WHERE id = ?").bind(status, reportId).run();
+        return Response.json({ success: true });
+    } catch (e) {
+        return Response.json({ error: e.message }, { status: 500 });
+    }
+}
+
 export async function adminGetActivityLogs(request, env) {
     try {
         await ensureAllTables(env);

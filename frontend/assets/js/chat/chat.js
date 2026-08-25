@@ -5,9 +5,13 @@ constructor(){
 this.list=document.getElementById("conversationList");
 this.pollInterval=null;
 this.lastChatData="";
+this.selectMode=false;
+this.selectedConvIds=new Set();
+this.allConversations=[];
 
 this.loadChats();
 this.startPolling();
+this.setupSelectBar();
 
 const backBtn=document.getElementById("chatBackBtn");
 if(backBtn){
@@ -16,6 +20,88 @@ if(backBtn){
 
 window.addEventListener("beforeunload",()=>{this.stopPolling();});
 
+}
+
+setupSelectBar(){
+    document.getElementById("chatSelCancelBtn").onclick=()=>this.exitSelectMode();
+    document.getElementById("chatSelDeleteBtn").onclick=()=>this.bulkDeleteConversations();
+}
+
+enterSelectMode(){
+    this.selectMode=true;
+    document.getElementById("chatSelectBar").classList.add("show");
+}
+
+exitSelectMode(){
+    this.selectMode=false;
+    this.selectedConvIds.clear();
+    document.getElementById("chatSelectBar").classList.remove("show");
+    this.list.querySelectorAll(".chatCard.selected").forEach(c=>c.classList.remove("selected"));
+}
+
+toggleSelectConv(convId,card){
+    if(this.selectedConvIds.has(convId)){
+        this.selectedConvIds.delete(convId);
+        card.classList.remove("selected");
+    } else {
+        this.selectedConvIds.add(convId);
+        card.classList.add("selected");
+    }
+    document.getElementById("chatSelCount").textContent=this.selectedConvIds.size+" selected";
+}
+
+async bulkDeleteConversations(){
+    const ids=[...this.selectedConvIds];
+    if(!ids.length) return;
+    if(!confirm("Delete "+ids.length+" conversation(s)? This cannot be undone.")) return;
+
+    ids.forEach(id=>{
+        const card=this.list.querySelector('[data-conv-id="'+id+'"]');
+        if(card){card.style.transition="all .3s";card.style.maxHeight="0";card.style.padding="0";card.style.opacity="0";setTimeout(()=>card.remove(),300);}
+        this.allConversations=this.allConversations.filter(c=>c.id!==id);
+    });
+    this.exitSelectMode();
+
+    if(typeof CloudTokAPI!=="undefined"){
+        try{
+            const result=await CloudTokAPI.request("/messages/delete-conversations",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ids})});
+            if(result.success){
+                showToast(ids.length+" conversation(s) deleted","success");
+            } else {
+                showToast("Delete failed","error");
+                this.loadChats();
+            }
+        }catch(e){
+            showToast("Delete failed","error");
+            this.loadChats();
+        }
+    }
+}
+
+async deleteConversation(convId,card){
+    if(!confirm("Delete this conversation? This cannot be undone.")) return;
+
+    card.style.transition="all .3s";
+    card.style.maxHeight="0";
+    card.style.padding="0";
+    card.style.opacity="0";
+    setTimeout(()=>card.remove(),300);
+    this.allConversations=this.allConversations.filter(c=>c.id!==convId);
+
+    if(typeof CloudTokAPI!=="undefined"){
+        try{
+            const result=await CloudTokAPI.request("/conversations/"+convId,{method:"DELETE"});
+            if(result.success){
+                showToast("Conversation deleted","success");
+            } else {
+                showToast("Delete failed","error");
+                this.loadChats();
+            }
+        }catch(e){
+            showToast("Delete failed","error");
+            this.loadChats();
+        }
+    }
 }
 
 startPolling(){
@@ -50,8 +136,10 @@ if(typeof CloudTokAPI!=="undefined"){
         if(result.conversations){
 
             this.lastChatData=JSON.stringify(result);
+            this.allConversations=result.conversations;
 
             users=result.conversations.map(c=>({
+                id:c.id,
                 username:c.other_username,
                 displayName:c.other_display_name||c.other_username,
                 avatar:c.other_avatar||"assets/images/default-avatar.png",
@@ -85,6 +173,7 @@ if(users.length===0){
     users=storedUsers
     .filter(u=>u.username!==currentUser)
     .map(u=>({
+        id:0,
         username:u.username,
         displayName:u.displayName||u.username,
         avatar:u.avatar||"assets/images/default-avatar.png",
@@ -106,6 +195,7 @@ users.forEach(user=>{
 
     const card=document.createElement("div");
     card.className="chatCard";
+    if(user.id) card.dataset.convId=user.id;
 
     card.innerHTML=`
         <img src="${user.avatar}" class="chatAvatar" onerror="this.src='assets/images/default-avatar.png'">
@@ -118,7 +208,7 @@ users.forEach(user=>{
 
     let longPressTimer=null;
     let longPressFired=false;
-    const startLP=()=>{longPressFired=false;longPressTimer=setTimeout(()=>{longPressFired=true;this.showChatContextMenu(user);},500);};
+    const startLP=()=>{longPressFired=false;longPressTimer=setTimeout(()=>{longPressFired=true;this.showChatContextMenu(user,card);},500);};
     const cancelLP=()=>{clearTimeout(longPressTimer);};
 
     card.addEventListener("touchstart",startLP,{passive:true});
@@ -129,7 +219,16 @@ users.forEach(user=>{
     card.addEventListener("mouseleave",cancelLP);
 
     card.addEventListener("click",(e)=>{
-        if(longPressFired||this.ctxMenu){e.stopPropagation();return;}
+        if(longPressFired){
+            longPressFired=false;
+            e.stopPropagation();
+            return;
+        }
+        if(this.ctxMenu){e.stopPropagation();return;}
+        if(this.selectMode){
+            if(user.id) this.toggleSelectConv(user.id,card);
+            return;
+        }
         this.stopPolling();
         window.location.href="conversation.html?user="+encodeURIComponent(user.username);
     });
@@ -140,7 +239,7 @@ users.forEach(user=>{
 
 }
 
-showChatContextMenu(user){
+showChatContextMenu(user,card){
     if(this.ctxMenu){this.ctxMenu.remove();}
 
     const menu=document.createElement("div");
@@ -148,6 +247,13 @@ showChatContextMenu(user){
     this.ctxMenu=menu;
 
     const items=[
+        {icon:"✅",text:"Select chat",action:()=>{
+            if(user.id){
+                this.enterSelectMode();
+                this.toggleSelectConv(user.id,card);
+            }
+        }},
+        {sep:true},
         {icon:"⚠️",text:"Report user",danger:true,action:async()=>{
             const reason=prompt("Report reason:");
             if(reason){
@@ -159,9 +265,18 @@ showChatContextMenu(user){
                 try{await CloudTokAPI.blockUser(user.username);showToast("User blocked","success");}catch(e){showToast("Block failed","error");}
             }
         }},
+        {sep:true},
+        {icon:"🗑",text:"Delete chat",danger:true,action:()=>{
+            if(user.id){
+                this.deleteConversation(user.id,card);
+            }
+        }},
     ];
 
     items.forEach(item=>{
+        if(item.sep){
+            const s=document.createElement("div");s.className="msgCtxSep";menu.appendChild(s);return;
+        }
         const btn=document.createElement("button");
         btn.className="msgCtxItem"+(item.danger?" danger":"");
         btn.innerHTML='<span class="ctxIcon">'+item.icon+'</span>'+item.text;

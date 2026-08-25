@@ -270,16 +270,18 @@ export async function deleteMessage(request, env, messageId){
   const auth = await authenticate(request, env);
   if(auth.error) return auth.error;
 
+  const msgId = parseInt(messageId, 10);
+
   const msg = await env.DB.prepare(
     `SELECT m.id, m.sender_id, m.conversation_id, c.user1_id, c.user2_id
      FROM messages m JOIN conversations c ON m.conversation_id = c.id
      WHERE m.id = ?`
-  ).bind(messageId).first();
+  ).bind(msgId).first();
 
   if(!msg) return Response.json({error:"Message not found"},{status:404});
-  if(msg.sender_id !== auth.user.id) return Response.json({error:"Not authorized"},{status:403});
+  if(Number(msg.sender_id) !== Number(auth.user.id)) return Response.json({error:"Not authorized"},{status:403});
 
-  await env.DB.prepare(`DELETE FROM messages WHERE id = ?`).bind(messageId).run();
+  await env.DB.prepare(`DELETE FROM messages WHERE id = ?`).bind(msgId).run();
   return Response.json({success:true});
 }
 
@@ -370,4 +372,34 @@ export async function bulkLockMessages(request, env){
   const placeholders = ids.map(()=>"?").join(",");
   await env.DB.prepare(`UPDATE messages SET locked = 1, lock_password = ? WHERE id IN (${placeholders}) AND sender_id = ?`).bind(password, ...ids, auth.user.id).run();
   return Response.json({success:true, locked:ids.length});
+}
+
+
+export async function deleteConversation(request, env, conversationId){
+  const auth = await authenticate(request, env);
+  if(auth.error) return auth.error;
+
+  const conv = await env.DB.prepare(
+    `SELECT id FROM conversations WHERE id = ? AND (user1_id = ? OR user2_id = ?)`
+  ).bind(conversationId, auth.user.id, auth.user.id).first();
+
+  if(!conv) return Response.json({error:"Conversation not found"},{status:404});
+
+  await env.DB.prepare(`DELETE FROM messages WHERE conversation_id = ?`).bind(conversationId).run();
+  await env.DB.prepare(`DELETE FROM conversations WHERE id = ?`).bind(conversationId).run();
+  return Response.json({success:true});
+}
+
+
+export async function deleteConversations(request, env){
+  const auth = await authenticate(request, env);
+  if(auth.error) return auth.error;
+
+  const {ids} = await request.json();
+  if(!ids || !ids.length) return Response.json({error:"No conversations"},{status:400});
+
+  const placeholders = ids.map(()=>"?").join(",");
+  await env.DB.prepare(`DELETE FROM messages WHERE conversation_id IN (${placeholders})`).bind(...ids).run();
+  await env.DB.prepare(`DELETE FROM conversations WHERE id IN (${placeholders}) AND (user1_id = ? OR user2_id = ?)`).bind(...ids, auth.user.id, auth.user.id).run();
+  return Response.json({success:true, deleted:ids.length});
 }
