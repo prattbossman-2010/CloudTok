@@ -1203,7 +1203,7 @@ if(caption){
 
 
 const raw = this.currentVideo.caption || "";
-caption.innerHTML = raw.replace(/(#\w+)/g, '<a href="search.html?q=$1" style="color:#00b7ff;text-decoration:none;">$1</a>');
+caption.innerHTML = raw.replace(/(#\w+)/g, '<a href="hashtag.html?tag=$1" style="color:#00b7ff;text-decoration:none;">$1</a>');
 
 
 }
@@ -1233,8 +1233,21 @@ tag=>
 }
 
 
+if(typeof window.updateWatchOG === "function"){
+    window.updateWatchOG(
+        this.currentVideo.caption || "",
+        this.currentVideo.username || "",
+        this.currentVideo.views || 0,
+        this.currentVideo.likes || 0
+    );
+}
+
 
 }
+
+
+
+
 
 
 

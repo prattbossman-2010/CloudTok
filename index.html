@@ -36,6 +36,8 @@
 
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#ff2d55">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="assets/images/icon-192.png">
     <meta property="og:image" content="https://prattbossman-2010.github.io/CloudTok/assets/img/og-image.png">
     <meta property="og:site_name" content="CloudTok">
     <meta name="twitter:image" content="https://prattbossman-2010.github.io/CloudTok/assets/img/og-image.png">
@@ -161,6 +163,11 @@
 <script src="assets/js/components/notificationPopup.js"></script>
 <script>
 if (typeof CloudTokOnboarding !== "undefined") CloudTokOnboarding.showTip("index");
+</script>
+<script>
+if("serviceWorker" in navigator){
+    navigator.serviceWorker.register("/CloudTok/sw.js").catch(()=>{});
+}
 </script>
 
 </body>
