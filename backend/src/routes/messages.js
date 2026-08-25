@@ -267,6 +267,7 @@ export async function sendMessage(request, env, otherUsername){
 
 
 export async function deleteMessage(request, env, messageId){
+  await ensureMsgTables(env);
   const auth = await authenticate(request, env);
   if(auth.error) return auth.error;
 
@@ -376,6 +377,7 @@ export async function bulkLockMessages(request, env){
 
 
 export async function deleteConversation(request, env, conversationId){
+  await ensureMsgTables(env);
   const auth = await authenticate(request, env);
   if(auth.error) return auth.error;
 

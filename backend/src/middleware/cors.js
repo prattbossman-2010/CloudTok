@@ -22,6 +22,10 @@ function getAllowedOrigin(request) {
   return null;
 }
 
+export function getAllowedOriginForRequest(request) {
+  return getAllowedOrigin(request) || ALLOWED_ORIGINS[0];
+}
+
 export function corsHeaders(origin) {
   return {
     "Access-Control-Allow-Origin": origin || ALLOWED_ORIGINS[0],
@@ -43,14 +47,15 @@ export function handleCORS(request) {
   return null;
 }
 
-export async function withCORS(responseOrPromise) {
+export async function withCORS(responseOrPromise, request) {
   try {
     const response = await responseOrPromise;
+    const origin = (request && getAllowedOrigin(request)) || ALLOWED_ORIGINS[0];
     const newHeaders = new Headers(response.headers);
     Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
       newHeaders.set(key, value);
     });
-    newHeaders.set("Access-Control-Allow-Origin", ALLOWED_ORIGINS[0]);
+    newHeaders.set("Access-Control-Allow-Origin", origin);
     newHeaders.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     newHeaders.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
     return new Response(response.body, {
@@ -66,7 +71,7 @@ export async function withCORS(responseOrPromise) {
         headers: {
           ...SECURITY_HEADERS,
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": ALLOWED_ORIGINS[0]
+          "Access-Control-Allow-Origin": (request && getAllowedOrigin(request)) || ALLOWED_ORIGINS[0]
         }
       }
     );

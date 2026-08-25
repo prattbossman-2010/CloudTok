@@ -35,7 +35,7 @@ import { search, getHashtagVideos } from "./routes/search.js";
 import { getTrending, getDiscoverVideos } from "./routes/discover.js";
 import { toggleSave, getSavedVideos } from "./routes/saves.js";
 import { deleteVideo } from "./routes/videoDelete.js";
-import { handleCORS, withCORS } from "./middleware/cors.js";
+import { handleCORS, withCORS, getAllowedOriginForRequest } from "./middleware/cors.js";
 import { adminLogin, adminGetStats, adminGetUsers, adminUpdateUser, adminDeleteVideo, adminGetVideos, adminRunMigration } from "./routes/admin.js";
 import { initializePayment, verifyPayment, getTransactions, getPaystackConfig } from "./routes/payments.js";
 import { sendSignal, pollSignals, createLiveStream, getLiveStreams, endLiveStream, sendLiveChat, getLiveChat } from "./routes/webrtc.js";
@@ -68,6 +68,8 @@ export default {
 
     try{
 
+    const cors = (responseOrPromise) => withCORS(responseOrPromise, request);
+
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
@@ -77,7 +79,7 @@ export default {
     }
 
     if(path === "/"){
-      return withCORS(
+      return cors(
         new Response("CloudTok Backend is alive 🚀", {
           status: 200,
           headers: { "Content-Type": "text/plain" }
@@ -87,7 +89,7 @@ export default {
 
 
     if(path === "/api"){
-      return withCORS(
+      return cors(
         Response.json({
           name: "CloudTok API",
           version: "1.0.0",
@@ -98,14 +100,14 @@ export default {
 
 
     if(path === "/api/health"){
-      return withCORS(
+      return cors(
         Response.json({ status: "healthy", uptime: "running" })
       );
     }
 
 
     if(path === "/api/version"){
-      return withCORS(Response.json({ version: "1.0.0" }));
+      return cors(Response.json({ version: "1.0.0" }));
     }
 
 
@@ -113,42 +115,42 @@ export default {
       const { results } = await env.DB
         .prepare(`SELECT id, username, email, avatar, bio, display_name, created_at, updated_at FROM users`)
         .all();
-      return withCORS(Response.json({ users: results }));
+      return cors(Response.json({ users: results }));
     }
 
 
     if(path === "/api/users/signup" && method === "POST"){
-      return withCORS(signup(request, env));
+      return cors(signup(request, env));
     }
 
 
     if(path === "/api/users/login" && method === "POST"){
-      return withCORS(login(request, env));
+      return cors(login(request, env));
     }
 
     if(path === "/api/auth/forgot-password" && method === "POST"){
       const rateLimitResponse = authRateLimit(request);
-      if (rateLimitResponse) return withCORS(rateLimitResponse);
-      return withCORS(forgotPassword(request, env));
+      if (rateLimitResponse) return cors(rateLimitResponse);
+      return cors(forgotPassword(request, env));
     }
 
     if(path === "/api/auth/verify-code" && method === "POST"){
-      return withCORS(verifyResetCode(request, env));
+      return cors(verifyResetCode(request, env));
     }
 
     if(path === "/api/auth/reset-password" && method === "POST"){
       const rateLimitResponse = authRateLimit(request);
-      if (rateLimitResponse) return withCORS(rateLimitResponse);
-      return withCORS(resetPassword(request, env));
+      if (rateLimitResponse) return cors(rateLimitResponse);
+      return cors(resetPassword(request, env));
     }
 
 
     if(path === "/api/me"){
       const auth = await authenticate(request, env);
       if(auth.error){
-        return withCORS(auth.error);
+        return cors(auth.error);
       }
-      return withCORS(Response.json({ authenticated: true, user: auth.user }));
+      return cors(Response.json({ authenticated: true, user: auth.user }));
     }
 
 
@@ -156,7 +158,7 @@ export default {
       path === "/api/users/search" &&
       method === "GET"
     ){
-      return withCORS(search(request, env));
+      return cors(search(request, env));
     }
 
 
@@ -164,12 +166,12 @@ export default {
       path === "/api/search" &&
       method === "GET"
     ){
-      return withCORS(search(request, env));
+      return cors(search(request, env));
     }
 
     if(path.match(/^\/api\/hashtag\/[^\/]+$/) && method === "GET"){
       const tag = path.split("/")[3];
-      return withCORS(getHashtagVideos(request, env, decodeURIComponent(tag)));
+      return cors(getHashtagVideos(request, env, decodeURIComponent(tag)));
     }
 
 
@@ -177,7 +179,7 @@ export default {
       path === "/api/videos/trending" &&
       method === "GET"
     ){
-      return withCORS(getTrending(request, env));
+      return cors(getTrending(request, env));
     }
 
 
@@ -185,7 +187,7 @@ export default {
       path === "/api/discover" &&
       method === "GET"
     ){
-      return withCORS(getDiscoverVideos(request, env));
+      return cors(getDiscoverVideos(request, env));
     }
 
 
@@ -193,7 +195,7 @@ export default {
       path === "/api/videos/saved" &&
       method === "GET"
     ){
-      return withCORS(getSavedVideos(request, env));
+      return cors(getSavedVideos(request, env));
     }
 
 
@@ -201,7 +203,7 @@ export default {
       path === "/api/videos/liked" &&
       method === "GET"
     ){
-      return withCORS(getLikedVideos(request, env));
+      return cors(getLikedVideos(request, env));
     }
 
 
@@ -209,36 +211,36 @@ export default {
       path === "/api/messages/conversations" &&
       method === "GET"
     ){
-      return withCORS(getConversations(request, env));
+      return cors(getConversations(request, env));
     }
 
     if(path === "/api/messages/bulk-delete" && method === "POST"){
-      return withCORS(bulkDeleteMessages(request, env));
+      return cors(bulkDeleteMessages(request, env));
     }
     if(path === "/api/messages/bulk-archive" && method === "POST"){
-      return withCORS(bulkArchiveMessages(request, env));
+      return cors(bulkArchiveMessages(request, env));
     }
     if(path === "/api/messages/bulk-lock" && method === "POST"){
-      return withCORS(bulkLockMessages(request, env));
+      return cors(bulkLockMessages(request, env));
     }
     if(path === "/api/messages/delete-conversations" && method === "POST"){
-      return withCORS(deleteConversations(request, env));
+      return cors(deleteConversations(request, env));
     }
 
     const convMatch = path.match(/^\/api\/conversations\/(\d+)$/);
     if(convMatch && method === "DELETE"){
-      return withCORS(deleteConversation(request, env, parseInt(convMatch[1], 10)));
+      return cors(deleteConversation(request, env, parseInt(convMatch[1], 10)));
     }
 
     const msgMatch = path.match(/^\/api\/messages\/(\d+)(\/archive|\/lock)?$/);
     if(msgMatch && method === "DELETE"){
-      return withCORS(deleteMessage(request, env, msgMatch[1]));
+      return cors(deleteMessage(request, env, msgMatch[1]));
     }
     if(msgMatch && msgMatch[2] === "/archive" && method === "POST"){
-      return withCORS(archiveMessage(request, env, msgMatch[1]));
+      return cors(archiveMessage(request, env, msgMatch[1]));
     }
     if(msgMatch && msgMatch[2] === "/lock" && method === "POST"){
-      return withCORS(lockMessage(request, env, msgMatch[1]));
+      return cors(lockMessage(request, env, msgMatch[1]));
     }
 
     if(
@@ -247,7 +249,7 @@ export default {
       path !== "/api/messages/conversations"
     ){
       const otherUsername = path.split("/")[3];
-      return withCORS(getMessages(request, env, otherUsername));
+      return cors(getMessages(request, env, otherUsername));
     }
 
 
@@ -256,7 +258,7 @@ export default {
       method === "POST"
     ){
       const otherUsername = path.split("/")[3];
-      return withCORS(sendMessage(request, env, otherUsername));
+      return cors(sendMessage(request, env, otherUsername));
     }
 
 
@@ -264,7 +266,7 @@ export default {
       path === "/api/notifications" &&
       method === "GET"
     ){
-      return withCORS(getNotifications(request, env));
+      return cors(getNotifications(request, env));
     }
 
 
@@ -272,7 +274,7 @@ export default {
       path === "/api/notifications/read" &&
       method === "POST"
     ){
-      return withCORS(markAllRead(request, env));
+      return cors(markAllRead(request, env));
     }
 
 
@@ -280,7 +282,7 @@ export default {
       path === "/api/notifications" &&
       method === "DELETE"
     ){
-      return withCORS(clearNotifications(request, env));
+      return cors(clearNotifications(request, env));
     }
 
 
@@ -289,7 +291,7 @@ export default {
       method === "POST"
     ){
       const id = parseInt(path.split("/")[3], 10);
-      return withCORS(markNotificationRead(request, env, id));
+      return cors(markNotificationRead(request, env, id));
     }
 
 
@@ -297,7 +299,7 @@ export default {
       path === "/api/videos" &&
       method === "GET"
     ){
-      return withCORS(getVideos(request, env));
+      return cors(getVideos(request, env));
     }
 
 
@@ -305,7 +307,7 @@ export default {
       path === "/api/videos" &&
       method === "POST"
     ){
-      return withCORS(createVideo(request, env));
+      return cors(createVideo(request, env));
     }
 
 
@@ -314,7 +316,7 @@ export default {
       method === "POST"
     ){
       const videoId = path.split("/")[3];
-      return withCORS(toggleLike(request, env, videoId));
+      return cors(toggleLike(request, env, videoId));
     }
 
 
@@ -323,7 +325,7 @@ export default {
       method === "POST"
     ){
       const videoId = path.split("/")[3];
-      return withCORS(incrementViews(request, env, videoId));
+      return cors(incrementViews(request, env, videoId));
     }
 
 
@@ -332,7 +334,7 @@ export default {
       method === "GET"
     ){
       const videoId = path.split("/")[3];
-      return withCORS(getComments(request, env, videoId));
+      return cors(getComments(request, env, videoId));
     }
 
 
@@ -341,7 +343,7 @@ export default {
       method === "POST"
     ){
       const videoId = path.split("/")[3];
-      return withCORS(addComment(request, env, videoId));
+      return cors(addComment(request, env, videoId));
     }
 
 
@@ -350,7 +352,7 @@ export default {
       method === "POST"
     ){
       const videoId = parseInt(path.split("/")[3], 10);
-      return withCORS(toggleSave(request, env, videoId));
+      return cors(toggleSave(request, env, videoId));
     }
 
 
@@ -359,7 +361,7 @@ export default {
       method === "DELETE"
     ){
       const videoId = path.split("/")[3];
-      return withCORS(deleteVideo(request, env, videoId));
+      return cors(deleteVideo(request, env, videoId));
     }
 
 
@@ -372,7 +374,7 @@ export default {
       !path.endsWith("/following")
     ){
       const username = path.split("/")[3];
-      return withCORS(getUserVideos(request, env, username));
+      return cors(getUserVideos(request, env, username));
     }
 
 
@@ -381,7 +383,7 @@ export default {
       method === "GET"
     ){
       const username = path.split("/")[3];
-      return withCORS(getFollowers(env, username));
+      return cors(getFollowers(env, username));
     }
 
 
@@ -390,7 +392,7 @@ export default {
       method === "GET"
     ){
       const username = path.split("/")[3];
-      return withCORS(getFollowing(env, username));
+      return cors(getFollowing(env, username));
     }
 
 
@@ -399,7 +401,7 @@ export default {
       method === "POST"
     ){
       const username = path.split("/")[3];
-      return withCORS(followUser(request, env, username));
+      return cors(followUser(request, env, username));
     }
 
 
@@ -407,7 +409,7 @@ export default {
       path === "/api/users/profile" &&
       method === "PUT"
     ){
-      return withCORS(updateProfile(request, env));
+      return cors(updateProfile(request, env));
     }
 
 
@@ -415,7 +417,7 @@ export default {
       path === "/api/users/avatar" &&
       method === "POST"
     ){
-      return withCORS(updateAvatar(request, env));
+      return cors(updateAvatar(request, env));
     }
 
 
@@ -426,20 +428,20 @@ export default {
       path !== "/api/users/login"
     ){
       const username = path.split("/")[3];
-      return withCORS(getUserProfile(request, env, username));
+      return cors(getUserProfile(request, env, username));
     }
 
 
     if(path === "/api/storage/health"){
       const result = await StorageRouter.healthCheck(env);
-      return withCORS(Response.json(result));
+      return cors(Response.json(result));
     }
       
       if(
 path === "/api/storage/test/supabase-upload" &&
 method === "POST"
 ){
-return withCORS(
+return cors(
 testSupabaseUpload(request, env)
 );
 }
@@ -448,182 +450,182 @@ testSupabaseUpload(request, env)
   path === "/api/storage/test/supabase-videos" &&
   method === "GET"
 ){
-  return withCORS(
+  return cors(
     listSupabaseVideos(request, env)
   );
 }
       
     // Admin routes
     if(path === "/api/admin/login" && method === "POST"){
-      return withCORS(adminLogin(request, env));
+      return cors(adminLogin(request, env));
     }
 
     if(path === "/api/admin/stats" && method === "GET"){
-      return withCORS(adminGetStats(request, env));
+      return cors(adminGetStats(request, env));
     }
 
     if(path === "/api/admin/users" && method === "GET"){
-      return withCORS(adminGetUsers(request, env));
+      return cors(adminGetUsers(request, env));
     }
 
     if(path.match(/^\/api\/admin\/users\/\d+$/) && method === "PUT"){
       const userId = path.split("/")[4];
-      return withCORS(adminUpdateUser(request, env, userId));
+      return cors(adminUpdateUser(request, env, userId));
     }
 
     if(path === "/api/admin/videos" && method === "GET"){
-      return withCORS(adminGetVideos(request, env));
+      return cors(adminGetVideos(request, env));
     }
 
     if(path.match(/^\/api\/admin\/videos\/\d+$/) && method === "DELETE"){
       const videoId = path.split("/")[4];
-      return withCORS(adminDeleteVideo(request, env, videoId));
+      return cors(adminDeleteVideo(request, env, videoId));
     }
 
     if(path === "/api/admin/migrate" && method === "POST"){
-      return withCORS(adminRunMigration(request, env));
+      return cors(adminRunMigration(request, env));
     }
 
     if(path === "/api/payments/config" && method === "GET"){
-      return withCORS(getPaystackConfig(request, env));
+      return cors(getPaystackConfig(request, env));
     }
 
     if(path === "/api/payments/initialize" && method === "POST"){
-      return withCORS(initializePayment(request, env));
+      return cors(initializePayment(request, env));
     }
 
     if(path === "/api/payments/verify" && method === "POST"){
-      return withCORS(verifyPayment(request, env));
+      return cors(verifyPayment(request, env));
     }
 
     if(path === "/api/payments/transactions" && method === "GET"){
-      return withCORS(getTransactions(request, env));
+      return cors(getTransactions(request, env));
     }
 
     if(path === "/api/webrtc/signal" && method === "POST"){
-      return withCORS(sendSignal(request, env));
+      return cors(sendSignal(request, env));
     }
 
     if(path === "/api/webrtc/poll" && method === "GET"){
-      return withCORS(pollSignals(request, env));
+      return cors(pollSignals(request, env));
     }
 
     if(path === "/api/live/create" && method === "POST"){
-      return withCORS(createLiveStream(request, env));
+      return cors(createLiveStream(request, env));
     }
 
     if(path === "/api/live/streams" && method === "GET"){
-      return withCORS(getLiveStreams(request, env));
+      return cors(getLiveStreams(request, env));
     }
 
     if(path === "/api/live/end" && method === "POST"){
-      return withCORS(endLiveStream(request, env));
+      return cors(endLiveStream(request, env));
     }
     if(path === "/api/live/chat" && method === "POST"){
-      return withCORS(sendLiveChat(request, env));
+      return cors(sendLiveChat(request, env));
     }
     if(path === "/api/live/chat" && method === "GET"){
-      return withCORS(getLiveChat(request, env));
+      return cors(getLiveChat(request, env));
     }
 
     // Gift routes
     if(path === "/api/gifts/send" && method === "POST"){
-      return withCORS(sendGift(request, env));
+      return cors(sendGift(request, env));
     }
     if(path === "/api/gifts/history" && method === "GET"){
-      return withCORS(getGiftHistory(request, env));
+      return cors(getGiftHistory(request, env));
     }
     if(path === "/api/wallet/balance" && method === "GET"){
-      return withCORS(getWalletBalance(request, env));
+      return cors(getWalletBalance(request, env));
     }
     if(path === "/api/gift-config" && method === "GET"){
       try {
         const { results } = await env.DB.prepare("SELECT gift_name, price_usd FROM gift_config").all();
-        return withCORS(Response.json({ config: results || [] }));
+        return cors(Response.json({ config: results || [] }));
       } catch(e) {
-        return withCORS(Response.json({ config: [] }));
+        return cors(Response.json({ config: [] }));
       }
     }
 
     // Extended admin routes
     if(path === "/api/admin/streams" && method === "GET"){
-      return withCORS(adminGetLiveStreams(request, env));
+      return cors(adminGetLiveStreams(request, env));
     }
     if(path.match(/^\/api\/admin\/streams\/[^\/]+\/stop$/) && method === "POST"){
       const streamKey = decodeURIComponent(path.split("/")[4]);
-      return withCORS(adminStopStream(request, env, streamKey));
+      return cors(adminStopStream(request, env, streamKey));
     }
     if(path === "/api/admin/transactions" && method === "GET"){
-      return withCORS(adminGetTransactions(request, env));
+      return cors(adminGetTransactions(request, env));
     }
     if(path === "/api/admin/gifts" && method === "GET"){
-      return withCORS(adminGetGifts(request, env));
+      return cors(adminGetGifts(request, env));
     }
     if(path === "/api/admin/messages" && method === "GET"){
-      return withCORS(adminGetMessages(request, env));
+      return cors(adminGetMessages(request, env));
     }
     if(path === "/api/admin/reports" && method === "GET"){
-      return withCORS(adminGetReports(request, env));
+      return cors(adminGetReports(request, env));
     }
     if(path.match(/^\/api\/admin\/reports\/\d+$/) && method === "PUT"){
       const reportId = path.split("/")[4];
-      return withCORS(adminUpdateReport(request, env, reportId));
+      return cors(adminUpdateReport(request, env, reportId));
     }
     if(path === "/api/admin/comments" && method === "GET"){
-      return withCORS(adminGetComments(request, env));
+      return cors(adminGetComments(request, env));
     }
     if(path.match(/^\/api\/admin\/comments\/\d+$/) && method === "DELETE"){
       const commentId = path.split("/")[4];
-      return withCORS(adminDeleteComment(request, env, commentId));
+      return cors(adminDeleteComment(request, env, commentId));
     }
     if(path === "/api/admin/logs" && method === "GET"){
-      return withCORS(adminGetActivityLogs(request, env));
+      return cors(adminGetActivityLogs(request, env));
     }
     if(path === "/api/admin/storage" && method === "GET"){
-      return withCORS(adminGetStorageHealth(request, env));
+      return cors(adminGetStorageHealth(request, env));
     }
     if(path === "/api/admin/balance" && method === "POST"){
-      return withCORS(adminAdjustBalance(request, env));
+      return cors(adminAdjustBalance(request, env));
     }
     if(path === "/api/admin/gift-config" && method === "GET"){
-      return withCORS(adminGetGiftConfig(request, env));
+      return cors(adminGetGiftConfig(request, env));
     }
     if(path === "/api/admin/gift-config" && method === "POST"){
-      return withCORS(adminUpdateGiftPrice(request, env));
+      return cors(adminUpdateGiftPrice(request, env));
     }
 
     if(path.startsWith("/api/admin/clear/") && method === "POST"){
       const table = path.split("/api/admin/clear/")[1];
-      return withCORS(adminClearTable(request, env, table));
+      return cors(adminClearTable(request, env, table));
     }
 
 
     // Block routes
     if(path.match(/^\/api\/users\/[^\/]+\/block$/) && method === "POST"){
       const username = path.split("/")[3];
-      return withCORS(blockUser(request, env, username));
+      return cors(blockUser(request, env, username));
     }
     if(path === "/api/users/blocked" && method === "GET"){
-      return withCORS(getBlockedUsers(request, env));
+      return cors(getBlockedUsers(request, env));
     }
 
     // Report routes
     if(path.match(/^\/api\/videos\/\d+\/report$/) && method === "POST"){
       const videoId = path.split("/")[3];
-      return withCORS(reportVideo(request, env, videoId));
+      return cors(reportVideo(request, env, videoId));
     }
     if(path.match(/^\/api\/users\/[^\/]+\/report$/) && method === "POST"){
       const username = path.split("/")[3];
-      return withCORS(reportUser(request, env, username));
+      return cors(reportUser(request, env, username));
     }
 
     // Download route
     if(path.match(/^\/api\/videos\/\d+\/download$/) && method === "GET"){
       const videoId = path.split("/")[3];
-      return withCORS(downloadVideo(request, env, videoId));
+      return cors(downloadVideo(request, env, videoId));
     }
 
-    return withCORS(
+    return cors(
       new Response("404 - Endpoint Not Found", {
         status: 404,
         headers: { "Content-Type": "text/plain" }
@@ -632,10 +634,11 @@ testSupabaseUpload(request, env)
 
     }
     catch(error){
+      const errorOrigin = getAllowedOriginForRequest(request);
       return new Response(JSON.stringify({error:error.message||"Server error"}),{
         status:500,
         headers:{
-          "Access-Control-Allow-Origin":"*",
+          "Access-Control-Allow-Origin":errorOrigin,
           "Access-Control-Allow-Methods":"GET, POST, PUT, DELETE, OPTIONS",
           "Access-Control-Allow-Headers":"Content-Type, Authorization",
           "Content-Type":"application/json"

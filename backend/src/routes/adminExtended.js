@@ -17,6 +17,7 @@ async function ensureAllTables(env) {
     await ensureTable(env, `CREATE TABLE IF NOT EXISTS notifications (id INTEGER PRIMARY KEY, user_id INTEGER, from_user_id INTEGER, type TEXT, message TEXT, reference_type TEXT, reference_id INTEGER, read INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')))`);
     await ensureTable(env, `CREATE TABLE IF NOT EXISTS video_likes (id INTEGER PRIMARY KEY, video_id INTEGER, user_id INTEGER, created_at TEXT DEFAULT (datetime('now')))`);
     await ensureTable(env, `CREATE TABLE IF NOT EXISTS video_saves (id INTEGER PRIMARY KEY, video_id INTEGER, user_id INTEGER, created_at TEXT DEFAULT (datetime('now')))`);
+    await ensureTable(env, `CREATE TABLE IF NOT EXISTS content_reports (id INTEGER PRIMARY KEY AUTOINCREMENT, reporter_id INTEGER NOT NULL, video_id INTEGER, reported_user_id INTEGER, reason TEXT, details TEXT, status TEXT DEFAULT 'pending', created_at TEXT DEFAULT (datetime('now')))`);
     try { await env.DB.prepare("ALTER TABLE users ADD COLUMN wallet_balance REAL DEFAULT 0").run(); } catch(e) {}
     try { await env.DB.prepare("ALTER TABLE users ADD COLUMN allow_messages TEXT DEFAULT 'everyone'").run(); } catch(e) {}
 }
