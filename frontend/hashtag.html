@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Hashtag - CloudTok</title>
+<meta name="description" content="Discover trending videos on CloudTok. Watch the latest content from creators worldwide.">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="CloudTok">
+<meta property="og:title" content="Hashtag Videos - CloudTok">
+<meta property="og:description" content="Watch trending hashtag videos on CloudTok. Discover the best content from creators worldwide.">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+.hashtagPage{max-width:900px;margin:0 auto;padding:20px;padding-top:70px;padding-bottom:80px;}
+.hashtagHeader{text-align:center;margin-bottom:30px;}
+.hashtagTitle{font-size:28px;font-weight:800;color:#fff;margin:0;}
+.hashtagTitle span{color:#fe2d55;}
+.hashtagCount{color:rgba(255,255,255,.4);font-size:14px;margin-top:6px;}
+.videoGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;}
+.videoCard{position:relative;border-radius:12px;overflow:hidden;aspect-ratio:9/16;background:#111;cursor:pointer;}
+.videoCard video,.videoCard img{width:100%;height:100%;object-fit:cover;}
+.videoCard .overlay{position:absolute;bottom:0;left:0;right:0;padding:10px;background:linear-gradient(transparent,rgba(0,0,0,.8));}
+.videoCard .overlay .caption{color:#fff;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.videoCard .overlay .views{color:rgba(255,255,255,.5);font-size:11px;margin-top:2px;}
+.videoCard .playIcon{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:36px;opacity:.7;}
+.emptyState{text-align:center;padding:80px 20px;color:rgba(255,255,255,.3);}
+.emptyState .icon{font-size:48px;margin-bottom:16px;}
+.loadMore{display:block;margin:30px auto;padding:12px 30px;background:#fe2d55;color:#fff;border:none;border-radius:25px;font-size:14px;font-weight:600;cursor:pointer;}
+.loadMore:disabled{opacity:.4;cursor:not-allowed;}
+@media(max-width:480px){
+.videoGrid{grid-template-columns:repeat(3,1fr);gap:8px;}
+.hashtagTitle{font-size:22px;}
+}
+</style>
+</head>
+<body>
+<div class="hashtagPage">
+    <div class="hashtagHeader">
+        <h1 class="hashtagTitle">#<span id="hashtagName">loading</span></h1>
+        <p class="hashtagCount" id="hashtagCount"></p>
+    </div>
+    <div class="videoGrid" id="videoGrid"></div>
+    <button class="loadMore" id="loadMoreBtn" style="display:none;">Load more</button>
+    <div class="emptyState" id="emptyState" style="display:none;">
+        <div class="icon">#</div>
+        <p>No videos found with this hashtag</p>
+    </div>
+</div>
+<script src="assets/js/api/api.js"></script>
+<script src="assets/js/core/engine.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", async ()=>{
+    const params = new URLSearchParams(window.location.search);
+    const tag = params.get("tag") || "";
+    if(!tag){ document.getElementById("emptyState").style.display="block"; return; }
+
+    document.getElementById("hashtagName").textContent = tag;
+    document.title = "#" + tag + " - CloudTok";
+    document.querySelector('meta[name="description"]').content = "Watch trending #" + tag + " videos on CloudTok. Discover the best content from creators worldwide.";
+
+    let offset = 0;
+    const limit = 20;
+    let allLoaded = false;
+
+    async function loadVideos(append){
+        if(!append) offset = 0;
+        try{
+            const result = await CloudTokAPI.request("/hashtag/" + encodeURIComponent(tag) + "?limit=" + limit + "&offset=" + offset);
+            const videos = result.videos || [];
+            const total = result.count || 0;
+
+            document.getElementById("hashtagCount").textContent = total + " video" + (total !== 1 ? "s" : "");
+
+            if(videos.length === 0 && offset === 0){
+                document.getElementById("emptyState").style.display="block";
+                return;
+            }
+
+            const grid = document.getElementById("videoGrid");
+            if(!append) grid.innerHTML = "";
+
+            videos.forEach(v => {
+                const card = document.createElement("div");
+                card.className = "videoCard";
+                card.innerHTML = `
+                    <video src="${v.video_url}" muted loop preload="metadata" playsinline></video>
+                    <div class="playIcon">▶</div>
+                    <div class="overlay">
+                        <div class="caption">${v.caption || ""}</div>
+                        <div class="views">${formatNum(v.views)} views</div>
+                    </div>
+                `;
+                card.onclick = ()=>{ window.location.href = "watch.html?id=" + v.id; };
+                card.addEventListener("mouseenter", ()=>{ card.querySelector("video").play().catch(()=>{}); });
+                card.addEventListener("mouseleave", ()=>{ const vid = card.querySelector("video"); vid.pause(); vid.currentTime = 0; });
+                grid.appendChild(card);
+            });
+
+            offset += videos.length;
+            const btn = document.getElementById("loadMoreBtn");
+            if(offset < total){ btn.style.display="block"; btn.disabled=false; }
+            else { btn.style.display="none"; }
+        }catch(e){
+            console.log("Hashtag load failed", e);
+        }
+    }
+
+    function formatNum(n){ if(!n) return "0"; if(n >= 1000000) return (n/1000000).toFixed(1)+"M"; if(n >= 1000) return (n/1000).toFixed(1)+"K"; return n.toString(); }
+
+    document.getElementById("loadMoreBtn").onclick = function(){ this.disabled=true; loadVideos(true); };
+
+    await loadVideos(false);
+});
+</script>
+</body>
+</html>

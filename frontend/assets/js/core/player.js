@@ -666,8 +666,8 @@ this.updateSave();
     document.createElement("p");
 
 
-    caption.textContent =
-    this.data.caption || "";
+    caption.innerHTML =
+    (this.data.caption || "").replace(/(#\w+)/g, '<a href="hashtag.html?tag=$1" style="color:#00b7ff;text-decoration:none;">$1</a>');
 
 
 

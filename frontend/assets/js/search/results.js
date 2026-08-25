@@ -42,7 +42,7 @@ if(typeof CloudTokAPI!=="undefined"){
 
                 <div class="resultInfo">
                 <h3>${video.username}</h3>
-                <p>${video.caption||""}</p>
+                <p>${(video.caption||"").replace(/(#\w+)/g,'<a href="hashtag.html?tag=$1" style="color:#00b7ff;text-decoration:none;">$1')}</p>
                 </div>
 
                 </div>
@@ -86,7 +86,7 @@ CloudTokDatabase.videos.forEach(video=>{
 
         <div class="resultInfo">
         <h3>${video.username}</h3>
-        <p>${video.caption||""}</p>
+        <p>${(video.caption||"").replace(/(#\w+)/g,'<a href="hashtag.html?tag=$1" style="color:#00b7ff;text-decoration:none;">$1')}</p>
         <span>#${(video.tags||[]).join(" #")}</span>
         </div>
 

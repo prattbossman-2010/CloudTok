@@ -29,7 +29,7 @@ import {
   bulkArchiveMessages,
   bulkLockMessages
 } from "./routes/messages.js";
-import { search } from "./routes/search.js";
+import { search, getHashtagVideos } from "./routes/search.js";
 import { getTrending, getDiscoverVideos } from "./routes/discover.js";
 import { toggleSave, getSavedVideos } from "./routes/saves.js";
 import { deleteVideo } from "./routes/videoDelete.js";
@@ -51,6 +51,7 @@ import { blockUser, getBlockedUsers } from "./routes/blocks.js";
 import { reportVideo, reportUser } from "./routes/reports.js";
 import { forgotPassword, verifyResetCode, resetPassword } from "./routes/passwordReset.js";
 import { authRateLimit, apiRateLimit } from "./middleware/rateLimit.js";
+import { generateOGImage } from "./routes/ogImage.js";
 
 export default {
 
@@ -69,6 +70,9 @@ export default {
     const path = url.pathname;
     const method = request.method;
 
+    if(path === "/api/og" && method === "GET"){
+      return generateOGImage(request, env);
+    }
 
     if(path === "/"){
       return withCORS(
@@ -159,6 +163,11 @@ export default {
       method === "GET"
     ){
       return withCORS(search(request, env));
+    }
+
+    if(path.match(/^\/api\/hashtag\/[^\/]+$/) && method === "GET"){
+      const tag = path.split("/")[3];
+      return withCORS(getHashtagVideos(request, env, decodeURIComponent(tag)));
     }
 
 

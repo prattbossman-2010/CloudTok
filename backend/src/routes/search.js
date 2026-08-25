@@ -113,3 +113,64 @@ export async function search(request, env){
   });
 
 }
+
+
+export async function getHashtagVideos(request, env, hashtag){
+
+  const url = new URL(request.url);
+  const limit = Math.min(parseInt(url.searchParams.get("limit") || "20"), 50);
+  const offset = parseInt(url.searchParams.get("offset") || "0");
+
+  const tagPattern = `%#${hashtag}%`;
+  const tagPatternAlt = `%${hashtag}%`;
+
+  const { results: videos } =
+  await env.DB
+  .prepare(
+    `
+    SELECT
+      videos.id,
+      videos.video_url,
+      videos.thumbnail_url,
+      videos.caption,
+      videos.tags,
+      videos.category,
+      videos.views,
+      videos.likes,
+      videos.comments,
+      videos.created_at,
+      users.id AS user_id,
+      users.username,
+      users.display_name,
+      users.avatar
+    FROM videos
+    JOIN users ON videos.user_id = users.id
+    WHERE LOWER(videos.tags) LIKE LOWER(?)
+       OR LOWER(videos.caption) LIKE LOWER(?)
+    ORDER BY videos.created_at DESC
+    LIMIT ? OFFSET ?
+    `
+  )
+  .bind(
+    tagPattern,
+    tagPatternAlt,
+    limit,
+    offset
+  )
+  .all();
+
+  const countResult = await env.DB
+  .prepare(
+    `SELECT COUNT(*) AS count FROM videos
+     WHERE LOWER(tags) LIKE LOWER(?) OR LOWER(caption) LIKE LOWER(?)`
+  )
+  .bind(tagPattern, tagPatternAlt)
+  .first();
+
+  return Response.json({
+    hashtag: hashtag,
+    count: countResult ? countResult.count : 0,
+    videos
+  });
+
+}

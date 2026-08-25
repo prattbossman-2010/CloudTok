@@ -156,6 +156,14 @@ window.CloudTokAPI = {
 },
 
 
+    async getHashtag(tag, limit=20, offset=0){
+    return await this.request(
+        "/hashtag/" + encodeURIComponent(tag) +
+        "?limit=" + limit + "&offset=" + offset
+    );
+},
+
+
     async getUserVideos(username){
 
     const response =
