@@ -1524,16 +1524,6 @@ showSavedMessage(text){
 
             this.isLiked = result.liked;
 
-            if(result.liked && !wasLiked){
-                this.likes++;
-            } else if(!result.liked && wasLiked){
-                this.likes = Math.max(0, this.likes - 1);
-            } else if(result.liked && wasLiked){
-                // no change
-            } else {
-                // both unlike - no change
-            }
-
             this.updateLike();
             this.syncLikeToDatabase(result.liked);
 

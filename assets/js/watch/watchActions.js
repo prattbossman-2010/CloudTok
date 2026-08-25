@@ -205,11 +205,6 @@ if(typeof CloudTokAPI!=="undefined"){
         );
         if(result.success){
             this.isLiked=result.liked;
-            if(result.liked && !wasLiked){
-                this.video.likes=(this.video.likes||0)+1;
-            }else if(!result.liked && wasLiked){
-                this.video.likes=Math.max(0,(this.video.likes||0)-1);
-            }
             if(result.liked){
                 if(!this.video.likedBy.includes(this.currentUser)) this.video.likedBy.push(this.currentUser);
             }else{
