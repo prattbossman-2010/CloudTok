@@ -106,8 +106,12 @@ window.CloudTokAPI = {
         options
     );
 
-    const raw =
-    await response.json();
+    let raw;
+    try {
+        raw = await response.json();
+    } catch(e) {
+        raw = { error: "Invalid response", success: false };
+    }
 
     if(response.status === 401 &&
       (raw.error === "invalid_token" ||

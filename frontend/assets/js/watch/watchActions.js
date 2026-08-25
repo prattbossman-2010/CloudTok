@@ -186,8 +186,8 @@ showActionSheet(){
             navigator.clipboard.writeText(videoUrl).catch(()=>{});
             showToast("Link copied!", "success");
         }},
-        {icon:"📤", text:"Share to apps", action:()=>{ this.showSharePlatforms(); }},
-        {icon:"👥", text:"Share with users", action:()=>{ this.showShareToUsers(); }},
+        {icon:"📤", text:"Share to apps", action:()=>{ setTimeout(()=>this.showSharePlatforms(), 100); }},
+        {icon:"👥", text:"Share with users", action:()=>{ setTimeout(()=>this.showShareToUsers(), 100); }},
         {sep:true},
         {icon:"⚠️", text:"Report video", danger:true, action:()=>{ this.showReportPrompt("video"); }},
         {icon:"🚫", text:"Report user", danger:true, action:()=>{ this.showReportPrompt("user"); }},

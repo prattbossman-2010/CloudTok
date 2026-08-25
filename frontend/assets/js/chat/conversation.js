@@ -160,24 +160,31 @@ setupMessageEvents(){
 }
 
 async deleteMessage(msgId,el){
-    el.style.transition="all .3s";
-    el.style.maxHeight="0";
-    el.style.padding="0";
-    el.style.margin="0";
-    el.style.opacity="0";
-    setTimeout(()=>el.remove(),300);
-    this.allMessages=this.allMessages.filter(m=>m.id!==msgId);
-    this.lastMessageCount=Math.max(0,this.lastMessageCount-1);
-
     if(typeof CloudTokAPI!=="undefined"){
         try{
             const result=await CloudTokAPI.request("/messages/"+msgId,{method:"DELETE"});
-            if(!result.success){
-                showToast("Delete failed","error");
+            if(result.success){
+                el.style.transition="all .3s";
+                el.style.maxHeight="0";
+                el.style.padding="0";
+                el.style.margin="0";
+                el.style.opacity="0";
+                setTimeout(()=>el.remove(),300);
+                this.allMessages=this.allMessages.filter(m=>m.id!==msgId);
+                this.lastMessageCount=Math.max(0,this.lastMessageCount-1);
+                showToast("Message deleted","success");
+            } else {
+                showToast("Delete failed: "+(result.error||"Unknown"),"error");
             }
         }catch(e){
             showToast("Delete failed","error");
         }
+    } else {
+        el.style.transition="all .3s";
+        el.style.maxHeight="0";
+        el.style.opacity="0";
+        setTimeout(()=>el.remove(),300);
+        this.allMessages=this.allMessages.filter(m=>m.id!==msgId);
     }
 }
 

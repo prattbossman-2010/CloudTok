@@ -117,7 +117,8 @@ users.forEach(user=>{
     `;
 
     let longPressTimer=null;
-    const startLP=()=>{longPressTimer=setTimeout(()=>{this.showChatContextMenu(user);},500);};
+    let longPressFired=false;
+    const startLP=()=>{longPressFired=false;longPressTimer=setTimeout(()=>{longPressFired=true;this.showChatContextMenu(user);},500);};
     const cancelLP=()=>{clearTimeout(longPressTimer);};
 
     card.addEventListener("touchstart",startLP,{passive:true});
@@ -127,11 +128,11 @@ users.forEach(user=>{
     card.addEventListener("mouseup",cancelLP);
     card.addEventListener("mouseleave",cancelLP);
 
-    card.onclick=()=>{
-        if(this.ctxMenu){this.ctxMenu.remove();this.ctxMenu=null;return;}
+    card.addEventListener("click",(e)=>{
+        if(longPressFired||this.ctxMenu){e.stopPropagation();return;}
         this.stopPolling();
         window.location.href="conversation.html?user="+encodeURIComponent(user.username);
-    };
+    });
 
     this.list.appendChild(card);
 
