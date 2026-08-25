@@ -116,7 +116,19 @@ users.forEach(user=>{
         ${user.unreadCount>0?`<span class="unreadBadge">${user.unreadCount}</span>`:""}
     `;
 
+    let longPressTimer=null;
+    const startLP=()=>{longPressTimer=setTimeout(()=>{this.showChatContextMenu(user);},500);};
+    const cancelLP=()=>{clearTimeout(longPressTimer);};
+
+    card.addEventListener("touchstart",startLP,{passive:true});
+    card.addEventListener("touchend",cancelLP,{passive:true});
+    card.addEventListener("touchmove",cancelLP,{passive:true});
+    card.addEventListener("mousedown",startLP);
+    card.addEventListener("mouseup",cancelLP);
+    card.addEventListener("mouseleave",cancelLP);
+
     card.onclick=()=>{
+        if(this.ctxMenu){this.ctxMenu.remove();this.ctxMenu=null;return;}
         this.stopPolling();
         window.location.href="conversation.html?user="+encodeURIComponent(user.username);
     };
@@ -125,6 +137,45 @@ users.forEach(user=>{
 
 });
 
+}
+
+showChatContextMenu(user){
+    if(this.ctxMenu){this.ctxMenu.remove();}
+
+    const menu=document.createElement("div");
+    menu.className="msgContextMenu";
+    this.ctxMenu=menu;
+
+    const items=[
+        {icon:"⚠️",text:"Report user",danger:true,action:async()=>{
+            const reason=prompt("Report reason:");
+            if(reason){
+                try{await CloudTokAPI.reportUser(user.username,reason);showToast("User reported","success");}catch(e){showToast("Report failed","error");}
+            }
+        }},
+        {icon:"🚫",text:"Block user",danger:true,action:async()=>{
+            if(confirm("Block "+user.displayName+"?")){
+                try{await CloudTokAPI.blockUser(user.username);showToast("User blocked","success");}catch(e){showToast("Block failed","error");}
+            }
+        }},
+    ];
+
+    items.forEach(item=>{
+        const btn=document.createElement("button");
+        btn.className="msgCtxItem"+(item.danger?" danger":"");
+        btn.innerHTML='<span class="ctxIcon">'+item.icon+'</span>'+item.text;
+        btn.onclick=(e)=>{e.stopPropagation();menu.remove();this.ctxMenu=null;item.action();};
+        menu.appendChild(btn);
+    });
+
+    document.body.appendChild(menu);
+    const rect=menu.getBoundingClientRect();
+    menu.style.top="50%";
+    menu.style.left="50%";
+    menu.style.transform="translate(-50%,-50%)";
+
+    const closeMenu=(e)=>{if(!menu.contains(e.target)){menu.remove();this.ctxMenu=null;document.removeEventListener("click",closeMenu);}};
+    setTimeout(()=>document.addEventListener("click",closeMenu),10);
 }
 
 }

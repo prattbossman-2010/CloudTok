@@ -166,11 +166,19 @@ async deleteMessage(msgId,el){
     el.style.margin="0";
     el.style.opacity="0";
     setTimeout(()=>el.remove(),300);
+    this.allMessages=this.allMessages.filter(m=>m.id!==msgId);
+    this.lastMessageCount=Math.max(0,this.lastMessageCount-1);
 
     if(typeof CloudTokAPI!=="undefined"){
-        try{await CloudTokAPI.request("/messages/"+msgId,{method:"DELETE"});}catch(e){}
+        try{
+            const result=await CloudTokAPI.request("/messages/"+msgId,{method:"DELETE"});
+            if(!result.success){
+                showToast("Delete failed","error");
+            }
+        }catch(e){
+            showToast("Delete failed","error");
+        }
     }
-    this.allMessages=this.allMessages.filter(m=>m.id!==msgId);
 }
 
 async toggleArchive(msgId){
@@ -374,7 +382,15 @@ async loadMessages(isPoll=false){
                     :"message received";
 
                     bubble.dataset.msgId=msg.id;
-                    bubble.textContent=msg.text;
+
+                    const videoMatch=(msg.text||"").match(/watch\.html\?id=(\d+)/);
+                    if(videoMatch){
+                        bubble.innerHTML='<div class="msgVideoPreview" onclick="window.location.href=\'watch.html?id='+videoMatch[1]+'\'" style="cursor:pointer;background:rgba(255,255,255,.06);border-radius:12px;padding:10px;max-width:220px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:20px;">🎬</span><span style="font-size:12px;color:rgba(255,255,255,.5);">Video</span></div><div style="font-size:12px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+msg.text+'</div></div>';
+                    } else if((msg.text||"").startsWith("http")){
+                        bubble.innerHTML='<a href="'+msg.text+'" target="_blank" rel="noopener" style="color:#00b7ff;text-decoration:none;word-break:break-all;">'+msg.text+'</a>';
+                    } else {
+                        bubble.textContent=msg.text;
+                    }
 
                     this.messages.appendChild(bubble);
 
