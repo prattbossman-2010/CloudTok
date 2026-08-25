@@ -186,16 +186,7 @@ showActionSheet(){
             navigator.clipboard.writeText(videoUrl).catch(()=>{});
             showToast("Link copied!", "success");
         }},
-        {icon:"📤", text:"Share", action:async()=>{
-            try{
-                if(navigator.share){
-                    await navigator.share({title:"CloudTok", text:this.video.caption, url:videoUrl});
-                } else {
-                    navigator.clipboard.writeText(videoUrl).catch(()=>{});
-                    showToast("Link copied!", "success");
-                }
-            }catch(e){}
-        }},
+        {icon:"📤", text:"Share to apps", action:()=>{ this.showSharePlatforms(); }},
         {icon:"👥", text:"Share with users", action:()=>{ this.showShareToUsers(); }},
         {sep:true},
         {icon:"⚠️", text:"Report video", danger:true, action:()=>{ this.showReportPrompt("video"); }},
@@ -239,6 +230,61 @@ showReportPrompt(type){
     }
 }
 
+showSharePlatforms(){
+    const existing = document.querySelector(".actionSheetOverlay");
+    if(existing) existing.remove();
+
+    const overlay = document.createElement("div");
+    overlay.className = "actionSheetOverlay";
+
+    const sheet = document.createElement("div");
+    sheet.className = "actionSheet";
+
+    const videoUrl = window.location.origin + "/CloudTok/watch.html?id=" + this.video.id;
+    const caption = encodeURIComponent(this.video.caption || "Check this out on CloudTok");
+    const url = encodeURIComponent(videoUrl);
+
+    const platforms = [
+        {icon:"💬", name:"WhatsApp", color:"#25D366", action:()=>{ window.open("https://wa.me/?text="+caption+"%20"+url, "_blank"); }},
+        {icon:"📘", name:"Facebook", color:"#1877F2", action:()=>{ window.open("https://www.facebook.com/sharer/sharer.php?u="+url, "_blank"); }},
+        {icon:"🐦", name:"Twitter / X", color:"#1DA1F2", action:()=>{ window.open("https://twitter.com/intent/tweet?text="+caption+"&url="+url, "_blank"); }},
+        {icon:"📸", name:"Instagram", color:"#E4405F", action:()=>{ navigator.clipboard.writeText(videoUrl).catch(()=>{}); showToast("Link copied! Open Instagram and paste.", "success"); }},
+        {icon:"🎵", name:"TikTok", color:"#000", action:()=>{ navigator.clipboard.writeText(videoUrl).catch(()=>{}); showToast("Link copied! Open TikTok and paste.", "success"); }},
+        {icon:"📺", name:"YouTube", color:"#FF0000", action:()=>{ navigator.clipboard.writeText(videoUrl).catch(()=>{}); showToast("Link copied! Open YouTube and paste.", "success"); }},
+        {icon:"✉️", name:"Telegram", color:"#0088cc", action:()=>{ window.open("https://t.me/share/url?url="+url+"&text="+caption, "_blank"); }},
+        {icon:"💼", name:"LinkedIn", color:"#0A66C2", action:()=>{ window.open("https://www.linkedin.com/sharing/share-offsite/?url="+url, "_blank"); }},
+        {icon:"📧", name:"Email", color:"#EA4335", action:()=>{ window.location.href="mailto:?subject=CloudTok Video&body="+caption+"%20"+url; }},
+    ];
+
+    sheet.innerHTML = '<div class="actionSheetHandle"></div>' +
+        '<div style="padding:8px 20px 12px;color:rgba(255,255,255,.5);font-size:13px;text-transform:uppercase;letter-spacing:1px;">Share to</div>';
+
+    const grid = document.createElement("div");
+    grid.style.cssText = "display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px 12px;";
+
+    platforms.forEach(p=>{
+        const item = document.createElement("div");
+        item.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border-radius:12px;cursor:pointer;transition:background .15s;";
+        item.innerHTML = '<div style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;background:'+p.color+'20;">'+p.icon+'</div><span style="font-size:11px;color:rgba(255,255,255,.7);">'+p.name+'</span>';
+        item.onmouseenter = ()=> item.style.background = "rgba(255,255,255,.06)";
+        item.onmouseleave = ()=> item.style.background = "none";
+        item.onclick = (e)=>{ e.stopPropagation(); overlay.remove(); p.action(); };
+        grid.appendChild(item);
+    });
+
+    sheet.appendChild(grid);
+
+    const cancel = document.createElement("button");
+    cancel.className = "actionSheetCancel";
+    cancel.textContent = "Cancel";
+    cancel.onclick = ()=> overlay.remove();
+    sheet.appendChild(cancel);
+
+    overlay.appendChild(sheet);
+    overlay.onclick = (e)=>{ if(e.target === overlay) overlay.remove(); };
+    document.body.appendChild(overlay);
+}
+
 showShareToUsers(){
     const existing = document.querySelector(".actionSheetOverlay");
     if(existing) existing.remove();
@@ -267,7 +313,7 @@ showShareToUsers(){
     list.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,.3);">Loading...</div>';
 
     const videoUrl = window.location.origin + "/CloudTok/watch.html?id=" + this.video.id;
-    const shareMsg = "Check this out: " + videoUrl;
+    const shareMsg = videoUrl;
 
     if(typeof CloudTokAPI !== "undefined"){
         CloudTokAPI.getConversations().then(result=>{
