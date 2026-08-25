@@ -24,6 +24,9 @@ export async function generateOGImage(request, env) {
   <rect x="0" y="0" width="1200" height="6" fill="url(#accent)"/>
   <circle cx="100" cy="120" r="50" fill="#ff2d55" opacity="0.15"/>
   <circle cx="1100" cy="500" r="80" fill="#ff2d55" opacity="0.08"/>
+  <rect x="100" y="60" width="8" height="40" rx="4" fill="#ff2d55"/>
+  <text x="120" y="95" font-family="Arial,sans-serif" font-size="36" font-weight="800" fill="#ffffff">Cloud</text>
+  <text x="255" y="95" font-family="Arial,sans-serif" font-size="36" font-weight="800" fill="#ff2d55">Tok</text>
   <text x="100" y="200" font-family="Arial,sans-serif" font-size="72" font-weight="800" fill="#ffffff">${safeTitle.length > 40 ? safeTitle.substring(0,40)+"..." : safeTitle}</text>
   <text x="100" y="280" font-family="Arial,sans-serif" font-size="32" fill="#ff2d55">@${safeUser}</text>
   <text x="100" y="360" font-family="Arial,sans-serif" font-size="24" fill="rgba(255,255,255,0.5)">${views} views · ${likes} likes</text>

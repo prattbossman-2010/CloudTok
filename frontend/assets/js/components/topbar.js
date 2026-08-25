@@ -23,7 +23,7 @@ top.innerHTML=`
 
 <div class="logo">
 
-☁ CloudTok
+<img src="images/logo.jpg" alt="CloudTok" style="width:28px;height:28px;border-radius:6px;vertical-align:middle;margin-right:6px;">CloudTok
 
 </div>
 
