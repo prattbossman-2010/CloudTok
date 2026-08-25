@@ -26,6 +26,14 @@
 
     <div id="conversationList" class="conversationList"></div>
 
+    <div class="msgSelectBar" id="chatSelectBar">
+        <span class="selCount" id="chatSelCount">0 selected</span>
+        <div class="msgSelectActions">
+            <button id="chatSelDeleteBtn" class="danger">🗑 Delete</button>
+            <button id="chatSelCancelBtn">✕ Cancel</button>
+        </div>
+    </div>
+
 </div>
 
 <div id="newChatOverlay" class="newChatOverlay" style="display:none">
@@ -41,6 +49,7 @@
 
 <script src="assets/js/api/api.js"></script>
 <script src="assets/js/database/database.js"></script>
+<script src="assets/js/components/toast.js"></script>
 <script src="assets/js/chat/chat.js"></script>
 <script src="assets/js/core/webrtc.js"></script>
 <script src="assets/js/core/callPoller.js"></script>

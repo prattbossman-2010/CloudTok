@@ -218,6 +218,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             <button class="adminNav" data-tab="videos"><span class="icon">🎬</span><span>Videos</span></button>
             <button class="adminNav" data-tab="comments"><span class="icon">💬</span><span>Comments</span></button>
             <button class="adminNav" data-tab="messages"><span class="icon">✉️</span><span>Messages</span></button>
+            <button class="adminNav" data-tab="reports"><span class="icon">🚨</span><span>Reports</span></button>
             <button class="adminNav" data-tab="streams"><span class="icon">📡</span><span>Live Streams</span></button>
             <button class="adminNav" data-tab="transactions"><span class="icon">💰</span><span>Transactions</span></button>
             <button class="adminNav" data-tab="gifts"><span class="icon">🎁</span><span>Gifts</span></button>
@@ -281,6 +282,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
             <h1>✉️ Messages</h1>
             <div class="searchBar"><button class="refreshBtn" onclick="admin.loadMessages()">Refresh</button></div>
             <div id="messagesTable" class="adminTable"></div>
+        </div>
+
+        <div id="reportsTab" class="adminTab">
+            <h1>🚨 Reports</h1>
+            <div class="searchBar"><button class="refreshBtn" onclick="admin.loadReports()">Refresh</button></div>
+            <div id="reportsTable" class="adminTable"></div>
         </div>
 
         <div id="streamsTab" class="adminTab">

@@ -19,6 +19,7 @@ constructor(){
     this.ctxMenu=null;
     this.longPressTimer=null;
     this.longPressMsgId=null;
+    this.deletedIds=new Set();
     this.setup();
     this.setupSelectBar();
 }
@@ -160,31 +161,33 @@ setupMessageEvents(){
 }
 
 async deleteMessage(msgId,el){
+    const id=String(msgId);
+    this.deletedIds.add(id);
+    el.style.transition="all .3s";
+    el.style.maxHeight="0";
+    el.style.padding="0";
+    el.style.margin="0";
+    el.style.opacity="0";
+    setTimeout(()=>el.remove(),300);
+    this.allMessages=this.allMessages.filter(m=>String(m.id)!==id);
+    this.lastMessageCount=Math.max(0,this.lastMessageCount-1);
+    showToast("Message deleted","success");
+
     if(typeof CloudTokAPI!=="undefined"){
         try{
-            const result=await CloudTokAPI.request("/messages/"+msgId,{method:"DELETE"});
-            if(result.success){
-                el.style.transition="all .3s";
-                el.style.maxHeight="0";
-                el.style.padding="0";
-                el.style.margin="0";
-                el.style.opacity="0";
-                setTimeout(()=>el.remove(),300);
-                this.allMessages=this.allMessages.filter(m=>m.id!==msgId);
-                this.lastMessageCount=Math.max(0,this.lastMessageCount-1);
-                showToast("Message deleted","success");
-            } else {
+            const result=await CloudTokAPI.request("/messages/"+id,{method:"DELETE"});
+            if(!result.success){
+                this.deletedIds.delete(id);
                 showToast("Delete failed: "+(result.error||"Unknown"),"error");
+                this.lastMessageCount++;
+                await this.loadMessages();
             }
         }catch(e){
+            this.deletedIds.delete(id);
             showToast("Delete failed","error");
+            this.lastMessageCount++;
+            await this.loadMessages();
         }
-    } else {
-        el.style.transition="all .3s";
-        el.style.maxHeight="0";
-        el.style.opacity="0";
-        setTimeout(()=>el.remove(),300);
-        this.allMessages=this.allMessages.filter(m=>m.id!==msgId);
     }
 }
 
@@ -236,6 +239,7 @@ async toggleLock(msgId){
 async bulkDelete(){
     const ids=[...this.selectedMsgIds];
     ids.forEach(id=>{
+        this.deletedIds.add(id);
         const el=this.messages.querySelector('[data-msg-id="'+id+'"]');
         if(el){el.style.transition="all .3s";el.style.maxHeight="0";el.style.padding="0";el.style.opacity="0";setTimeout(()=>el.remove(),300);}
         this.allMessages=this.allMessages.filter(m=>m.id!==id);
@@ -379,6 +383,8 @@ async loadMessages(isPoll=false){
                 localStorage.getItem("CloudTokCurrentUser")||"";
 
                 result.messages.forEach(msg=>{
+
+                    if(this.deletedIds.has(String(msg.id))) return;
 
                     const bubble=
                     document.createElement("div");

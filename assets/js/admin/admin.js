@@ -47,7 +47,7 @@ class CloudTokAdmin {
         document.querySelectorAll(".adminTab").forEach((t) => t.classList.remove("active"));
         btn.classList.add("active");
         document.getElementById(btn.dataset.tab + "Tab").classList.add("active");
-        const loaders = { dashboard: () => this.loadDashboard(), analytics: () => this.loadAnalytics(), users: () => this.loadUsers(), videos: () => this.loadVideos(), comments: () => this.loadComments(), messages: () => this.loadMessages(), streams: () => this.loadStreams(), transactions: () => this.loadTransactions(), gifts: () => this.loadGifts(), giftConfig: () => this.loadGiftConfig(), logs: () => this.loadLogs(), storage: () => this.loadStorage() };
+        const loaders = { dashboard: () => this.loadDashboard(), analytics: () => this.loadAnalytics(), users: () => this.loadUsers(), videos: () => this.loadVideos(), comments: () => this.loadComments(), messages: () => this.loadMessages(), reports: () => this.loadReports(), streams: () => this.loadStreams(), transactions: () => this.loadTransactions(), gifts: () => this.loadGifts(), giftConfig: () => this.loadGiftConfig(), logs: () => this.loadLogs(), storage: () => this.loadStorage() };
         if (loaders[btn.dataset.tab]) loaders[btn.dataset.tab]();
       };
     });
@@ -233,6 +233,27 @@ class CloudTokAdmin {
       html += "</tbody></table>";
       document.getElementById("messagesTable").innerHTML = html;
     } catch (e) { document.getElementById("messagesTable").innerHTML = "<p>Failed to load messages.</p>"; }
+  }
+  async loadReports() {
+    try {
+      const result = await this.api("/admin/reports");
+      if (result.error) { document.getElementById("reportsTable").innerHTML = "<p>" + result.error + "</p>"; return; }
+      const reports = result.reports || [];
+      if (reports.length === 0) { document.getElementById("reportsTable").innerHTML = '<div class="emptyState"><div class="icon">🚨</div><p>No reports found</p></div>'; return; }
+      var html = '<table><thead><tr><th>Reporter</th><th>Reported User</th><th>Reason</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+      reports.forEach(function(r) {
+        const statusColor = r.status === "pending" ? "#ff4444" : r.status === "reviewed" ? "#44aa44" : "#888";
+        html += '<tr><td>@' + (r.reporter_username || "?") + '</td><td>@' + (r.reported_username || "N/A") + '</td><td>' + (r.reason || "No reason").substring(0, 80) + '</td><td><span style="color:' + statusColor + ';font-weight:600;">' + (r.status || "pending") + '</span></td><td>' + (r.created_at ? new Date(r.created_at).toLocaleDateString() : "") + '</td><td class="actionsCell">' + (r.status === "pending" ? '<button class="adminBtn" onclick="admin.updateReport(' + r.id + ',\'reviewed\')">Mark Reviewed</button>' : "") + '</td></tr>';
+      });
+      html += "</tbody></table>";
+      document.getElementById("reportsTable").innerHTML = html;
+    } catch (e) { document.getElementById("reportsTable").innerHTML = "<p>Failed to load reports.</p>"; }
+  }
+  async updateReport(reportId, status) {
+    try {
+      await this.api("/admin/reports/" + reportId, "PUT", { status: status });
+      this.loadReports();
+    } catch (e) {}
   }
   async loadStreams() {
     try {
