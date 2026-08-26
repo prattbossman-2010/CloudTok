@@ -189,6 +189,28 @@ clear(){
 
 }
 
+appendVideos(videos){
+
+    videos.forEach(video=>{
+
+        try{
+
+            const card = new VideoCard(video);
+            const videoElement = card.getVideoElement();
+            if(videoElement){
+                videoElement.muted = true;
+            }
+            this.addCard(card);
+
+        } catch(error){
+            console.error(error);
+        }
+
+    });
+
+}
+
+
 
 
 

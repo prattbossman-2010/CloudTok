@@ -68,6 +68,40 @@ body.profilePageBody{
 */
 
 
+#feedTabs{
+    position:fixed;
+    top:12px;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    gap:4px;
+    background:rgba(0,0,0,.6);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    border-radius:999px;
+    padding:4px;
+    z-index:100;
+    border:1px solid rgba(255,255,255,.1);
+}
+.feedTab{
+    padding:8px 20px;
+    border:none;
+    border-radius:999px;
+    background:transparent;
+    color:rgba(255,255,255,.5);
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all .25s;
+}
+.feedTab.active{
+    background:rgba(255,255,255,.15);
+    color:#fff;
+}
+.feedTab:active{
+    transform:scale(.95);
+}
+
 #feedContainer{
 
     position:absolute;

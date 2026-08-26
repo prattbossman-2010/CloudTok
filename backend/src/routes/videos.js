@@ -8,11 +8,13 @@ export async function getVideos(request, env) {
     const limit = Math.min(parseInt(url.searchParams.get("limit") || "50"), 100);
     const offset = parseInt(url.searchParams.get("offset") || "0");
     const user = (url.searchParams.get("user") || "").trim();
+    const followingOnly = url.searchParams.get("following") === "1";
 
     const auth = await authenticate(request, env);
     let likedIds = [];
     let savedIds = [];
     let blockedIds = [];
+    let followingIds = [];
 
     if (!auth.error && auth.user) {
       const { results: likes } = await env.DB
@@ -32,6 +34,16 @@ export async function getVideos(request, env) {
         const { results: blocks } = await env.DB.prepare("SELECT blocked_id FROM user_blocks WHERE blocker_id = ?").bind(auth.user.id).all();
         blockedIds = blocks.map(b => b.blocked_id);
       } catch(e) {}
+
+      if (followingOnly) {
+        try {
+          const { results: follows } = await env.DB
+            .prepare("SELECT following_id FROM follows WHERE follower_id = ?")
+            .bind(auth.user.id)
+            .all();
+          followingIds = follows.map(f => f.following_id);
+        } catch(e) {}
+      }
     }
 
     let query = `
@@ -64,6 +76,15 @@ export async function getVideos(request, env) {
       const placeholders = blockedIds.map(() => "?").join(",");
       query += ` ${blockClause} videos.user_id NOT IN (${placeholders})`;
       params.push(...blockedIds);
+    }
+
+    if (followingOnly && followingIds.length > 0) {
+      const clause = (user || blockedIds.length > 0) ? " AND" : " WHERE";
+      const placeholders = followingIds.map(() => "?").join(",");
+      query += ` ${clause} videos.user_id IN (${placeholders})`;
+      params.push(...followingIds);
+    } else if (followingOnly && followingIds.length === 0) {
+      query += ` WHERE videos.user_id = -1`;
     }
 
     query += ` ORDER BY videos.created_at DESC LIMIT ? OFFSET ?`;

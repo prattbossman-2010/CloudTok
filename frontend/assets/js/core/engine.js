@@ -16,6 +16,8 @@ constructor(){
 
     this.isSwiping = false;
 
+    this.currentFeedType = "foryou";
+
     // ===== Global Sound Manager =====
     this.soundEnabled = false;
     this.soundButton = null;
@@ -79,6 +81,7 @@ createSoundController(){
 async init(){
 
     this.createSoundController();
+    this.setupFeedTabs();
 
     await this.loadVideos();
 
@@ -106,6 +109,21 @@ async init(){
 
 }
 
+setupFeedTabs(){
+    const tabs = document.querySelectorAll(".feedTab");
+    tabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+            if(tab.dataset.feed === this.currentFeedType) return;
+            tabs.forEach(t => t.classList.remove("active"));
+            tab.classList.add("active");
+            this.currentFeedType = tab.dataset.feed;
+            this.videoList = [];
+            this.currentIndex = 0;
+            this.loadVideos();
+        });
+    });
+}
+
 
 
 
@@ -122,8 +140,13 @@ async loadVideos(){
 
     try{
 
+    const options = {};
+    if(this.currentFeedType === "following"){
+        options.following = true;
+    }
+
     const result =
-    await CloudTokAPI.getVideos();
+    await CloudTokAPI.getVideos(options);
 
         
     this.videoList =
@@ -728,7 +751,11 @@ setupInfiniteScroll(){
             loading = true;
             try{
                 const offset = this.videoList.length;
-                const result = await CloudTokAPI.getVideos({offset: offset, limit: 10});
+                const options = {offset: offset, limit: 10};
+                if(this.currentFeedType === "following"){
+                    options.following = true;
+                }
+                const result = await CloudTokAPI.getVideos(options);
                 if(result.videos && result.videos.length > 0){
                     const newVideos = result.videos.filter(v => !this.videoList.some(existing => existing.id === v.id));
                     if(newVideos.length > 0){

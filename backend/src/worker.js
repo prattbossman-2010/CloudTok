@@ -7,7 +7,8 @@ import {
   getUserProfile,
   updateProfile,
   updateAvatar,
-  getUserVideos
+  getUserVideos,
+  getCreatorAnalytics
 } from "./routes/profile.js";
 import { toggleLike, getLikedVideos } from "./routes/interactions.js";
 import { getVideos, createVideo, incrementViews, downloadVideo } from "./routes/videos.js";
@@ -37,7 +38,7 @@ import { toggleSave, getSavedVideos } from "./routes/saves.js";
 import { deleteVideo } from "./routes/videoDelete.js";
 import { handleCORS, withCORS, getAllowedOriginForRequest } from "./middleware/cors.js";
 import { adminLogin, adminGetStats, adminGetUsers, adminUpdateUser, adminDeleteVideo, adminGetVideos, adminRunMigration } from "./routes/admin.js";
-import { initializePayment, verifyPayment, getTransactions, getPaystackConfig, handlePaystackWebhook, getExchangeRates } from "./routes/payments.js";
+import { initializePayment, verifyPayment, getTransactions, getPaystackConfig } from "./routes/payments.js";
 import { sendSignal, pollSignals, createLiveStream, getLiveStreams, endLiveStream, sendLiveChat, getLiveChat } from "./routes/webrtc.js";
 
 
@@ -377,6 +378,14 @@ export default {
       return cors(getUserVideos(request, env, username));
     }
 
+    if(
+      path.match(/^\/api\/users\/[^\/]+\/analytics$/) &&
+      method === "GET"
+    ){
+      const username = path.split("/")[3];
+      return cors(getCreatorAnalytics(request, env, username));
+    }
+
 
     if(
       path.match(/^\/api\/users\/[^\/]+\/followers$/) &&
@@ -500,14 +509,6 @@ testSupabaseUpload(request, env)
 
     if(path === "/api/payments/transactions" && method === "GET"){
       return cors(getTransactions(request, env));
-    }
-
-    if(path === "/api/payments/webhook" && method === "POST"){
-      return handlePaystackWebhook(request, env);
-    }
-
-    if(path === "/api/exchange-rates" && method === "GET"){
-      return cors(getExchangeRates(request, env));
     }
 
     if(path === "/api/webrtc/signal" && method === "POST"){

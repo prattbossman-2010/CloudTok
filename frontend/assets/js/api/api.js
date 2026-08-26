@@ -167,7 +167,6 @@ window.CloudTokAPI = {
     );
 },
 
-
     async getUserVideos(username){
 
     const response =
@@ -178,12 +177,22 @@ window.CloudTokAPI = {
         "/videos"
     );
 
-    const raw = await response.json();
+    const raw =
+    await response.json();
 
     return {
         ...raw,
         ...(raw.data || {})
     };
+},
+
+    async getCreatorAnalytics(username){
+
+    return await this.request(
+        "/users/" +
+        encodeURIComponent(username) +
+        "/analytics"
+    );
 },
 
 
@@ -216,6 +225,7 @@ window.CloudTokAPI = {
     if(options.user) params.push("user=" + encodeURIComponent(options.user));
     if(options.limit) params.push("limit=" + options.limit);
     if(options.offset) params.push("offset=" + options.offset);
+    if(options.following) params.push("following=1");
     if(params.length) url += "?" + params.join("&");
 
     const response =

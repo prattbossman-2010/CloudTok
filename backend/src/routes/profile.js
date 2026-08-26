@@ -184,3 +184,48 @@ export async function getUserVideos(request, env, username) {
     return error(err.message || "Failed to load user videos", 500, "USER_VIDEOS_ERROR");
   }
 }
+
+export async function getCreatorAnalytics(request, env, username) {
+  try {
+    const auth = await authenticate(request, env);
+    if (auth.error) return auth.error;
+
+    const user = await env.DB.prepare("SELECT id FROM users WHERE username = ?").bind(username).first();
+    if (!user) return error("User not found", 404, "USER_NOT_FOUND");
+    if (user.id !== auth.user.id) return error("Forbidden", 403, "FORBIDDEN");
+
+    const { results: videos } = await env.DB.prepare(
+      "SELECT id, views, likes, comments, created_at FROM videos WHERE user_id = ? ORDER BY created_at DESC"
+    ).bind(user.id).all();
+
+    const totalViews = videos.reduce((sum, v) => sum + (v.views || 0), 0);
+    const totalLikes = videos.reduce((sum, v) => sum + (v.likes || 0), 0);
+    const totalComments = videos.reduce((sum, v) => sum + (v.comments || 0), 0);
+    const avgViews = videos.length > 0 ? Math.round(totalViews / videos.length) : 0;
+    const avgLikes = videos.length > 0 ? Math.round(totalLikes / videos.length) : 0;
+
+    let topVideo = null;
+    if (videos.length > 0) {
+      topVideo = videos.reduce((best, v) => (v.views || 0) > (best.views || 0) ? v : best, videos[0]);
+    }
+
+    const now = Date.now();
+    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+    const recentVideos = videos.filter(v => new Date(v.created_at).getTime() > now - sevenDays);
+    const recentViews = recentVideos.reduce((sum, v) => sum + (v.views || 0), 0);
+    const recentLikes = recentVideos.reduce((sum, v) => sum + (v.likes || 0), 0);
+
+    return success({
+      totalVideos: videos.length,
+      totalViews,
+      totalLikes,
+      totalComments,
+      avgViews,
+      avgLikes,
+      topVideo: topVideo ? { id: topVideo.id, views: topVideo.views, likes: topVideo.likes } : null,
+      recentActivity: { videos: recentVideos.length, views: recentViews, likes: recentLikes }
+    });
+  } catch (err) {
+    return error(err.message || "Failed to load analytics", 500, "ANALYTICS_ERROR");
+  }
+}

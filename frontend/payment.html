@@ -204,12 +204,27 @@ body{background:#000;}
                 </div>
                 <div class="payMethodCheck">✓</div>
             </div>
+            <div class="payMethod" onclick="selectPayMethod('virtual',this)" data-method="virtual">
+                <div class="payMethodIcon virtual">🌐</div>
+                <div class="payMethodInfo">
+                    <div class="payMethodName">Virtual Card</div>
+                    <div class="payMethodDesc">Pay with virtual card via Paystack</div>
+                </div>
+                <div class="payMethodCheck">✓</div>
+            </div>
         </div>
 
         <div class="bankForm" id="bankForm">
             <div class="bankDetails" id="bankDetailsBox">
                 <p style="color:#fff;font-size:14px;margin-bottom:8px;">Paystack will generate a unique bank account for you to transfer to.</p>
                 <p style="color:rgba(255,255,255,.5);font-size:13px;">After clicking "Fund Wallet", you'll see the bank details. Transfer the exact amount to complete payment.</p>
+            </div>
+        </div>
+
+        <div class="virtualCardForm" id="virtualCardForm">
+            <div class="bankDetails">
+                <p style="color:#fff;font-size:14px;margin-bottom:8px;">Paystack will open a secure card payment form.</p>
+                <p style="color:rgba(255,255,255,.5);font-size:13px;">Enter your card details in the Paystack popup to complete payment. We never see or store your card details.</p>
             </div>
         </div>
 
@@ -267,7 +282,7 @@ body{background:#000;}
 
 <script src="assets/js/api/api.js"></script>
 <script>
-const FALLBACK_RATES = {
+const EXCHANGE_RATES = {
     USD: 1,
     NGN: 1550,
     GHS: 12.5,
@@ -277,17 +292,14 @@ const FALLBACK_RATES = {
     EUR: 0.92
 };
 
-let EXCHANGE_RATES = { ...FALLBACK_RATES };
-let paystackKey = "";
-
 const PAYSTACK_CURRENCY_MAP = {
     USD: "USD",
     NGN: "NGN",
     GHS: "GHS",
     GBP: "GBP",
     EUR: "EUR",
-    KES: "USD",
-    ZAR: "USD"
+    KES: "NGN",
+    ZAR: "NGN"
 };
 
 const CURRENCY_SYMBOLS = {
@@ -378,6 +390,7 @@ function updateConversion(){
 
     if(!amount || amount <= 0){
         info.style.display = "none";
+        document.getElementById("bankAmount").value = "";
         return;
     }
 
@@ -387,6 +400,7 @@ function updateConversion(){
     document.getElementById("conversionText").textContent = "You pay: " + CURRENCY_SYMBOLS[selectedCurrency] + amount.toLocaleString();
     document.getElementById("conversionUsd").textContent = "= $" + usdAmount.toFixed(2);
     info.style.display = "flex";
+    document.getElementById("bankAmount").value = "$" + usdAmount.toFixed(2);
 }
 
 function selectPayMethod(method, el){
@@ -395,7 +409,9 @@ function selectPayMethod(method, el){
     el.classList.add("selected");
 
     const bankForm = document.getElementById("bankForm");
+    const virtualForm = document.getElementById("virtualCardForm");
     bankForm.classList.remove("show");
+    virtualForm.classList.remove("show");
 }
 
 function copyBankDetails(){
@@ -422,6 +438,11 @@ function processPayment(){
         return;
     }
 
+    if(selectedPayMethod === "virtual"){
+        initVirtualCard(amountUSD, localAmount);
+        return;
+    }
+
     payWithPaystack(amountUSD, localAmount);
 }
 
@@ -441,13 +462,8 @@ function payWithPaystack(amountUSD, localAmount){
         return;
     }
 
-    if(!paystackKey){
-        showToast("Payment not ready, try again","error");
-        return;
-    }
-
     const handler = PaystackPop.setup({
-        key: paystackKey,
+        key: "pk_live_15e3b81eee8f83c75bbdac7508a18bd16228d3ed",
         email: email,
         amount: paystackAmount,
         currency: paystackCurrency,
@@ -485,19 +501,55 @@ function initBankTransfer(amountUSD, localAmount){
         return;
     }
 
-    if(!paystackKey){
-        showToast("Payment not ready, try again","error");
-        return;
-    }
-
     showToast("Initializing bank transfer...");
 
     const handler = PaystackPop.setup({
-        key: paystackKey,
+        key: "pk_live_15e3b81eee8f83c75bbdac7508a18bd16228d3ed",
         email: email,
         amount: paystackAmount,
         currency: paystackCurrency,
         channels: ["bank"],
+        metadata: {
+            custom_fields: [
+                {display_name: "User", variable_name: "user", value: localStorage.getItem("CloudTokCurrentUser")},
+                {display_name: "USD Amount", variable_name: "usd_amount", value: amountUSD}
+            ]
+        },
+        callback: function(response){
+            showToast("Payment successful! Verifying...");
+            verifyAndCredit(response.reference, amountUSD);
+        },
+        onClose: function(){
+            showToast("Payment cancelled","error");
+        }
+    });
+    handler.openIframe();
+}
+
+function initVirtualCard(amountUSD, localAmount){
+    const email = localStorage.getItem("CloudTokCurrentUser") + "@cloudtok.app";
+    const paystackCurrency = PAYSTACK_CURRENCY_MAP[selectedCurrency];
+
+    let paystackAmount;
+    if(selectedCurrency === "NGN"){
+        paystackAmount = Math.round(localAmount);
+    } else {
+        paystackAmount = Math.round(localAmount * 100);
+    }
+
+    if(typeof PaystackPop === "undefined"){
+        showToast("Paystack loading, try again","error");
+        return;
+    }
+
+    showToast("Opening card payment...");
+
+    const handler = PaystackPop.setup({
+        key: "pk_live_15e3b81eee8f83c75bbdac7508a18bd16228d3ed",
+        email: email,
+        amount: paystackAmount,
+        currency: paystackCurrency,
+        channels: ["card"],
         metadata: {
             custom_fields: [
                 {display_name: "User", variable_name: "user", value: localStorage.getItem("CloudTokCurrentUser")},
@@ -574,29 +626,9 @@ function buyGift(name, price){
 
 document.getElementById("payAmount").addEventListener("input", updateConversion);
 
-async function initPaymentPage(){
-    try{
-        const rateResp = await fetch("https://open.er-api.com/v6/latest/USD");
-        const rateData = await rateResp.json();
-        if(rateData && rateData.rates){
-            for(const code of Object.keys(FALLBACK_RATES)){
-                if(code === "USD") continue;
-                if(rateData.rates[code]) EXCHANGE_RATES[code] = 1 / rateData.rates[code];
-            }
-        }
-    } catch(e){}
-
-    try{
-        const keyResp = await CloudTokAPI.getPaystackConfig();
-        if(keyResp && keyResp.publicKey) paystackKey = keyResp.publicKey;
-    } catch(e){}
-
-    loadBalance();
-    loadTransactions();
-    updateAmountPresets();
-}
-
-initPaymentPage();
+loadBalance();
+loadTransactions();
+updateAmountPresets();
 </script>
 <script src="assets/js/core/webrtc.js"></script>
 <script src="assets/js/core/callPoller.js"></script>

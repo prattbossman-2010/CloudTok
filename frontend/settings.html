@@ -21,6 +21,21 @@
 <div class="settingsContent">
 
 <div class="settingsSection">
+    <h3>Appearance</h3>
+    <div class="settingItem">
+        <span class="settingIcon">🌙</span>
+        <div class="settingInfo">
+            <span class="settingLabel">Dark Mode</span>
+            <span class="settingDesc" id="themeDesc">Dark</span>
+        </div>
+        <label class="toggle">
+            <input type="checkbox" id="themeToggle" checked>
+            <span class="toggleSlider"></span>
+        </label>
+    </div>
+</div>
+
+<div class="settingsSection">
     <h3>Account</h3>
     <div class="settingItem" id="editProfileBtn">
         <span class="settingIcon">👤</span>
@@ -78,24 +93,68 @@
 <div class="settingsSection">
     <h3>Notifications</h3>
     <div class="settingItem">
-        <span class="settingIcon">🔔</span>
+        <span class="settingIcon">❤️</span>
         <div class="settingInfo">
-            <span class="settingLabel">Push Notifications</span>
-            <span class="settingDesc">Likes, comments, follows</span>
+            <span class="settingLabel">Likes</span>
+            <span class="settingDesc">When someone likes your video</span>
         </div>
         <label class="toggle">
-            <input type="checkbox" id="notifToggle" checked>
+            <input type="checkbox" id="notifLikes" checked>
             <span class="toggleSlider"></span>
         </label>
     </div>
     <div class="settingItem">
-        <span class="settingIcon">📩</span>
+        <span class="settingIcon">💬</span>
         <div class="settingInfo">
-            <span class="settingLabel">Email Notifications</span>
-            <span class="settingDesc">Updates about your account</span>
+            <span class="settingLabel">Comments</span>
+            <span class="settingDesc">When someone comments on your video</span>
         </div>
         <label class="toggle">
-            <input type="checkbox" id="emailNotifToggle">
+            <input type="checkbox" id="notifComments" checked>
+            <span class="toggleSlider"></span>
+        </label>
+    </div>
+    <div class="settingItem">
+        <span class="settingIcon">👤</span>
+        <div class="settingInfo">
+            <span class="settingLabel">New Followers</span>
+            <span class="settingDesc">When someone follows you</span>
+        </div>
+        <label class="toggle">
+            <input type="checkbox" id="notifFollowers" checked>
+            <span class="toggleSlider"></span>
+        </label>
+    </div>
+    <div class="settingItem">
+        <span class="settingIcon">💬</span>
+        <div class="settingInfo">
+            <span class="settingLabel">Messages</span>
+            <span class="settingDesc">When you receive a direct message</span>
+        </div>
+        <label class="toggle">
+            <input type="checkbox" id="notifMessages" checked>
+            <span class="toggleSlider"></span>
+        </label>
+    </div>
+    <div class="settingItem">
+        <span class="settingIcon">🎁</span>
+        <div class="settingInfo">
+            <span class="settingLabel">Gifts</span>
+            <span class="settingDesc">When someone sends you a gift</span>
+        </div>
+        <label class="toggle">
+            <input type="checkbox" id="notifGifts" checked>
+            <span class="toggleSlider"></span>
+        </label>
+    </div>
+    <div class="settingItem">
+        <span class="settingIcon">📡</span>
+        <div class="settingInfo">
+            <span class="settingLabel">Live Streams</span>
+            <span class="settingDesc">When someone you follow goes live</span>
+        </div>
+        <label class="toggle">
+            <input type="checkbox" id="notifLive" checked>
             <span class="toggleSlider"></span>
         </label>
     </div>
@@ -147,14 +206,14 @@
         </div>
         <span class="settingArrow">›</span>
     </a>
-    <a href="help.html" class="settingItem" style="text-decoration:none;color:inherit;">
+    <a href="terms.html" class="settingItem" style="text-decoration:none;color:inherit;">
         <span class="settingIcon">📋</span>
         <div class="settingInfo">
             <span class="settingLabel">Terms of Service</span>
         </div>
         <span class="settingArrow">›</span>
     </a>
-    <a href="help.html" class="settingItem" style="text-decoration:none;color:inherit;">
+    <a href="privacy.html" class="settingItem" style="text-decoration:none;color:inherit;">
         <span class="settingIcon">🛡</span>
         <div class="settingInfo">
             <span class="settingLabel">Privacy Policy</span>
@@ -188,9 +247,22 @@
 <script src="assets/js/database/authGuard.js"></script>
 <script src="assets/js/api/api.js"></script>
 
+<script src="assets/js/core/theme.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", async ()=>{
     const emailEl = document.getElementById("currentEmail");
+
+    const themeToggle = document.getElementById("themeToggle");
+    const themeDesc = document.getElementById("themeDesc");
+    const currentTheme = localStorage.getItem("CloudTokTheme") || "dark";
+    themeToggle.checked = currentTheme === "dark";
+    themeDesc.textContent = currentTheme === "dark" ? "Dark" : "Light";
+    themeToggle.addEventListener("change", function(){
+        const newTheme = this.checked ? "dark" : "light";
+        localStorage.setItem("CloudTokTheme", newTheme);
+        themeDesc.textContent = newTheme === "dark" ? "Dark" : "Light";
+        CloudTokTheme.apply();
+    });
 
     const user = CloudTokUsers.getCurrentUser();
     const email = (user && user.email) || localStorage.getItem("CloudTokUserEmail") || "";
@@ -215,6 +287,20 @@ document.addEventListener("DOMContentLoaded", async ()=>{
             document.getElementById("walletBalance").textContent = "$" + walletResult.balance.toFixed(2);
         }
     } catch(e){}
+
+    const notifPrefs = JSON.parse(localStorage.getItem("CloudTokNotifPrefs") || "{}");
+    const notifToggles = ["notifLikes","notifComments","notifFollowers","notifMessages","notifGifts","notifLive"];
+    notifToggles.forEach(id => {
+        const el = document.getElementById(id);
+        if(el){
+            el.checked = notifPrefs[id] !== false;
+            el.addEventListener("change", function(){
+                const prefs = JSON.parse(localStorage.getItem("CloudTokNotifPrefs") || "{}");
+                prefs[id] = this.checked;
+                localStorage.setItem("CloudTokNotifPrefs", JSON.stringify(prefs));
+            });
+        }
+    });
 
     const allowMsgSelect = document.getElementById("allowMessagesSelect");
     const allowMsgDesc = document.getElementById("allowMessagesDesc");
