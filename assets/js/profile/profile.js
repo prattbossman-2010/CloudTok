@@ -530,6 +530,12 @@ this.showSavedVideos();
 
 break;
 
+case "analyticsTab":
+
+this.showAnalytics();
+
+break;
+
 }
 
 };
@@ -672,6 +678,70 @@ this.renderGrid(videos);
 
 }
 
+async showAnalytics(){
+    this.grid.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,.5);">Loading analytics...</div>';
+    try {
+        const result = await CloudTokAPI.getCreatorAnalytics(this.currentUsername);
+        if(result.error){
+            this.grid.innerHTML = '<div class="emptyProfile"><h3>Could not load analytics</h3><p>'+result.error+'</p></div>';
+            return;
+        }
+        const a = result;
+        this.grid.innerHTML = `
+            <div style="padding:20px;display:flex;flex-direction:column;gap:16px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div style="background:rgba(255,255,255,.06);border-radius:12px;padding:16px;text-align:center;">
+                        <div style="font-size:24px;font-weight:700;color:#ff2d55;">${a.totalViews.toLocaleString()}</div>
+                        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:4px;">Total Views</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,.06);border-radius:12px;padding:16px;text-align:center;">
+                        <div style="font-size:24px;font-weight:700;color:#ff6b35;">${a.totalLikes.toLocaleString()}</div>
+                        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:4px;">Total Likes</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,.06);border-radius:12px;padding:16px;text-align:center;">
+                        <div style="font-size:24px;font-weight:700;color:#00b7ff;">${a.totalComments.toLocaleString()}</div>
+                        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:4px;">Total Comments</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,.06);border-radius:12px;padding:16px;text-align:center;">
+                        <div style="font-size:24px;font-weight:700;color:#44aa44;">${a.totalVideos}</div>
+                        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:4px;">Videos</div>
+                    </div>
+                </div>
+                <div style="background:rgba(255,255,255,.06);border-radius:12px;padding:16px;">
+                    <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:8px;">Averages per Video</div>
+                    <div style="display:flex;gap:20px;">
+                        <div><span style="font-weight:600;">${a.avgViews.toLocaleString()}</span> <span style="color:rgba(255,255,255,.4);font-size:12px;">views</span></div>
+                        <div><span style="font-weight:600;">${a.avgLikes.toLocaleString()}</span> <span style="color:rgba(255,255,255,.4);font-size:12px;">likes</span></div>
+                    </div>
+                </div>
+                <div style="background:rgba(255,255,255,.06);border-radius:12px;padding:16px;">
+                    <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:8px;">Last 7 Days</div>
+                    <div style="display:flex;gap:20px;">
+                        <div><span style="font-weight:600;">${a.recentActivity.videos}</span> <span style="color:rgba(255,255,255,.4);font-size:12px;">videos</span></div>
+                        <div><span style="font-weight:600;">${a.recentActivity.views.toLocaleString()}</span> <span style="color:rgba(255,255,255,.4);font-size:12px;">views</span></div>
+                        <div><span style="font-weight:600;">${a.recentActivity.likes.toLocaleString()}</span> <span style="color:rgba(255,255,255,.4);font-size:12px;">likes</span></div>
+                    </div>
+                </div>
+                ${a.topVideo ? `
+                <div style="background:rgba(255,255,255,.06);border-radius:12px;padding:16px;">
+                    <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:8px;">Top Performing Video</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-weight:600;">Video #${a.topVideo.id}</span>
+                        <div style="display:flex;gap:12px;">
+                            <span>▶ ${a.topVideo.views} views</span>
+                            <span>❤ ${a.topVideo.likes} likes</span>
+                        </div>
+                    </div>
+                    <div style="margin-top:8px;"><button onclick="window.location.href='watch.html?id=${a.topVideo.id}'" style="background:#ff2d55;color:#fff;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-size:13px;">Watch</button></div>
+                </div>
+                ` : ''}
+            </div>
+        `;
+    } catch(e) {
+        this.grid.innerHTML = '<div class="emptyProfile"><h3>Could not load analytics</h3><p>Please try again later.</p></div>';
+    }
+}
+
     setupProfileMode(){
 
 const followBtn =
@@ -758,6 +828,11 @@ if(changeAvatarBtn){
 
 changeAvatarBtn.style.display = "block";
 
+}
+
+const analyticsTab = document.getElementById("analyticsTab");
+if(analyticsTab){
+    analyticsTab.style.display = "block";
 }
 
 }

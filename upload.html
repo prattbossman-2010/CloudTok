@@ -29,6 +29,14 @@
     <p class="uploadHint">MP4 or WebM • Max 100MB • Up to 6 minutes</p>
     <input type="file" id="videoInput" accept="video/mp4,video/webm,video/quicktime" class="fileInput">
     <button class="selectFileBtn" onclick="document.getElementById('videoInput').click()">Select file</button>
+    <div id="draftCard" style="display:none;margin-top:16px;background:rgba(255,255,255,.06);border-radius:12px;padding:14px;width:100%;max-width:320px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:13px;font-weight:600;">📝 Draft</span>
+            <button id="clearDraftBtn" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;">×</button>
+        </div>
+        <p id="draftCaption" style="font-size:12px;color:rgba(255,255,255,.6);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></p>
+        <p style="font-size:11px;color:rgba(255,255,255,.3);margin:4px 0 0;">Select a video to resume this draft</p>
+    </div>
 </div>
 
 <div class="goLiveSection">
@@ -114,10 +122,59 @@ window.onload = function(){
 
     let selectedFile = null;
     let selectedCategory = "General";
+    const DRAFT_KEY = "CloudTokUploadDraft";
+
+    function loadDraft(){
+        try {
+            const draft = JSON.parse(localStorage.getItem(DRAFT_KEY));
+            if(draft && draft.caption){
+                const card = document.getElementById("draftCard");
+                document.getElementById("draftCaption").textContent = draft.caption || "No caption";
+                card.style.display = "block";
+                return draft;
+            }
+        } catch(e){}
+        return null;
+    }
+
+    function saveDraft(){
+        if(captionInput.value.trim() || tagsInput.value.trim()){
+            localStorage.setItem(DRAFT_KEY, JSON.stringify({
+                caption: captionInput.value,
+                tags: tagsInput.value,
+                category: selectedCategory
+            }));
+        }
+    }
+
+    function clearDraft(){
+        localStorage.removeItem(DRAFT_KEY);
+        document.getElementById("draftCard").style.display = "none";
+    }
+
+    const savedDraft = loadDraft();
+    if(savedDraft){
+        captionInput.value = savedDraft.caption || "";
+        tagsInput.value = savedDraft.tags || "";
+        charCount.textContent = (savedDraft.caption || "").length + "/2200";
+        if(savedDraft.category){
+            selectedCategory = savedDraft.category;
+            categoryPills.forEach(p => {
+                p.classList.toggle("active", p.dataset.value === selectedCategory);
+            });
+        }
+    }
+
+    document.getElementById("clearDraftBtn").addEventListener("click", (e)=>{
+        e.stopPropagation();
+        clearDraft();
+    });
 
     captionInput.addEventListener("input", ()=>{
         charCount.textContent = captionInput.value.length + "/2200";
+        saveDraft();
     });
+    tagsInput.addEventListener("input", saveDraft);
 
     categoryPills.forEach(pill => {
         pill.addEventListener("click", ()=>{
@@ -181,6 +238,7 @@ window.onload = function(){
                 progressText.textContent = "Uploading " + value + "%";
             },
             onComplete: (video)=>{
+                clearDraft();
                 progressText.textContent = "Upload complete!";
                 setTimeout(()=>{ window.location.href = "index.html"; }, 800);
             }
