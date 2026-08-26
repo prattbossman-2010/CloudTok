@@ -37,7 +37,7 @@ import { toggleSave, getSavedVideos } from "./routes/saves.js";
 import { deleteVideo } from "./routes/videoDelete.js";
 import { handleCORS, withCORS, getAllowedOriginForRequest } from "./middleware/cors.js";
 import { adminLogin, adminGetStats, adminGetUsers, adminUpdateUser, adminDeleteVideo, adminGetVideos, adminRunMigration } from "./routes/admin.js";
-import { initializePayment, verifyPayment, getTransactions, getPaystackConfig } from "./routes/payments.js";
+import { initializePayment, verifyPayment, getTransactions, getPaystackConfig, handlePaystackWebhook, getExchangeRates } from "./routes/payments.js";
 import { sendSignal, pollSignals, createLiveStream, getLiveStreams, endLiveStream, sendLiveChat, getLiveChat } from "./routes/webrtc.js";
 
 
@@ -500,6 +500,14 @@ testSupabaseUpload(request, env)
 
     if(path === "/api/payments/transactions" && method === "GET"){
       return cors(getTransactions(request, env));
+    }
+
+    if(path === "/api/payments/webhook" && method === "POST"){
+      return handlePaystackWebhook(request, env);
+    }
+
+    if(path === "/api/exchange-rates" && method === "GET"){
+      return cors(getExchangeRates(request, env));
     }
 
     if(path === "/api/webrtc/signal" && method === "POST"){
