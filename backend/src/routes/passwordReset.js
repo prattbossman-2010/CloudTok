@@ -216,7 +216,7 @@ export async function resetPassword(request, env) {
       return error("Reset session expired. Please start over.", 400, "SESSION_EXPIRED");
     }
 
-    if (reset.code !== code) {
+    if (reset.code !== code && !reset.verified) {
       return error("Invalid verification code", 400, "INVALID_CODE");
     }
 
