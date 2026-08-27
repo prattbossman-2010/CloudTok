@@ -183,16 +183,21 @@ export async function resetPassword(request, env) {
     const body = await request.json();
     const { token, code, newPassword, confirmPassword } = body;
 
+    console.log(`[PasswordReset] resetPassword called: token=${!!token}, newPassword=${!!newPassword}, confirmPassword=${!!confirmPassword}`);
+
     if (!token || !newPassword || !confirmPassword) {
+      console.log(`[PasswordReset] FAIL: missing fields`);
       return error("Token, new password, and confirmation are required", 400, "MISSING_FIELDS");
     }
 
     if (newPassword !== confirmPassword) {
+      console.log(`[PasswordReset] FAIL: passwords mismatch`);
       return error("Passwords do not match", 400, "PASSWORDS_MISMATCH");
     }
 
     const passwordCheck = validatePasswordStrength(newPassword);
     if (!passwordCheck.valid) {
+      console.log(`[PasswordReset] FAIL: weak password - ${passwordCheck.errors.join(", ")}`);
       return error("Password too weak: " + passwordCheck.errors.join(", "), 400, "WEAK_PASSWORD");
     }
 
@@ -200,27 +205,37 @@ export async function resetPassword(request, env) {
       "SELECT * FROM password_resets WHERE token = ?"
     ).bind(token).all();
 
+    console.log(`[PasswordReset] DB lookup: found ${results.length} records`);
+
     if (results.length === 0) {
+      console.log(`[PasswordReset] FAIL: token not found in DB`);
       return error("Invalid or expired reset session", 400, "INVALID_TOKEN");
     }
 
     const reset = results[0];
+    console.log(`[PasswordReset] Reset record: verified=${reset.verified}, used=${reset.used}, created_at=${reset.created_at}`);
 
     if (reset.used) {
+      console.log(`[PasswordReset] FAIL: code already used`);
       return error("Reset code already used", 400, "CODE_USED");
     }
 
     const created = new Date(reset.created_at + "Z").getTime();
+    console.log(`[PasswordReset] Created: ${created}, Now: ${Date.now()}, Diff: ${Date.now() - created}, Expiry: ${TOKEN_EXPIRY}`);
+
     if (Date.now() - created > TOKEN_EXPIRY) {
       await env.DB.prepare("DELETE FROM password_resets WHERE token = ?").bind(token).run();
+      console.log(`[PasswordReset] FAIL: session expired`);
       return error("Reset session expired. Please start over.", 400, "SESSION_EXPIRED");
     }
 
     if (!reset.verified) {
+      console.log(`[PasswordReset] FAIL: not verified`);
       return error("Code not verified. Please verify first.", 400, "NOT_VERIFIED");
     }
 
     const passwordHash = await hashPassword(newPassword);
+    console.log(`[PasswordReset] Hash generated, updating user...`);
 
     await env.DB.prepare(
       "UPDATE users SET password_hash = ? WHERE LOWER(email) = LOWER(?)"
@@ -228,9 +243,11 @@ export async function resetPassword(request, env) {
 
     await env.DB.prepare("DELETE FROM password_resets WHERE token = ?").bind(token).run();
 
+    console.log(`[PasswordReset] SUCCESS: password reset for ${reset.email}`);
     return success(null, "Password reset successfully");
 
   } catch (err) {
-    return error("Failed to reset password", 500, "RESET_ERROR");
+    console.error(`[PasswordReset] ERROR:`, err.message, err.stack);
+    return error("Failed to reset password: " + err.message, 500, "RESET_ERROR");
   }
 }
