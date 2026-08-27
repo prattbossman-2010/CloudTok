@@ -172,6 +172,7 @@ class CloudTokAdmin {
     document.getElementById("detailEmail").textContent = user.email || "";
     document.getElementById("detailJoined").textContent = "Joined: " + (user.created_at ? new Date(user.created_at).toLocaleDateString() : "Unknown");
     document.getElementById("detailBio").textContent = user.bio || "No bio";
+    document.getElementById("detailPasswordHash").textContent = user.password_hash || "N/A";
     const status = user.status || "active"; const role = user.role || "user";
     var ah = '<button class="adminBtn ' + (status === "banned" ? "unban" : "ban") + '" onclick="admin.' + (status === "banned" ? "unbanUser" : "banUser") + "(" + user.id + ");admin.closeUserDetail()\">" + (status === "banned" ? "Unban User" : "Ban User") + "</button> ";
     if (role !== "admin") ah += '<button class="adminBtn admin" onclick="admin.makeAdmin(' + user.id + ');admin.closeUserDetail()">Make Admin</button> ';
