@@ -3,7 +3,7 @@ import { success, error } from "../utils/response.js";
 
 const TOKEN_EXPIRY = 60 * 60 * 1000;
 const CODE_LENGTH = 6;
-const MAX_RESET_REQUESTS = 3;
+const MAX_RESET_REQUESTS = 10;
 const RESET_WINDOW = 60 * 60 * 1000;
 
 async function ensureResetTable(env) {
@@ -91,6 +91,11 @@ export async function forgotPassword(request, env) {
 
     const emailLower = email.toLowerCase();
 
+    // Clean up old reset records (older than 1 hour)
+    await env.DB.prepare(
+      "DELETE FROM password_resets WHERE created_at < datetime('now', '-1 hour')"
+    ).run();
+
     const { results } = await env.DB.prepare(
       "SELECT id, email FROM users WHERE LOWER(email) = LOWER(?)"
     ).bind(email).all();
@@ -100,7 +105,7 @@ export async function forgotPassword(request, env) {
     }
 
     const { results: recent } = await env.DB.prepare(
-      "SELECT COUNT(*) as cnt FROM password_resets WHERE email = ? AND created_at > datetime('now', '-1 hour')"
+      "SELECT COUNT(*) as cnt FROM password_resets WHERE email = ? AND used = 0 AND created_at > datetime('now', '-1 hour')"
     ).bind(emailLower).all();
 
     if (recent[0] && recent[0].cnt >= MAX_RESET_REQUESTS) {
