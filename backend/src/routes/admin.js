@@ -84,7 +84,7 @@ export async function adminGetUsers(request, env) {
     if (auth.error) return auth;
 
     const { results } = await env.DB.prepare(`
-        SELECT id, username, display_name, email, avatar, bio, role, status, wallet_balance, password_hash, created_at
+        SELECT id, username, display_name, email, avatar, bio, role, status, wallet_balance, created_at
         FROM users ORDER BY created_at DESC
     `).all();
 
