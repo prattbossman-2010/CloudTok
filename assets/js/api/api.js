@@ -228,8 +228,14 @@ window.CloudTokAPI = {
     if(options.following) params.push("following=1");
     if(params.length) url += "?" + params.join("&");
 
+    const token =
+    localStorage.getItem("CloudTokToken");
+
+    const headers = {};
+    if(token) headers["Authorization"] = "Bearer " + token;
+
     const response =
-    await fetch(url);
+    await fetch(url, { headers });
 
     const raw =
     await response.json();

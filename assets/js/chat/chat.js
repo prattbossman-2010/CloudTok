@@ -8,6 +8,7 @@ this.lastChatData="";
 this.selectMode=false;
 this.selectedConvIds=new Set();
 this.allConversations=[];
+this.deletedConvIds=new Set();
 
 this.loadChats();
 this.startPolling();
@@ -59,6 +60,7 @@ async bulkDeleteConversations(){
         const card=this.list.querySelector('[data-conv-id="'+id+'"]');
         if(card){card.style.transition="all .3s";card.style.maxHeight="0";card.style.padding="0";card.style.opacity="0";setTimeout(()=>card.remove(),300);}
         this.allConversations=this.allConversations.filter(c=>c.id!==id);
+        this.deletedConvIds.add(id);
     });
     this.exitSelectMode();
 
@@ -87,6 +89,7 @@ async deleteConversation(convId,card){
     card.style.opacity="0";
     setTimeout(()=>card.remove(),300);
     this.allConversations=this.allConversations.filter(c=>c.id!==convId);
+    this.deletedConvIds.add(convId);
 
     if(typeof CloudTokAPI!=="undefined"){
         try{
@@ -136,9 +139,10 @@ if(typeof CloudTokAPI!=="undefined"){
         if(result.conversations){
 
             this.lastChatData=JSON.stringify(result);
-            this.allConversations=result.conversations;
+            const activeConvs=result.conversations.filter(c=>!this.deletedConvIds.has(c.id));
+            this.allConversations=activeConvs;
 
-            users=result.conversations.map(c=>({
+            users=activeConvs.map(c=>({
                 id:c.id,
                 username:c.other_username,
                 displayName:c.other_display_name||c.other_username,
