@@ -34,6 +34,10 @@ function generateToken() {
 
 async function sendResetEmail(env, toEmail, code) {
   const apiKey = env.RESEND_API_KEY;
+  const fromEmail = env.EMAIL_FROM;
+
+  console.log(`[PasswordReset] RESEND_API_KEY present: ${!!apiKey}, EMAIL_FROM: ${fromEmail || "not set"}`);
+
   if (!apiKey) {
     console.log(`[PasswordReset] No RESEND_API_KEY set. Code for ${toEmail}: ${code}`);
     return false;
@@ -47,7 +51,7 @@ async function sendResetEmail(env, toEmail, code) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        from: env.EMAIL_FROM || "CloudTok <noreply@resend.dev>",
+        from: fromEmail || "CloudTok <noreply@resend.dev>",
         to: [toEmail],
         subject: "Your CloudTok Password Reset Code",
         html: `
@@ -61,9 +65,11 @@ async function sendResetEmail(env, toEmail, code) {
       })
     });
 
+    const respText = await res.text();
+    console.log(`[PasswordReset] Resend API response: ${res.status} ${respText}`);
+
     if (!res.ok) {
-      const err = await res.text();
-      console.error(`[PasswordReset] Email send failed: ${res.status} ${err}`);
+      console.error(`[PasswordReset] Email send failed: ${res.status} ${respText}`);
       return false;
     }
     return true;
