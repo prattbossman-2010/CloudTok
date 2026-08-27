@@ -183,8 +183,8 @@ export async function resetPassword(request, env) {
     const body = await request.json();
     const { token, code, newPassword, confirmPassword } = body;
 
-    if (!token || !code || !newPassword || !confirmPassword) {
-      return error("All fields are required", 400, "MISSING_FIELDS");
+    if (!token || !newPassword || !confirmPassword) {
+      return error("Token, new password, and confirmation are required", 400, "MISSING_FIELDS");
     }
 
     if (newPassword !== confirmPassword) {
@@ -214,10 +214,6 @@ export async function resetPassword(request, env) {
     if (Date.now() - created > TOKEN_EXPIRY) {
       await env.DB.prepare("DELETE FROM password_resets WHERE token = ?").bind(token).run();
       return error("Reset session expired. Please start over.", 400, "SESSION_EXPIRED");
-    }
-
-    if (reset.code !== code && !reset.verified) {
-      return error("Invalid verification code", 400, "INVALID_CODE");
     }
 
     if (!reset.verified) {
