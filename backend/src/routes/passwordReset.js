@@ -195,10 +195,8 @@ export async function resetPassword(request, env) {
       return error("Passwords do not match", 400, "PASSWORDS_MISMATCH");
     }
 
-    const passwordCheck = validatePasswordStrength(newPassword);
-    if (!passwordCheck.valid) {
-      console.log(`[PasswordReset] FAIL: weak password - ${passwordCheck.errors.join(", ")}`);
-      return error("Password too weak: " + passwordCheck.errors.join(", "), 400, "WEAK_PASSWORD");
+    if (newPassword.length < 6) {
+      return error("Password must be at least 6 characters", 400, "WEAK_PASSWORD");
     }
 
     const { results } = await env.DB.prepare(
