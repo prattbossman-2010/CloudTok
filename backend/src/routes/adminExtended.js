@@ -24,14 +24,14 @@ async function ensureAllTables(env) {
 
 async function adminAuth(request, env) {
     const authHeader = request.headers.get("Authorization");
-    if (!authHeader) return { error: Response.json({ error: "Unauthorized" }, { status: 401 }) };
+    if (!authHeader) return { error: new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } }) };
     const token = authHeader.replace("Bearer ", "");
     const { verifyToken } = await import("../utils/jwt.js");
     const payload = await verifyToken(token, env.JWT_SECRET || "cloudtok-secret");
-    if (!payload) return { error: Response.json({ error: "Invalid token" }, { status: 401 }) };
+    if (!payload) return { error: new Response(JSON.stringify({ error: "Invalid token" }), { status: 401, headers: { "Content-Type": "application/json" } }) };
     const uid = payload.userId || payload.id;
     const { results: user } = await env.DB.prepare("SELECT role, username FROM users WHERE id = ?").bind(uid).all();
-    if (!user || !user[0] || user[0].role !== "admin") return { error: Response.json({ error: "Admin only" }, { status: 403 }) };
+    if (!user || !user[0] || user[0].role !== "admin") return { error: new Response(JSON.stringify({ error: "Admin only" }), { status: 403, headers: { "Content-Type": "application/json" } }) };
     return { userId: uid, username: user[0].username };
 }
 
@@ -50,6 +50,10 @@ async function safeQuery(env, sql, bindArr) {
     }
 }
 
+function jsonResp(data, status) {
+    return new Response(JSON.stringify(data), { status: status || 200, headers: { "Content-Type": "application/json" } });
+}
+
 export async function adminGetLiveStreams(request, env) {
     try {
         await ensureAllTables(env);
@@ -60,9 +64,9 @@ export async function adminGetLiveStreams(request, env) {
              FROM live_streams ls LEFT JOIN users u ON ls.user_id = u.id
              WHERE ls.status = 'active'
              ORDER BY ls.created_at DESC`);
-        return Response.json({ streams: results });
+        return jsonResp({ streams: results });
     } catch (e) {
-        return Response.json({ streams: [] }, { status: 500 });
+        return jsonResp({ streams: [] }, 500);
     }
 }
 
@@ -73,9 +77,9 @@ export async function adminStopStream(request, env, streamKey) {
         if (auth.error) return auth.error;
         await env.DB.prepare("UPDATE live_streams SET status = 'ended', ended_at = datetime('now') WHERE stream_key = ?").bind(streamKey).run();
         try { await logActivity(env, auth.username || "", "stop_stream", "live_stream", streamKey, "Admin forced stream end"); } catch(e) {}
-        return Response.json({ success: true, message: "Stream stopped" });
+        return jsonResp({ success: true, message: "Stream stopped" });
     } catch (e) {
-        return Response.json({ error: e.message }, { status: 500 });
+        return jsonResp({ error: e.message }, 500);
     }
 }
 
@@ -86,9 +90,9 @@ export async function adminGetTransactions(request, env) {
         if (auth.error) return auth.error;
         const results = await safeQuery(env,
             `SELECT t.*, u.username, u.avatar FROM transactions t LEFT JOIN users u ON t.user_id = u.id ORDER BY t.created_at DESC LIMIT 100`);
-        return Response.json({ transactions: results });
+        return jsonResp({ transactions: results });
     } catch (e) {
-        return Response.json({ transactions: [] }, { status: 500 });
+        return jsonResp({ transactions: [] }, 500);
     }
 }
 
@@ -103,9 +107,9 @@ export async function adminGetGifts(request, env) {
              LEFT JOIN users su ON g.sender_id = su.id
              LEFT JOIN users ru ON g.receiver_id = ru.id
              ORDER BY g.created_at DESC LIMIT 100`);
-        return Response.json({ gifts: results });
+        return jsonResp({ gifts: results });
     } catch (e) {
-        return Response.json({ gifts: [] }, { status: 500 });
+        return jsonResp({ gifts: [] }, 500);
     }
 }
 
@@ -123,9 +127,9 @@ export async function adminGetMessages(request, env) {
              LEFT JOIN users u1 ON c.user1_id = u1.id
              LEFT JOIN users u2 ON c.user2_id = u2.id
              ORDER BY m.created_at DESC LIMIT 100`);
-        return Response.json({ messages: results });
+        return jsonResp({ messages: results });
     } catch (e) {
-        return Response.json({ messages: [] }, { status: 500 });
+        return jsonResp({ messages: [] }, 500);
     }
 }
 
@@ -143,9 +147,9 @@ export async function adminGetReports(request, env) {
              LEFT JOIN videos vv ON cr.video_id = vv.id
              LEFT JOIN users vu ON vv.user_id = vu.id
              ORDER BY cr.created_at DESC LIMIT 200`);
-        return Response.json({ reports: results });
+        return jsonResp({ reports: results });
     } catch (e) {
-        return Response.json({ reports: [] }, { status: 500 });
+        return jsonResp({ reports: [] }, 500);
     }
 }
 
@@ -157,9 +161,9 @@ export async function adminUpdateReport(request, env, reportId) {
         const body = await request.json();
         const status = body.status || "reviewed";
         await env.DB.prepare("UPDATE content_reports SET status = ? WHERE id = ?").bind(status, reportId).run();
-        return Response.json({ success: true });
+        return jsonResp({ success: true });
     } catch (e) {
-        return Response.json({ error: e.message }, { status: 500 });
+        return jsonResp({ error: e.message }, 500);
     }
 }
 
@@ -170,9 +174,9 @@ export async function adminGetActivityLogs(request, env) {
         if (auth.error) return auth.error;
         const results = await safeQuery(env,
             "SELECT * FROM activity_logs ORDER BY created_at DESC LIMIT 200");
-        return Response.json({ logs: results });
+        return jsonResp({ logs: results });
     } catch (e) {
-        return Response.json({ logs: [] }, { status: 500 });
+        return jsonResp({ logs: [] }, 500);
     }
 }
 
@@ -254,7 +258,7 @@ export async function adminGetStorageHealth(request, env) {
             };
         });
 
-        return Response.json({
+        return jsonResp({
             storage: {
                 providers: enrichedProviders,
                 events: events.slice(0, 30),
@@ -272,7 +276,7 @@ export async function adminGetStorageHealth(request, env) {
             }
         });
     } catch (e) {
-        return Response.json({ storage: { providers: [], events: [], summary: {} } }, { status: 500 });
+        return jsonResp({ storage: { providers: [], events: [], summary: {} } }, 500);
     }
 }
 
@@ -283,9 +287,9 @@ export async function adminDeleteComment(request, env, commentId) {
         if (auth.error) return auth.error;
         await env.DB.prepare("DELETE FROM video_comments WHERE id = ?").bind(Number(commentId)).run();
         try { await logActivity(env, auth.username || "", "delete_comment", "comment", commentId, "Admin deleted comment"); } catch(e) {}
-        return Response.json({ success: true });
+        return jsonResp({ success: true });
     } catch (e) {
-        return Response.json({ error: e.message }, { status: 500 });
+        return jsonResp({ error: e.message }, 500);
     }
 }
 
@@ -299,9 +303,9 @@ export async function adminGetComments(request, env) {
              FROM video_comments vc
              LEFT JOIN users u ON vc.user_id = u.id
              ORDER BY vc.created_at DESC LIMIT 100`);
-        return Response.json({ comments: results });
+        return jsonResp({ comments: results });
     } catch (e) {
-        return Response.json({ comments: [] }, { status: 500 });
+        return jsonResp({ comments: [] }, 500);
     }
 }
 
@@ -319,15 +323,15 @@ export async function adminAdjustBalance(request, env) {
         const reason = String(body.reason || "");
 
         if (isNaN(userId) || userId <= 0 || isNaN(amount)) {
-            return Response.json({ error: "Valid user_id and amount required" }, { status: 400 });
+            return jsonResp({ error: "Valid user_id and amount required" }, 400);
         }
 
         await env.DB.prepare("UPDATE users SET wallet_balance = COALESCE(wallet_balance, 0) + ? WHERE id = ?").bind(Number(amount), Number(userId)).run();
         try { await logActivity(env, auth.username || "", "adjust_balance", "user", String(userId), `${amount >= 0 ? "Added" : "Removed"} $${Math.abs(amount).toFixed(2)}${reason ? " - " + reason : ""}`); } catch(e) {}
         const { results } = await env.DB.prepare("SELECT wallet_balance FROM users WHERE id = ?").bind(Number(userId)).all();
-        return Response.json({ success: true, balance: results[0]?.wallet_balance || 0 });
+        return jsonResp({ success: true, balance: results[0]?.wallet_balance || 0 });
     } catch (e) {
-        return Response.json({ error: e.message }, { status: 500 });
+        return jsonResp({ error: e.message }, 500);
     }
 }
 
@@ -344,7 +348,7 @@ export async function adminUpdateGiftPrice(request, env) {
         const newPrice = parseFloat(String(body.new_price || ""));
 
         if (!giftName || isNaN(newPrice) || newPrice <= 0) {
-            return Response.json({ error: "Valid gift_name and new_price required" }, { status: 400 });
+            return jsonResp({ error: "Valid gift_name and new_price required" }, 400);
         }
 
         const { results: existing } = await env.DB.prepare("SELECT id FROM gift_config WHERE gift_name = ?").bind(giftName).all();
@@ -354,9 +358,9 @@ export async function adminUpdateGiftPrice(request, env) {
             await env.DB.prepare("INSERT INTO gift_config (gift_name, price_usd, updated_at) VALUES (?, ?, datetime('now'))").bind(giftName, Number(newPrice)).run();
         }
         try { await logActivity(env, auth.username || "", "update_gift_price", "gift", giftName, `Updated ${giftName} to $${newPrice.toFixed(2)}`); } catch(e) {}
-        return Response.json({ success: true });
+        return jsonResp({ success: true });
     } catch (e) {
-        return Response.json({ error: e.message }, { status: 500 });
+        return jsonResp({ error: e.message }, 500);
     }
 }
 
@@ -366,9 +370,9 @@ export async function adminGetGiftConfig(request, env) {
         const auth = await adminAuth(request, env);
         if (auth.error) return auth.error;
         const config = await safeQuery(env, "SELECT * FROM gift_config ORDER BY price_usd ASC");
-        return Response.json({ config });
+        return jsonResp({ config });
     } catch (e) {
-        return Response.json({ config: [] }, { status: 500 });
+        return jsonResp({ config: [] }, 500);
     }
 }
 
@@ -386,14 +390,82 @@ export async function adminClearTable(request, env, table) {
         const auth = await adminAuth(request, env);
         if (auth.error) return auth.error;
         const allowed = ["video_comments", "activity_logs", "transactions", "gift_transactions", "live_streams", "messages", "conversations", "live_chat", "webrtc_signals", "notifications"];
-        if (!allowed.includes(table)) return Response.json({ error: "Table not clearable" }, { status: 400 });
+        if (!allowed.includes(table)) return jsonResp({ error: "Table not clearable" }, 400);
         await env.DB.prepare("DELETE FROM " + table).run();
         if (table === "video_comments") {
             try { await env.DB.prepare("UPDATE videos SET comments = 0").run(); } catch(e) {}
         }
         try { await logActivity(env, auth.username || "", "clear_table", table, table, "Cleared all rows from " + table); } catch(e) {}
-        return Response.json({ success: true, message: "Cleared " + table });
+        return jsonResp({ success: true, message: "Cleared " + table });
     } catch (e) {
-        return Response.json({ error: e.message }, { status: 500 });
+        return jsonResp({ error: e.message }, 500);
+    }
+}
+
+export async function adminGetUsers(request, env) {
+    try {
+        await ensureAllTables(env);
+        const auth = await adminAuth(request, env);
+        if (auth.error) return auth.error;
+        const { results } = await env.DB.prepare(`
+            SELECT id, username, email, display_name, avatar, bio, role, status, wallet_balance,
+                   created_at
+            FROM users ORDER BY created_at DESC
+        `).all();
+        return jsonResp({ users: results });
+    } catch (e) {
+        return jsonResp({ users: [], error: e.message }, 500);
+    }
+}
+
+export async function adminDeleteUser(request, env, userId) {
+    try {
+        await ensureAllTables(env);
+        const auth = await adminAuth(request, env);
+        if (auth.error) return auth.error;
+        const uid = parseInt(userId);
+        if (!uid) return jsonResp({ error: "Invalid user ID" }, 400);
+
+        const { results: user } = await env.DB.prepare("SELECT id, username, role FROM users WHERE id = ?").bind(uid).all();
+        if (!user || !user[0]) return jsonResp({ error: "User not found" }, 404);
+        if (user[0].role === "admin") return jsonResp({ error: "Cannot delete admin accounts" }, 400);
+
+        const tables = [
+            "video_likes", "video_saves", "video_comments",
+            "notifications", "messages", "conversations",
+            "follows", "content_reports", "live_chat",
+            "gift_transactions", "transactions"
+        ];
+        for (const t of tables) {
+            try { await env.DB.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(uid).run(); } catch(e) {}
+            try { await env.DB.prepare(`DELETE FROM ${t} WHERE sender_id = ?`).bind(uid).run(); } catch(e) {}
+            try { await env.DB.prepare(`DELETE FROM ${t} WHERE receiver_id = ?`).bind(uid).run(); } catch(e) {}
+        }
+        try { await env.DB.prepare("DELETE FROM videos WHERE user_id = ?").bind(uid).run(); } catch(e) {}
+        try { await env.DB.prepare("DELETE FROM live_streams WHERE user_id = ?").bind(uid).run(); } catch(e) {}
+        try { await env.DB.prepare("DELETE FROM user_blocks WHERE blocker_id = ? OR blocked_id = ?").bind(uid, uid).run(); } catch(e) {}
+
+        await env.DB.prepare("DELETE FROM users WHERE id = ?").bind(uid).run();
+        try { await logActivity(env, auth.username || "", "delete_user", "user", String(uid), "Deleted user " + user[0].username); } catch(e) {}
+        return jsonResp({ success: true, message: "User deleted" });
+    } catch (e) {
+        return jsonResp({ error: e.message }, 500);
+    }
+}
+
+export async function adminUpdateUserRole(request, env, userId) {
+    try {
+        await ensureAllTables(env);
+        const auth = await adminAuth(request, env);
+        if (auth.error) return auth.error;
+        const body = await request.json();
+        const { role } = body;
+        const uid = parseInt(userId);
+        if (!uid || !["user", "admin"].includes(role)) return jsonResp({ error: "Invalid params" }, 400);
+        await env.DB.prepare("UPDATE users SET role = ? WHERE id = ?").bind(role, uid).run();
+        try { await logActivity(env, auth.username || "", "update_role", "user", String(uid), "Set role to " + role); } catch(e) {}
+        return jsonResp({ success: true, message: "Role updated" });
+    } catch (e) {
+        return jsonResp({ error: e.message }, 500);
     }
 }

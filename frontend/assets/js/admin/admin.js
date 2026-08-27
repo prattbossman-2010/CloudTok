@@ -135,7 +135,7 @@ class CloudTokAdmin {
       const search = (document.getElementById("usersSearch")?.value || "").toLowerCase();
       if (search) users = users.filter(function(u) { return (u.username || "").toLowerCase().includes(search) || (u.email || "").toLowerCase().includes(search) || (u.display_name || "").toLowerCase().includes(search); });
       if (users.length === 0) { document.getElementById("usersTable").innerHTML = '<div class="emptyState"><div class="icon">👥</div><p>No users found</p></div>'; return; }
-      var html = '<table><thead><tr><th><input type="checkbox" onchange="admin.toggleAllUsers(this)"></th><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody>';
+      var html = '<table><thead><tr><th><input type="checkbox" onchange="admin.toggleAllUsers(this)"></th><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Balance</th><th>Joined</th><th>Actions</th></tr></thead><tbody>';
       users.forEach(function(u) {
         const status = u.status || "active"; const role = u.role || "user";
         html += '<tr><td><input type="checkbox" value="' + u.id + '" onchange="admin.toggleUserSelect(' + u.id + ',this)"></td>';
@@ -143,12 +143,14 @@ class CloudTokAdmin {
         html += '<td>' + (u.email || "") + '</td>';
         html += '<td><span class="statusBadge ' + role + '">' + role + '</span></td>';
         html += '<td><span class="statusBadge ' + status + '">' + status + '</span></td>';
+        html += '<td>$' + (u.wallet_balance || 0).toFixed(2) + '</td>';
         html += '<td>' + (u.created_at ? new Date(u.created_at).toLocaleDateString() : "") + '</td>';
         html += '<td class="actionsCell">';
         html += '<button class="adminBtn view" onclick="admin.viewUser(' + u.id + ')">View</button> ';
         html += '<button class="adminBtn view" onclick="admin.adjustBalance(' + u.id + ')">💰</button> ';
         html += status !== "banned" ? '<button class="adminBtn ban" onclick="admin.banUser(' + u.id + ')">Ban</button> ' : '<button class="adminBtn unban" onclick="admin.unbanUser(' + u.id + ')">Unban</button> ';
-        if (role !== "admin") html += '<button class="adminBtn admin" onclick="admin.makeAdmin(' + u.id + ')">Admin</button>';
+        if (role !== "admin") html += '<button class="adminBtn admin" onclick="admin.makeAdmin(' + u.id + ')">Admin</button> ';
+        if (role !== "admin") html += '<button class="adminBtn danger" onclick="admin.deleteUser(' + u.id + ')">Delete</button>';
         html += '</td></tr>';
       });
       html += "</tbody></table>";
@@ -172,8 +174,17 @@ class CloudTokAdmin {
     document.getElementById("detailBio").textContent = user.bio || "No bio";
     const status = user.status || "active"; const role = user.role || "user";
     var ah = '<button class="adminBtn ' + (status === "banned" ? "unban" : "ban") + '" onclick="admin.' + (status === "banned" ? "unbanUser" : "banUser") + "(" + user.id + ");admin.closeUserDetail()\">" + (status === "banned" ? "Unban User" : "Ban User") + "</button> ";
-    if (role !== "admin") ah += '<button class="adminBtn admin" onclick="admin.makeAdmin(' + user.id + ');admin.closeUserDetail()">Make Admin</button>';
+    if (role !== "admin") ah += '<button class="adminBtn admin" onclick="admin.makeAdmin(' + user.id + ');admin.closeUserDetail()">Make Admin</button> ';
+    if (role !== "admin") ah += '<button class="adminBtn danger" onclick="admin.deleteUser(' + user.id + ');admin.closeUserDetail()">Delete User</button>';
+    ah += '<button class="adminBtn view" onclick="admin.closeUserDetail()">Close</button>';
     document.getElementById("detailActions").innerHTML = ah;
+    var statsHtml = '';
+    statsHtml += '<div class="userDetailStat"><div class="num">' + (user.wallet_balance != null ? "$" + user.wallet_balance.toFixed(2) : "$0.00") + '</div><div class="lbl">Balance</div></div>';
+    statsHtml += '<div class="userDetailStat"><div class="num">' + role + '</div><div class="lbl">Role</div></div>';
+    statsHtml += '<div class="userDetailStat"><div class="num">' + status + '</div><div class="lbl">Status</div></div>';
+    statsHtml += '<div class="userDetailStat"><div class="num">' + user.id + '</div><div class="lbl">User ID</div></div>';
+    var existing = document.getElementById("detailStatsGrid");
+    if (existing) existing.innerHTML = statsHtml;
     document.getElementById("userDetailModal").classList.add("show");
   }
   closeUserDetail() { document.getElementById("userDetailModal").classList.remove("show"); }
@@ -403,6 +414,7 @@ class CloudTokAdmin {
   async makeAdmin(id) { if (!confirm("Make this user an admin?")) return; await this.api("/admin/users/" + id, "PUT", { role: "admin" }); this.loadUsers(); }
   async deleteVideo(id, confirmMsg) { if (confirmMsg !== false && !confirm("Delete this video?")) return; await this.api("/admin/videos/" + id, "DELETE"); this.loadVideos(); }
   async deleteComment(id) { if (!confirm("Delete this comment?")) return; await this.api("/admin/comments/" + id, "DELETE"); this.loadComments(); }
+  async deleteUser(id, confirmMsg) { if (confirmMsg !== false && !confirm("PERMANENTLY delete this user and ALL their data? This cannot be undone.")) return; const result = await this.api("/admin/users/" + id, "DELETE"); if (result.success) { alert("User deleted permanently."); this.loadUsers(); } else alert(result.error || "Delete failed"); }
   async stopStream(streamKey) { if (!confirm("Stop this live stream?")) return; await this.api("/admin/streams/" + encodeURIComponent(streamKey) + "/stop", "POST"); this.loadStreams(); }
   async adjustBalance(userId) {
     const amount = prompt("Enter amount (+ to add, - to remove):");

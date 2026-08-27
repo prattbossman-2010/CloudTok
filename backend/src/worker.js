@@ -37,7 +37,7 @@ import { getTrending, getDiscoverVideos } from "./routes/discover.js";
 import { toggleSave, getSavedVideos } from "./routes/saves.js";
 import { deleteVideo } from "./routes/videoDelete.js";
 import { handleCORS, withCORS, getAllowedOriginForRequest } from "./middleware/cors.js";
-import { adminLogin, adminGetStats, adminGetUsers, adminUpdateUser, adminDeleteVideo, adminGetVideos, adminRunMigration } from "./routes/admin.js";
+import { adminLogin, adminGetStats, adminGetUsers, adminUpdateUser, adminDeleteUser, adminDeleteVideo, adminGetVideos, adminRunMigration } from "./routes/admin.js";
 import { initializePayment, verifyPayment, getTransactions, getPaystackConfig } from "./routes/payments.js";
 import { sendSignal, pollSignals, createLiveStream, getLiveStreams, endLiveStream, sendLiveChat, getLiveChat } from "./routes/webrtc.js";
 
@@ -480,6 +480,11 @@ testSupabaseUpload(request, env)
     if(path.match(/^\/api\/admin\/users\/\d+$/) && method === "PUT"){
       const userId = path.split("/")[4];
       return cors(adminUpdateUser(request, env, userId));
+    }
+
+    if(path.match(/^\/api\/admin\/users\/\d+$/) && method === "DELETE"){
+      const userId = path.split("/")[4];
+      return cors(adminDeleteUser(request, env, userId));
     }
 
     if(path === "/api/admin/videos" && method === "GET"){

@@ -7,7 +7,7 @@ export async function adminLogin(request, env) {
     const { email, password } = body;
 
     if (!email || !password) {
-        return Response.json({ error: "Email and password required" }, { status: 400 });
+        return new Response(JSON.stringify({ error: "Email and password required" }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
 
     const { results } = await env.DB.prepare(`
@@ -16,18 +16,18 @@ export async function adminLogin(request, env) {
     `).bind(email).all();
 
     if (results.length === 0) {
-        return Response.json({ error: "Invalid credentials" }, { status: 401 });
+        return new Response(JSON.stringify({ error: "Invalid credentials" }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
 
     const user = results[0];
     const passwordValid = await verifyPassword(password, user.password_hash);
 
     if (!passwordValid) {
-        return Response.json({ error: "Invalid credentials" }, { status: 401 });
+        return new Response(JSON.stringify({ error: "Invalid credentials" }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
 
     if (user.role !== "admin") {
-        return Response.json({ error: "Admin access required" }, { status: 403 });
+        return new Response(JSON.stringify({ error: "Admin access required" }), { status: 403, headers: { "Content-Type": "application/json" } });
     }
 
     const token = await createToken({
@@ -37,7 +37,7 @@ export async function adminLogin(request, env) {
         role: user.role
     }, env.JWT_SECRET);
 
-    return Response.json({
+    return new Response(JSON.stringify({
         success: true,
         token,
         user: {
@@ -48,14 +48,14 @@ export async function adminLogin(request, env) {
             avatar: user.avatar,
             role: user.role
         }
-    });
+    }), { headers: { "Content-Type": "application/json" } });
 }
 
 export async function adminCheck(request, env) {
     const auth = await authenticate(request, env);
     if (auth.error) return auth.error;
     if (auth.user.role !== "admin") {
-        return Response.json({ error: "Admin access required" }, { status: 403 });
+        return new Response(JSON.stringify({ error: "Admin access required" }), { status: 403, headers: { "Content-Type": "application/json" } });
     }
     return { user: auth.user };
 }
@@ -70,13 +70,13 @@ export async function adminGetStats(request, env) {
     const comments = await env.DB.prepare("SELECT COUNT(*) as count FROM video_comments").first();
     const follows = await env.DB.prepare("SELECT COUNT(*) as count FROM follows").first();
 
-    return Response.json({
+    return new Response(JSON.stringify({
         users: users.count,
         videos: videos.count,
         likes: likes.count,
         comments: comments.count,
         follows: follows.count
-    });
+    }), { headers: { "Content-Type": "application/json" } });
 }
 
 export async function adminGetUsers(request, env) {
@@ -84,11 +84,41 @@ export async function adminGetUsers(request, env) {
     if (auth.error) return auth;
 
     const { results } = await env.DB.prepare(`
-        SELECT id, username, display_name, email, avatar, bio, role, status, created_at
+        SELECT id, username, display_name, email, avatar, bio, role, status, wallet_balance, created_at
         FROM users ORDER BY created_at DESC
     `).all();
 
-    return Response.json({ users: results });
+    return new Response(JSON.stringify({ users: results }), { headers: { "Content-Type": "application/json" } });
+}
+
+export async function adminDeleteUser(request, env, userId) {
+    const auth = await adminCheck(request, env);
+    if (auth.error) return auth;
+
+    const uid = parseInt(userId);
+    if (!uid) return new Response(JSON.stringify({ error: "Invalid user ID" }), { status: 400, headers: { "Content-Type": "application/json" } });
+
+    const user = await env.DB.prepare("SELECT id, username, role FROM users WHERE id = ?").bind(uid).first();
+    if (!user) return new Response(JSON.stringify({ error: "User not found" }), { status: 404, headers: { "Content-Type": "application/json" } });
+    if (user.role === "admin") return new Response(JSON.stringify({ error: "Cannot delete admin accounts" }), { status: 400, headers: { "Content-Type": "application/json" } });
+
+    const tables = [
+        "video_likes", "video_saves", "video_comments",
+        "notifications", "messages", "conversations",
+        "follows", "content_reports", "live_chat",
+        "gift_transactions", "transactions"
+    ];
+    for (const t of tables) {
+        try { await env.DB.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(uid).run(); } catch(e) {}
+        try { await env.DB.prepare(`DELETE FROM ${t} WHERE sender_id = ?`).bind(uid).run(); } catch(e) {}
+        try { await env.DB.prepare(`DELETE FROM ${t} WHERE receiver_id = ?`).bind(uid).run(); } catch(e) {}
+    }
+    try { await env.DB.prepare("DELETE FROM videos WHERE user_id = ?").bind(uid).run(); } catch(e) {}
+    try { await env.DB.prepare("DELETE FROM live_streams WHERE user_id = ?").bind(uid).run(); } catch(e) {}
+    try { await env.DB.prepare("DELETE FROM user_blocks WHERE blocker_id = ? OR blocked_id = ?").bind(uid, uid).run(); } catch(e) {}
+
+    await env.DB.prepare("DELETE FROM users WHERE id = ?").bind(uid).run();
+    return new Response(JSON.stringify({ success: true, message: "User deleted" }), { headers: { "Content-Type": "application/json" } });
 }
 
 export async function adminUpdateUser(request, env, userId) {
@@ -105,7 +135,7 @@ export async function adminUpdateUser(request, env, userId) {
         await env.DB.prepare("UPDATE users SET role = ? WHERE id = ?").bind(role, userId).run();
     }
 
-    return Response.json({ success: true });
+    return new Response(JSON.stringify({ success: true }), { headers: { "Content-Type": "application/json" } });
 }
 
 export async function adminDeleteVideo(request, env, videoId) {
@@ -119,7 +149,7 @@ export async function adminDeleteVideo(request, env, videoId) {
     ).bind(videoId).first();
 
     if (!video) {
-      return Response.json({ success: false, error: "Video not found" }, { status: 404 });
+      return new Response(JSON.stringify({ success: false, error: "Video not found" }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
 
     // Try to delete from storage (best effort)
@@ -157,17 +187,17 @@ export async function adminDeleteVideo(request, env, videoId) {
       ).run();
     } catch (e) {}
 
-    return Response.json({
+    return new Response(JSON.stringify({
       success: true,
       message: "Video deleted by admin",
       storage: storageResult
-    });
+    }), { headers: { "Content-Type": "application/json" } });
 
   } catch (err) {
-    return Response.json({
+    return new Response(JSON.stringify({
       success: false,
       error: err.message || "Failed to delete video"
-    }, { status: 500 });
+    }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 }
 
@@ -183,7 +213,7 @@ export async function adminGetVideos(request, env) {
         ORDER BY videos.created_at DESC
     `).all();
 
-    return Response.json({ videos: results });
+    return new Response(JSON.stringify({ videos: results }), { headers: { "Content-Type": "application/json" } });
 }
 
 export async function adminRunMigration(request, env) {
@@ -305,9 +335,9 @@ export async function adminRunMigration(request, env) {
     }
   }
 
-  return Response.json({
+  return new Response(JSON.stringify({
     success: true,
     message: "Migration completed",
     results
-  });
+  }), { headers: { "Content-Type": "application/json" } });
 }

@@ -1,5 +1,11 @@
 import { verifyToken } from "../utils/jwt.js";
 
+function authErrorResponse(status, message, code) {
+  return new Response(
+    JSON.stringify({ error: code, message }),
+    { status, headers: { "Content-Type": "application/json" } }
+  );
+}
 
 export async function authenticate(request, env) {
 
@@ -10,15 +16,7 @@ export async function authenticate(request, env) {
   if (!authHeader) {
 
     return {
-      error: Response.json(
-        {
-          error: "session_expired",
-          message: "Please log in to continue"
-        },
-        {
-          status: 401
-        }
-      )
+      error: authErrorResponse(401, "Please log in to continue", "session_expired")
     };
 
   }
@@ -30,15 +28,7 @@ export async function authenticate(request, env) {
   if (parts.length !== 2 || parts[0] !== "Bearer") {
 
     return {
-      error: Response.json(
-        {
-          error: "invalid_token",
-          message: "Your session is invalid. Please log out and log back in"
-        },
-        {
-          status: 401
-        }
-      )
+      error: authErrorResponse(401, "Your session is invalid. Please log out and log back in", "invalid_token")
     };
 
   }
@@ -57,15 +47,7 @@ export async function authenticate(request, env) {
   if (!user) {
 
     return {
-      error: Response.json(
-        {
-          error: "invalid_token",
-          message: "Your session has expired. Please log out and log back in to continue"
-        },
-        {
-          status: 401
-        }
-      )
+      error: authErrorResponse(401, "Your session has expired. Please log out and log back in to continue", "invalid_token")
     };
 
   }

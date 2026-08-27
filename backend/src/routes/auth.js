@@ -44,7 +44,7 @@ export async function login(request, env) {
     const { results } = await env.DB.prepare(`
       SELECT id, username, email, display_name, avatar, bio, password_hash, role, status
       FROM users
-      WHERE email = ?
+      WHERE LOWER(email) = LOWER(?)
     `).bind(email).all();
 
     if (results.length === 0) {
