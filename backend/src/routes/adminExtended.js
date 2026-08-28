@@ -75,6 +75,33 @@ export async function adminStopStream(request, env, streamKey) {
         await ensureAllTables(env);
         const auth = await adminAuth(request, env);
         if (auth.error) return auth.error;
+
+        // Get the stream owner's username before ending
+        const stream = await safeQuery(env,
+            "SELECT username, user_id FROM live_streams WHERE stream_key = ? AND status = 'active'",
+            [streamKey]);
+
+        if (stream.length > 0) {
+            // Send a stop signal so the streamer's page picks it up and disconnects
+            try {
+                await env.DB.prepare(
+                    "INSERT INTO webrtc_signals (from_username, to_username, signal_type, signal_data, created_at) VALUES (?, ?, ?, ?, datetime('now'))"
+                ).bind(
+                    "admin",
+                    stream[0].username,
+                    "stream_ended",
+                    JSON.stringify({ stream_key: streamKey, reason: "admin" })
+                ).run();
+            } catch(e) {}
+
+            // Also force-end any active WebRTC sessions for this user
+            try {
+                await env.DB.prepare(
+                    "DELETE FROM webrtc_signals WHERE from_username = ? OR to_username = ?"
+                ).bind(stream[0].username, stream[0].username).run();
+            } catch(e) {}
+        }
+
         await env.DB.prepare("UPDATE live_streams SET status = 'ended', ended_at = datetime('now') WHERE stream_key = ?").bind(streamKey).run();
         try { await logActivity(env, auth.username || "", "stop_stream", "live_stream", streamKey, "Admin forced stream end"); } catch(e) {}
         return jsonResp({ success: true, message: "Stream stopped" });

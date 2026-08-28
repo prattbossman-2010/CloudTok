@@ -1,5 +1,9 @@
 import { authenticate } from "../middleware/auth.js";
 
+function jsonResp(data, status) {
+    return new Response(JSON.stringify(data), { status: status || 200, headers: { "Content-Type": "application/json" } });
+}
+
 async function ensureTables(env) {
     try { await env.DB.prepare("CREATE TABLE IF NOT EXISTS webrtc_signals (id INTEGER PRIMARY KEY, from_username TEXT NOT NULL, to_username TEXT NOT NULL, signal_type TEXT NOT NULL, signal_data TEXT DEFAULT '{}', created_at TEXT DEFAULT (datetime('now')))").run(); } catch(e) {}
     try { await env.DB.prepare("CREATE TABLE IF NOT EXISTS live_streams (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, username TEXT NOT NULL, stream_key TEXT UNIQUE NOT NULL, title TEXT DEFAULT 'Live Stream', status TEXT DEFAULT 'active', viewers INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')), ended_at TEXT)").run(); } catch(e) {}
@@ -15,7 +19,7 @@ export async function sendSignal(request, env) {
     const { to_username, signal_type, signal_data } = body;
 
     if (!to_username || !signal_type) {
-        return Response.json({ error: "to_username and signal_type required" }, { status: 400 });
+        return jsonResp({ error: "to_username and signal_type required" }, 400);
     }
 
     const from_username = auth.user.username;
@@ -30,7 +34,7 @@ export async function sendSignal(request, env) {
         new Date().toISOString()
     ).run();
 
-    return Response.json({ success: true });
+    return jsonResp({ success: true });
 }
 
 export async function pollSignals(request, env) {
@@ -52,7 +56,7 @@ export async function pollSignals(request, env) {
         ).run();
     }
 
-    return Response.json({
+    return jsonResp({
         signals: results.map(r => ({
             id: r.id,
             from: r.from_username,
@@ -86,11 +90,10 @@ export async function createLiveStream(request, env) {
             "active"
         ).run();
     } catch(e) {
-        console.error("[Live] D1 insert failed:", e.message);
-        return Response.json({ error: "Failed to create stream: " + e.message }, { status: 500 });
+        return jsonResp({ error: "Failed to create stream: " + e.message }, 500);
     }
 
-    return Response.json({
+    return jsonResp({
         success: true,
         stream_key: streamKey,
         stream_url: `live.html?key=${streamKey}`
@@ -117,7 +120,7 @@ export async function getLiveStreams(request, env) {
         return true;
     });
 
-    return Response.json({ streams: unique });
+    return jsonResp({ streams: unique });
 }
 
 export async function endLiveStream(request, env) {
@@ -129,7 +132,7 @@ export async function endLiveStream(request, env) {
     const { stream_key } = body;
 
     if (!stream_key) {
-        return Response.json({ error: "stream_key required" }, { status: 400 });
+        return jsonResp({ error: "stream_key required" }, 400);
     }
 
     let updated = false;
@@ -138,9 +141,7 @@ export async function endLiveStream(request, env) {
             "UPDATE live_streams SET status = 'ended', ended_at = datetime('now') WHERE stream_key = ? AND user_id = ?"
         ).bind(stream_key, auth.user.id).run();
         updated = result.meta && result.meta.changes > 0;
-    } catch(e) {
-        console.error("[Live] endLiveStream DB error:", e.message);
-    }
+    } catch(e) {}
 
     try {
         await env.DB.prepare(
@@ -160,7 +161,7 @@ export async function endLiveStream(request, env) {
         ).bind(stream_key).run();
     } catch(e) {}
 
-    return Response.json({ success: true, updated: updated });
+    return jsonResp({ success: true, updated: updated });
 }
 
 export async function sendLiveChat(request, env) {
@@ -172,7 +173,7 @@ export async function sendLiveChat(request, env) {
     const { stream_key, text, to_username } = body;
 
     if (!stream_key || !text) {
-        return Response.json({ error: "stream_key and text required" }, { status: 400 });
+        return jsonResp({ error: "stream_key and text required" }, 400);
     }
 
     try {
@@ -192,7 +193,7 @@ export async function sendLiveChat(request, env) {
         new Date().toISOString()
     ).run();
 
-    return Response.json({ success: true });
+    return jsonResp({ success: true });
 }
 
 export async function getLiveChat(request, env) {
@@ -205,7 +206,7 @@ export async function getLiveChat(request, env) {
     const after = parseInt(url.searchParams.get("after") || "0");
 
     if (!streamKey) {
-        return Response.json({ error: "stream_key required" }, { status: 400 });
+        return jsonResp({ error: "stream_key required" }, 400);
     }
 
     let messages = [];
@@ -222,5 +223,5 @@ export async function getLiveChat(request, env) {
         } catch(e2) {}
     }
 
-    return Response.json({ messages });
+    return jsonResp({ messages });
 }
