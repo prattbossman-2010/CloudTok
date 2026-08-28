@@ -339,6 +339,9 @@ function startSignalPoll(){
                         }
                     } else if(signal.type === "live-chat-viewer" && signal.data){
                         addStreamChatMessage(signal.data.username || signal.from || "viewer", signal.data.text || "");
+                    } else if(signal.type === "stream_ended"){
+                        showToast("Stream ended by admin");
+                        endStream();
                     }
                 }
             }
