@@ -239,7 +239,7 @@ Send
     const params = new URLSearchParams(window.location.search);
     const videoId = params.get("id");
     if(videoId && typeof CloudTokAPI !== "undefined"){
-        CloudTokAPI.request("/videos/"+videoId+"/views", {method:"POST"}).catch(()=>{});
+        CloudTokAPI.request("/videos/"+videoId+"/view", {method:"POST"}).catch(()=>{});
     }
     function updateOG(caption, username, views, likes){
         if(caption){

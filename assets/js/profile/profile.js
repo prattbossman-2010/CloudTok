@@ -93,6 +93,7 @@ try{ this.setupButtons(); }catch(e){}
 try{ this.setupTabs(); }catch(e){}
 try{ this.loadTheme(); }catch(e){}
 
+const params = new URLSearchParams(window.location.search);
 if(params.get("edit") === "true"){
     const ownCheck = this.currentUsername === (
         (localStorage.getItem("CloudTokCurrentUser")||"").replace(/^@+/,"").trim().toLowerCase()

@@ -74,6 +74,9 @@ class CloudTokUploader {
             // === REAL UPLOAD TO BACKEND ===
 let uploadResult = null;
 try {
+  if(!CloudTokAuthGuard.isLoggedIn()){
+    throw new Error("Please log in to upload videos");
+  }
   uploadResult = await CloudTokAPI.uploadVideo(
     file,
     caption,
@@ -83,7 +86,7 @@ try {
   );
 } catch (err) {
   console.error("Upload API error:", err);
-  uploadResult = null;
+  uploadResult = { error: err.message || "Upload failed" };
 }
 
 // Clean up the temporary object URL
