@@ -739,6 +739,10 @@ testSupabaseUpload(request, env)
       try {
         const results = [];
 
+        // Disable foreign keys for migration
+        await env.DB.prepare("PRAGMA foreign_keys = OFF").run();
+        results.push("Foreign keys disabled");
+
         // Step 1: Get all users
         const { results: users } = await env.DB.prepare("SELECT * FROM users").all();
         results.push(`Found ${users.length} users to migrate`);
@@ -762,17 +766,19 @@ testSupabaseUpload(request, env)
         results.push("Created users_new table");
 
         // Step 3: Copy users
+        let copied = 0;
         for (const u of users) {
           try {
             await env.DB.prepare(
               `INSERT INTO users_new (id, username, email, display_name, password_hash, avatar, bio, role, status, wallet_balance, allow_messages, created_at, updated_at)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
             ).bind(u.id, u.username, u.email, u.display_name, u.password_hash, u.avatar, u.bio, u.role || 'user', u.status || 'active', u.wallet_balance || 0, u.allow_messages || 'everyone', u.created_at, u.updated_at).run();
+            copied++;
           } catch(e) {
             results.push(`Error copying user ${u.username}: ${e.message}`);
           }
         }
-        results.push(`Copied ${users.length} users`);
+        results.push(`Copied ${copied} users`);
 
         // Step 4: Drop old table
         await env.DB.prepare("DROP TABLE users").run();
@@ -781,6 +787,10 @@ testSupabaseUpload(request, env)
         // Step 5: Rename new table
         await env.DB.prepare("ALTER TABLE users_new RENAME TO users").run();
         results.push("Renamed users_new to users");
+
+        // Re-enable foreign keys
+        await env.DB.prepare("PRAGMA foreign_keys = ON").run();
+        results.push("Foreign keys re-enabled");
 
         return cors(new Response(JSON.stringify({ success: true, results }, null, 2), { status: 200, headers: { "Content-Type": "application/json" } }));
       } catch(e) {

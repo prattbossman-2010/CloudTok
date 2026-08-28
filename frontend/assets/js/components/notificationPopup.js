@@ -13,7 +13,7 @@ this.toastElement=null;
 
 init(){
 
-if(!CloudTokAuth||!CloudTokAuth.isLoggedIn()) return;
+if(!CloudTokAuthGuard||!CloudTokAuthGuard.isLoggedIn()) return;
 
 this.createBell();
 this.startPolling();
@@ -59,7 +59,7 @@ if(target){
 
 async pollNow(){
 
-if(!CloudTokAuth||!CloudTokAuth.isLoggedIn()) return;
+if(!CloudTokAuthGuard||!CloudTokAuthGuard.isLoggedIn()) return;
 
 try{
 
@@ -74,7 +74,7 @@ try{
         }
         const newOnes=notifications.filter(n=>
             n.id>this.lastNotificationId&&
-            (n.type!=="message"||n.user_id!==CloudTokAuth.getCurrentUser().id)
+            (n.type!=="message"||n.user_id!==CloudTokAuthGuard.getCurrentUser().id)
         );
         if(newOnes.length>0){
             const latest=newOnes.reduce((a,b)=>new Date(b.created_at)>new Date(a.created_at)?b:a);
