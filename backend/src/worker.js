@@ -639,6 +639,61 @@ testSupabaseUpload(request, env)
       return cors(downloadVideo(request, env, videoId));
     }
 
+    // DEBUG endpoint - remove after testing
+    if(path === "/api/debug/test-login" && method === "POST"){
+      try {
+        const body = await request.json();
+        const { email, password } = body;
+        const { verifyPassword } = await import("./utils/crypto.js");
+
+        const debug = { step: "start", email };
+
+        const { results } = await env.DB.prepare(
+          "SELECT id, username, email, password_hash, role, status FROM users WHERE LOWER(email) = LOWER(?)"
+        ).bind(email).all();
+
+        debug.userCount = results.length;
+
+        if (results.length === 0) {
+          debug.failAt = "email_lookup";
+          debug.reason = "No user found with that email";
+          return cors(new Response(JSON.stringify(debug, null, 2), { status: 200, headers: { "Content-Type": "application/json" } }));
+        }
+
+        const user = results[0];
+        debug.userId = user.id;
+        debug.username = user.username;
+        debug.status = user.status;
+        debug.hashPresent = !!user.password_hash;
+        debug.hashLength = (user.password_hash || "").length;
+        debug.hashPrefix = (user.password_hash || "").substring(0, 20);
+        debug.hashSuffix = (user.password_hash || "").substring((user.password_hash || "").length - 20);
+
+        let pwValid = false;
+        let pwError = null;
+        try {
+          pwValid = await verifyPassword(password, user.password_hash);
+        } catch(e) {
+          pwError = e.message;
+        }
+
+        debug.passwordValid = pwValid;
+        debug.passwordError = pwError;
+
+        if (!pwValid) {
+          debug.failAt = "password_verify";
+          debug.reason = "Password hash mismatch";
+        } else {
+          debug.failAt = "none";
+          debug.reason = "Login should succeed - password is correct";
+        }
+
+        return cors(new Response(JSON.stringify(debug, null, 2), { status: 200, headers: { "Content-Type": "application/json" } }));
+      } catch(e) {
+        return cors(new Response(JSON.stringify({ error: e.message, stack: e.stack }), { status: 500, headers: { "Content-Type": "application/json" } }));
+      }
+    }
+
     return cors(
       new Response("404 - Endpoint Not Found", {
         status: 404,
