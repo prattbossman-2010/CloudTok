@@ -33,6 +33,8 @@ export async function login(request, env) {
     const body = await request.json();
     const { email, password } = body;
 
+    console.log(`[Login] Attempt for email: ${email}`);
+
     if (!email || !password) {
       return error("Email and password are required", 400, "MISSING_FIELDS");
     }
@@ -47,18 +49,22 @@ export async function login(request, env) {
       WHERE LOWER(email) = LOWER(?)
     `).bind(email).all();
 
+    console.log(`[Login] Email lookup: ${results.length} results`);
+
     if (results.length === 0) {
       recordFailedAttempt(email);
       return error("Invalid email or password", 401, "INVALID_CREDENTIALS");
     }
 
     const user = results[0];
+    console.log(`[Login] User found: ${user.username}, hash length: ${(user.password_hash || "").length}, hash prefix: ${(user.password_hash || "").substring(0, 10)}`);
 
     if (user.status === "banned" || user.status === "suspended") {
       return error("This account has been suspended", 403, "ACCOUNT_SUSPENDED");
     }
 
     const passwordValid = await verifyPassword(password, user.password_hash);
+    console.log(`[Login] Password valid: ${passwordValid}`);
 
     if (!passwordValid) {
       recordFailedAttempt(email);
@@ -74,6 +80,8 @@ export async function login(request, env) {
       role: user.role || "user"
     }, env.JWT_SECRET);
 
+    console.log(`[Login] SUCCESS for ${user.username}`);
+
     return success({
       token,
       user: {
@@ -88,6 +96,7 @@ export async function login(request, env) {
     }, "Login successful");
 
   } catch (err) {
+    console.error(`[Login] ERROR:`, err.message, err.stack);
     return error(err.message || "Login failed", 500, "LOGIN_ERROR");
   }
 }
