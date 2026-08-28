@@ -60,6 +60,13 @@ class CloudTokAdmin {
   setupSearch() {
     let ut = null; document.getElementById("usersSearch")?.addEventListener("input", () => { clearTimeout(ut); ut = setTimeout(() => this.loadUsers(), 300); });
     let vt = null; document.getElementById("videosSearch")?.addEventListener("input", () => { clearTimeout(vt); vt = setTimeout(() => this.loadVideos(), 300); });
+    document.getElementById("videosTable")?.addEventListener("click", (e) => {
+      const thumb = e.target.closest(".videoPreviewThumb");
+      if (!thumb) return;
+      const idx = parseInt(thumb.dataset.vidx);
+      const v = this.allVideos[idx];
+      if (v) this.previewVideo(v.video_url || "", v.caption || "", "@" + (v.username || ""), v.likes || 0, v.comments_count || 0, v.views || 0);
+    });
   }
   setupToggles() { document.querySelectorAll(".toggle").forEach((t) => { t.onclick = () => { t.classList.toggle("on"); this.settings[t.dataset.setting] = t.classList.contains("on"); this.saveSettings(); }; }); }
   loadSettings() { try { const s = localStorage.getItem("adminSettings"); if (s) this.settings = JSON.parse(s); document.querySelectorAll(".toggle").forEach((t) => { t.classList.toggle("on", !!this.settings[t.dataset.setting]); }); } catch (e) {} }
@@ -197,11 +204,11 @@ class CloudTokAdmin {
       if (search) videos = videos.filter(function(v) { return (v.caption || "").toLowerCase().includes(search) || (v.username || "").toLowerCase().includes(search); });
       if (videos.length === 0) { document.getElementById("videosTable").innerHTML = '<div class="emptyState"><div class="icon">🎬</div><p>No videos found</p></div>'; return; }
       var html = '<table><thead><tr><th><input type="checkbox" onchange="admin.toggleAllVideos(this)"></th><th>Preview</th><th>User</th><th>Caption</th><th>Likes</th><th>Views</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
-      videos.forEach(function(v) {
+      videos.forEach(function(v, idx) {
         const thumb = v.thumbnail_url || ""; const vidUrl = v.video_url || "";
         const cap = (v.caption || "").substring(0, 35) + ((v.caption || "").length > 35 ? "..." : "");
         html += '<tr><td><input type="checkbox" value="' + v.id + '" onchange="admin.toggleVideoSelect(' + v.id + ',this)"></td>';
-        html += '<td><div class="videoPreviewThumb" onclick="admin.previewVideo(\'' + vidUrl.replace(/'/g, "\\'") + "','" + (v.caption || "").replace(/'/g, "\\'") + "',@" + v.username + "," + (v.likes || 0) + "," + (v.comments_count || 0) + "," + (v.views || 0) + ')\">';
+        html += '<td><div class="videoPreviewThumb" data-vidx="' + idx + '">';
         html += thumb ? '<img src="' + thumb + '" onerror="this.parentElement.innerHTML=\'🎬\'">' : '<span>🎬</span>';
         html += '</div></td>';
         html += '<td>@' + v.username + '</td><td>' + cap + '</td><td>' + (v.likes || 0) + '</td><td>' + (v.views || 0) + '</td>';
