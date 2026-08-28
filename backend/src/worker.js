@@ -694,6 +694,100 @@ testSupabaseUpload(request, env)
       }
     }
 
+    // DEBUG: Reset password hash directly (fixes truncated hashes)
+    if(path === "/api/debug/set-password" && method === "POST"){
+      try {
+        const body = await request.json();
+        const { email, newPassword } = body;
+        const { hashPassword } = await import("./utils/crypto.js");
+
+        if (!email || !newPassword) {
+          return cors(new Response(JSON.stringify({ error: "email and newPassword required" }), { status: 400, headers: { "Content-Type": "application/json" } }));
+        }
+
+        const newHash = await hashPassword(newPassword);
+
+        const { results } = await env.DB.prepare(
+          "SELECT id, username, password_hash FROM users WHERE LOWER(email) = LOWER(?)"
+        ).bind(email).all();
+
+        if (results.length === 0) {
+          return cors(new Response(JSON.stringify({ error: "No user with that email" }), { status: 404, headers: { "Content-Type": "application/json" } }));
+        }
+
+        const oldHashLen = (results[0].password_hash || "").length;
+
+        await env.DB.prepare(
+          "UPDATE users SET password_hash = ? WHERE LOWER(email) = LOWER(?)"
+        ).bind(newHash, email).run();
+
+        return cors(new Response(JSON.stringify({
+          success: true,
+          username: results[0].username,
+          oldHashLength: oldHashLen,
+          newHashLength: newHash.length,
+          newHashPrefix: newHash.substring(0, 20),
+          message: "Password updated. You can now login."
+        }, null, 2), { status: 200, headers: { "Content-Type": "application/json" } }));
+      } catch(e) {
+        return cors(new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { "Content-Type": "application/json" } }));
+      }
+    }
+
+    // DEBUG: Recreate users table with correct password_hash column type
+    if(path === "/api/debug/fix-users-table" && method === "POST"){
+      try {
+        const results = [];
+
+        // Step 1: Get all users
+        const { results: users } = await env.DB.prepare("SELECT * FROM users").all();
+        results.push(`Found ${users.length} users to migrate`);
+
+        // Step 2: Create new table with TEXT password_hash
+        await env.DB.prepare(`CREATE TABLE IF NOT EXISTS users_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT UNIQUE NOT NULL,
+          email TEXT UNIQUE NOT NULL,
+          display_name TEXT,
+          password_hash TEXT,
+          avatar TEXT,
+          bio TEXT,
+          role TEXT DEFAULT 'user',
+          status TEXT DEFAULT 'active',
+          wallet_balance REAL DEFAULT 0,
+          allow_messages TEXT DEFAULT 'everyone',
+          created_at TEXT DEFAULT (datetime('now')),
+          updated_at TEXT DEFAULT (datetime('now'))
+        )`).run();
+        results.push("Created users_new table");
+
+        // Step 3: Copy users
+        for (const u of users) {
+          try {
+            await env.DB.prepare(
+              `INSERT INTO users_new (id, username, email, display_name, password_hash, avatar, bio, role, status, wallet_balance, allow_messages, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            ).bind(u.id, u.username, u.email, u.display_name, u.password_hash, u.avatar, u.bio, u.role || 'user', u.status || 'active', u.wallet_balance || 0, u.allow_messages || 'everyone', u.created_at, u.updated_at).run();
+          } catch(e) {
+            results.push(`Error copying user ${u.username}: ${e.message}`);
+          }
+        }
+        results.push(`Copied ${users.length} users`);
+
+        // Step 4: Drop old table
+        await env.DB.prepare("DROP TABLE users").run();
+        results.push("Dropped old users table");
+
+        // Step 5: Rename new table
+        await env.DB.prepare("ALTER TABLE users_new RENAME TO users").run();
+        results.push("Renamed users_new to users");
+
+        return cors(new Response(JSON.stringify({ success: true, results }, null, 2), { status: 200, headers: { "Content-Type": "application/json" } }));
+      } catch(e) {
+        return cors(new Response(JSON.stringify({ error: e.message, stack: e.stack }), { status: 500, headers: { "Content-Type": "application/json" } }));
+      }
+    }
+
     return cors(
       new Response("404 - Endpoint Not Found", {
         status: 404,
