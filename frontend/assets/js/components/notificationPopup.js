@@ -93,7 +93,7 @@ try{
 startPolling(){
 
 this.stopPolling();
-this.pollingInterval=setInterval(()=>this.pollNow(),30000);
+    this.pollingInterval=setInterval(()=>this.pollNow(),10000);
 
 }
 
@@ -147,14 +147,14 @@ const avatar=notification.from_avatar||notification.avatar||"assets/images/defau
 const videoThumb=notification.thumbnail||"";
 const videoId=notification.video_id||"";
 
-toast.innerHTML=`
+ toast.innerHTML=`
 
-<div class="notificationPopupAvatar"
+<img class="notificationPopupAvatar"
      onerror="this.src='assets/images/default-avatar.jpg'"
-     src="${avatar}"></div>
+     src="${avatar}" />
 
 <div class="notificationPopupIcon ${typeClass}">
-    ${typeIcon}
+     ${typeIcon}
 </div>
 
 <div class="notificationPopupBody">
@@ -173,8 +173,19 @@ toast.innerHTML=`
 toast.addEventListener("click",(e)=>{
     if(e.target.classList.contains("notificationPopupClose")) return;
     this.removeToast();
-    if(videoId) window.location.href="watch.html?id="+videoId;
-    else window.location.href="notifications.html";
+    const fromUser=notification.from_username;
+    if(notification.type==="message"&&fromUser){
+        window.location.href="conversation.html?user="+encodeURIComponent(fromUser);
+    } else if(notification.type==="follow"&&fromUser){
+        window.location.href="profile.html?user="+encodeURIComponent(fromUser);
+    } else if(notification.type==="like"||notification.type==="comment"){
+        if(videoId) window.location.href="watch.html?id="+videoId;
+        else if(fromUser) window.location.href="profile.html?user="+encodeURIComponent(fromUser);
+        else window.location.href="notifications.html";
+    } else {
+        if(videoId) window.location.href="watch.html?id="+videoId;
+        else window.location.href="notifications.html";
+    }
 });
 
 document.body.appendChild(toast);

@@ -9,7 +9,7 @@ export async function getUserProfile(request, env, username) {
         id, username, email, display_name, avatar, bio, website,
         role, status, created_at, updated_at
       FROM users
-      WHERE username = ?
+      WHERE LOWER(username) = LOWER(?)
     `).bind(username).all();
 
     if (results.length === 0) {

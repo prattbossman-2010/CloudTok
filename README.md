@@ -43,6 +43,10 @@ CloudTok/
 - Cloudflare D1
 
 ### Storage
+- Supabase
+- Cloudinary
+- ImageKit
+- Backblaze
 - Cloudflare R2
 
 ### Deployment
