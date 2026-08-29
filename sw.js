@@ -31,7 +31,6 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
-
   if (e.request.url.includes("/api/")) {
     e.respondWith(
       fetch(e.request).catch(() => {
@@ -43,19 +42,20 @@ self.addEventListener("fetch", (e) => {
     );
     return;
   }
-
+  if (e.request.url.includes("supabase.co/storage")) return;
   e.respondWith(
     caches.match(e.request).then((cached) => {
       const fetched = fetch(e.request).then((response) => {
         if (response && response.status === 200) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(e.request, clone);
-          });
+          try {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(e.request, clone);
+            });
+          } catch (_) {}
         }
         return response;
       }).catch(() => cached);
-
       return cached || fetched;
     })
   );
