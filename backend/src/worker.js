@@ -60,7 +60,7 @@ async function withdraw(request, env) {
     try {
         const auth = await authenticate(request, env);
         if (auth.error) return auth.error;
-        const userId = auth.userId || auth.id;
+        const userId = auth.user?.id;
         const body = await request.json();
         const amount = parseFloat(body.amount);
         if (!amount || amount <= 0) {

@@ -226,18 +226,26 @@
         emojiRow.innerHTML="";
         twemojiShortcodes.forEach(function(code){
             var btn = document.createElement("button");
-            btn.innerHTML = twemoji.parse(":" + code + ":");
+            if(typeof twemoji !== "undefined"){
+                btn.innerHTML = twemoji.parse(":" + code + ":");
+            } else {
+                btn.textContent = ":" + code + ":";
+            }
             btn.addEventListener("click", function(ev){
                 ev.stopPropagation();
-                input.value += ":" + code + ":";
-                setTimeout(function(){ twemoji.parse(input); }, 50);
+                if(typeof twemoji !== "undefined"){
+                    input.value += ":" + code + ":";
+                    setTimeout(function(){ twemoji.parse(input); }, 50);
+                } else {
+                    input.value += code + " ";
+                }
                 input.focus();
             });
             emojiRow.appendChild(btn);
         });
     }
     renderEmojiGrid();
-    twemoji.parse(document.body);
+    if(typeof twemoji !== "undefined") twemoji.parse(document.body);
 
     var emojiToggleBtn = document.getElementById("emojiToggleBtn");
     var gifToggleBtn = document.getElementById("gifToggleBtn");
