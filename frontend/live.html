@@ -60,34 +60,26 @@ p{color:#aaa;margin:0 0 30px;font-size:14px}
     .floatingMsg .chatUser{color:#00b7ff;font-weight:600;margin-right:6px;}
     @keyframes floatUp{0%{opacity:1;bottom:120px;}80%{opacity:1;}100%{opacity:0;bottom:calc(100vh - 60px);}}
 
-    /* Live Chat Bar */
-    .liveChatBar{position:absolute;bottom:20px;left:12px;right:12px;z-index:8;display:flex;flex-direction:column;gap:4px;}
-    .liveChatInputRow{display:flex;gap:8px;align-items:center;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);border-radius:24px;padding:6px 8px;}
-    .liveChatInputRow input{flex:1;background:none;border:none;outline:none;color:#fff;font-size:14px;padding:8px 12px;}
-    .liveChatInputRow input::placeholder{color:rgba(255,255,255,.4);}
-    .liveChatInputRow button{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:8px;border-radius:50%;}
-    .liveChatInputRow button:hover{background:rgba(255,255,255,.1);}
-    .liveChatInputRow .sendBtn{background:#ff2d55 !important;border-radius:20px !important;padding:8px 16px !important;font-weight:700;font-size:13px;}
-    .liveChatInputRow .sendBtn:hover{background:#e0244a !important;}
-    .liveChatInputRow .toolBtn{color:rgba(255,255,255,.5);}
-    .liveChatInputRow .toolBtn:hover{color:#fff;}
+    /* Stream Input Bar */
+    .streamInputBar{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);border-radius:16px 16px 0 0;padding:8px 12px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;z-index:10;}
+    .streamInputBar .emojiToggleBtn,.streamInputBar .gifToggleBtn,.streamInputBar .stickerToggleBtn{background:none;border:none;color:rgba(255,255,255,.5);font-size:18px;cursor:pointer;padding:6px;border-radius:50%;}
+    .streamInputBar .emojiToggleBtn:hover,.streamInputBar .gifToggleBtn:hover,.streamInputBar .stickerToggleBtn:hover{color:#fff;background:rgba(255,255,255,.1);}
+    .streamInputBar input{flex:1;background:none;border:none;outline:none;color:#fff;font-size:14px;padding:8px 12px;min-width:0;}
+    .streamInputBar input::placeholder{color:rgba(255,255,255,.4);}
+    .streamInputBar #liveSendBtn{background:#fe2c55;border:none;color:#fff;padding:8px 16px;border-radius:16px;font-weight:700;cursor:pointer;font-size:13px;}
+    .streamInputBar #liveSendBtn:hover{background:#e0244a;}
 
-    .liveEmojiBar{display:none;flex-direction:column;gap:4px;padding:8px 12px;position:absolute;bottom:100%;left:0;right:0;max-height:200px;overflow-y:auto;background:rgba(0,0,0,.8);border-bottom:1px solid rgba(255,255,255,.08);z-index:90;border-radius:12px 12px 0 0;}
-    .liveEmojiBar.show{display:flex;}
-    .liveEmojiBar .emojiRow{display:flex;gap:4px;flex-wrap:wrap;}
-    .liveEmojiBar .emojiRow button{background:none;border:none;font-size:24px;cursor:pointer;padding:6px;border-radius:8px;transition:background .2s;flex-shrink:0;}
-    .liveEmojiBar .emojiRow button:hover{background:rgba(255,255,255,.08);}
+    .emojiBar,.gifPanel,.stickerPanel{display:none;position:absolute;bottom:100%;left:0;right:0;background:rgba(0,0,0,.9);border-bottom:1px solid rgba(255,255,255,.08);max-height:300px;overflow-y:auto;padding:10px;z-index:90;border-radius:12px 12px 0 0;}
+    .emojiBar.show,.gifPanel.show,.stickerPanel.show{display:block;}
+    .emojiRow{display:flex;gap:4px;flex-wrap:wrap;}
+    .emojiRow button{background:none;border:none;font-size:24px;cursor:pointer;padding:6px;border-radius:8px;transition:background .2s;flex-shrink:0;}
+    .emojiRow button:hover{background:rgba(255,255,255,.08);}
+    .gifGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+    .stickerGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
 
-    .liveGifPanel{display:none;position:absolute;bottom:100%;left:0;right:0;background:rgba(0,0,0,.9);border-bottom:1px solid rgba(255,255,255,.08);max-height:300px;overflow-y:auto;padding:10px;z-index:90;border-radius:12px 12px 0 0;}
-    .liveGifPanel.show{display:block;}
-    .liveGifGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
     .liveGifItem{border-radius:10px;overflow:hidden;cursor:pointer;aspect-ratio:1;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;}
     .liveGifItem:hover{transform:scale(1.05);}
     .liveGifItem img{width:100%;height:100%;object-fit:cover;border-radius:10px;}
-
-    .liveStickerPanel{display:none;position:absolute;bottom:100%;left:0;right:0;background:rgba(0,0,0,.9);border-bottom:1px solid rgba(255,255,255,.08);max-height:300px;overflow-y:auto;padding:10px;z-index:90;border-radius:12px 12px 0 0;}
-    .liveStickerPanel.show{display:block;}
-    .liveStickerGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
     .liveStickerItem{border-radius:10px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;aspect-ratio:1;transition:transform .2s;}
     .liveStickerItem:hover{transform:scale(1.05);}
     .liveStickerItem img{width:100%;height:100%;object-fit:contain;}
@@ -155,25 +147,23 @@ p{color:#aaa;margin:0 0 30px;font-size:14px}
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.25 12C2.25 6.61522 6.61522 2.25 12 2.25C17.3848 2.25 21.75 6.61522 21.75 12C21.75 17.3848 17.3848 21.75 12 21.75C6.61522 21.75 2.25 17.3848 2.25 12ZM8.25 9.5625C8.25 8.83763 8.83763 8.25 9.5625 8.25H14.4375C15.1624 8.25 15.75 8.83763 15.75 9.5625V14.4375C15.75 15.1624 15.1624 15.75 14.4375 15.75H9.5625C8.83763 15.75 8.25 15.1624 8.25 14.4375V9.5625Z" fill="#fff"/></svg>
         </button>
     </div>
-    <div class="liveChatBar" id="liveChatBar">
-        <div class="liveEmojiBar" id="liveEmojiBar">
+    <div class="streamChatArea" id="streamChatArea"></div>
+    <div class="streamInputBar" id="streamInputBar">
+        <button class="emojiToggleBtn" id="liveEmojiToggle">😊</button>
+        <button class="gifToggleBtn" id="liveGifToggle">GIF</button>
+        <button class="stickerToggleBtn" id="liveStickerToggle">😀</button>
+        <input id="liveChatInput" type="text" placeholder="Chat...">
+        <button id="liveSendBtn">Send</button>
+        <div class="emojiBar" id="liveEmojiBar">
             <div class="emojiRow" id="liveEmojiRow"></div>
         </div>
-        <div class="liveGifPanel" id="liveGifPanel">
-            <div class="liveGifGrid" id="liveGifGrid"></div>
+        <div class="gifPanel" id="liveGifPanel">
+            <div class="gifGrid" id="liveGifGrid"></div>
         </div>
-        <div class="liveStickerPanel" id="liveStickerPanel">
-            <div class="liveStickerGrid" id="liveStickerGrid"></div>
-        </div>
-        <div class="liveChatInputRow">
-            <button class="toolBtn" id="liveEmojiToggle">😊</button>
-            <button class="toolBtn" id="liveGifToggle">GIF</button>
-            <button class="toolBtn" id="liveStickerToggle">😀</button>
-            <input id="liveChatInput" type="text" placeholder="Message...">
-            <button class="sendBtn" id="liveSendBtn">Send</button>
+        <div class="stickerPanel" id="liveStickerPanel">
+            <div class="stickerGrid" id="liveStickerGrid"></div>
         </div>
     </div>
-    <div class="streamChatArea" id="streamChatArea"></div>
 </div>
 
 <script src="assets/js/database/database.js"></script>
@@ -557,6 +547,7 @@ async function endStream(){
         });
     }
     renderLiveEmojiGrid();
+    twemoji.parse(document.body);
 
     var liveEmojiToggle = document.getElementById("liveEmojiToggle");
     var liveGifToggle = document.getElementById("liveGifToggle");
