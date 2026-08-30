@@ -508,7 +508,7 @@ window.CloudTokAPI = {
 
         return await this.request("/payments/transactions");
 
-    }
+    },
 
     async withdraw(amount){
 
