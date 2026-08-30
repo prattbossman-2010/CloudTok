@@ -536,18 +536,26 @@ async function endStream(){
         row.innerHTML = "";
         twemojiShortcodes.forEach(function(code){
             var btn = document.createElement("button");
-            btn.innerHTML = twemoji.parse(":" + code + ":");
+            if(typeof twemoji !== "undefined"){
+                btn.innerHTML = twemoji.parse(":" + code + ":");
+            } else {
+                btn.textContent = ":" + code + ":";
+            }
             btn.addEventListener("click", function(ev){
                 ev.stopPropagation();
-                document.getElementById("liveChatInput").value += ":" + code + ":";
-                setTimeout(function(){ if(twemoji) twemoji.parse(document.getElementById("liveChatInput")); }, 50);
+                if(typeof twemoji !== "undefined"){
+                    document.getElementById("liveChatInput").value += ":" + code + ":";
+                    setTimeout(function(){ twemoji.parse(document.getElementById("liveChatInput")); }, 50);
+                } else {
+                    document.getElementById("liveChatInput").value += code + " ";
+                }
                 document.getElementById("liveChatInput").focus();
             });
             row.appendChild(btn);
         });
     }
     renderLiveEmojiGrid();
-    twemoji.parse(document.body);
+    if(typeof twemoji !== "undefined") twemoji.parse(document.body);
 
     var liveEmojiToggle = document.getElementById("liveEmojiToggle");
     var liveGifToggle = document.getElementById("liveGifToggle");
