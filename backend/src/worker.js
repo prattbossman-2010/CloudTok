@@ -56,6 +56,33 @@ import { forgotPassword, verifyResetCode, resetPassword } from "./routes/passwor
 import { authRateLimit, apiRateLimit } from "./middleware/rateLimit.js";
 import { generateOGImage } from "./routes/ogImage.js";
 
+async function withdraw(request, env) {
+    try {
+        const auth = await authenticate(request, env);
+        if (auth.error) return auth.error;
+        const userId = auth.userId || auth.id;
+        const body = await request.json();
+        const amount = parseFloat(body.amount);
+        if (!amount || amount <= 0) {
+            return Response.json({ error: "Invalid amount" }, { status: 400 });
+        }
+        if (amount > 1000) {
+            return Response.json({ error: "Maximum withdrawal amount is $1000" }, { status: 400 });
+        }
+        const { results: user } = await env.DB.prepare("SELECT wallet_balance FROM users WHERE id = ?").bind(userId).all();
+        if (!user || user.length === 0) return Response.json({ error: "User not found" }, { status: 404 });
+        const balance = user[0].wallet_balance || 0;
+        if (balance < amount) {
+            return Response.json({ error: "Insufficient balance" }, { status: 400 });
+        }
+        await env.DB.prepare("UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?").bind(amount, userId).run();
+        const { results: updated } = await env.DB.prepare("SELECT wallet_balance FROM users WHERE id = ?").bind(userId).all();
+        return Response.json({ success: true, balance: updated[0].wallet_balance || 0 });
+    } catch (e) {
+        return Response.json({ error: e.message || "Withdrawal failed" }, { status: 500 });
+    }
+}
+
 export default {
 
   async fetch(request, env) {
@@ -551,6 +578,9 @@ testSupabaseUpload(request, env)
     }
     if(path === "/api/wallet/balance" && method === "GET"){
       return cors(getWalletBalance(request, env));
+    }
+    if(path === "/api/wallet/withdraw" && method === "POST"){
+      return cors(withdraw(request, env));
     }
     if(path === "/api/gift-config" && method === "GET"){
       try {

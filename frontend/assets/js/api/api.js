@@ -510,4 +510,14 @@ window.CloudTokAPI = {
 
     }
 
+    async withdraw(amount){
+
+        return await this.request("/wallet/withdraw", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ amount: amount })
+        });
+
+    }
+
 };
