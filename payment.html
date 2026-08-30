@@ -130,6 +130,7 @@ body{background:#000;}
 .cardInput{letter-spacing:2px;}
 .cardExpiryRow{display:flex;gap:10px;}
 </style>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 <body>
 
@@ -144,7 +145,23 @@ body{background:#000;}
     <span class="walletBalance" id="walletBalance">$0.00</span>
     <div class="walletActions">
         <button class="walletActionBtn" onclick="showFundSection()">Add Funds</button>
-        <button class="walletActionBtn" onclick="showToast('Withdraw coming soon','error')">Withdraw</button>
+        <button class="walletActionBtn" onclick="showWithdrawSection()">Withdraw</button>
+    </div>
+</div>
+
+<div class="paymentsContent" id="withdrawSection" style="display:none;">
+    <div class="section">
+        <h3>Withdraw Funds</h3>
+        <input type="number" class="payAmountInput" id="withdrawAmount" placeholder="Enter amount" min="1" step="1">
+        <div class="amountPresets" id="withdrawPresets">
+            <button class="amountPreset" onclick="setWithdrawAmount(10)">$10</button>
+            <button class="amountPreset" onclick="setWithdrawAmount(25)">$25</button>
+            <button class="amountPreset" onclick="setWithdrawAmount(50)">$50</button>
+            <button class="amountPreset" onclick="setWithdrawAmount(100)">$100</button>
+            <button class="amountPreset" onclick="setWithdrawAmount(0)">Custom</button>
+        </div>
+        <button class="payBtn" id="withdrawBtn" onclick="processWithdraw()">Withdraw</button>
+        <div id="withdrawResult" style="margin-top:12px;"></div>
     </div>
 </div>
 
@@ -327,6 +344,48 @@ function showToast(msg, type="success"){
 function showFundSection(){
     document.getElementById("fundSection").style.display="block";
     document.getElementById("fundSection").scrollIntoView({behavior:"smooth"});
+}
+
+function showWithdrawSection(){
+    document.getElementById("withdrawSection").style.display="block";
+    document.getElementById("withdrawSection").scrollIntoView({behavior:"smooth"});
+}
+
+function setWithdrawAmount(amount){
+    const input = document.getElementById("withdrawAmount");
+    if(amount === 0){
+        input.value = "";
+        input.placeholder = "Enter custom amount";
+        input.focus();
+    } else {
+        input.value = amount;
+    }
+}
+
+async function processWithdraw(){
+    const amount = parseFloat(document.getElementById("withdrawAmount").value);
+    const resultEl = document.getElementById("withdrawResult");
+    if(!amount || amount <= 0){
+        resultEl.innerHTML = '<span style="color:#ff2d55;">Please enter an amount</span>';
+        return;
+    }
+    const btn = document.getElementById("withdrawBtn");
+    btn.disabled = true;
+    btn.textContent = "Processing...";
+    try{
+        const result = await CloudTokAPI.withdraw(amount);
+        if(result.success){
+            resultEl.innerHTML = '<span style="color:#00c853;">$' + amount.toFixed(2) + ' withdrawn successfully!</span>';
+            document.getElementById("withdrawAmount").value = "";
+            loadBalance();
+        } else {
+            resultEl.innerHTML = '<span style="color:#ff2d55;">' + (result.error || "Withdrawal failed") + '</span>';
+        }
+    } catch(e){
+        resultEl.innerHTML = '<span style="color:#ff2d55;">Withdrawal failed</span>';
+    }
+    btn.disabled = false;
+    btn.textContent = "Withdraw";
 }
 
 function setAmount(localAmount){

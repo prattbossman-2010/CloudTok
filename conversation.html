@@ -34,6 +34,16 @@
 .createGifBtn{width:100%;padding:10px;background:rgba(255,45,85,.15);border:1px dashed rgba(255,45,85,.4);border-radius:10px;color:#ff2d55;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:10px;text-align:center;transition:background .2s;}
 .createGifBtn:hover{background:rgba(255,45,85,.25);}
 
+.stickerToggleBtn{background:none !important;border:none !important;color:rgba(255,255,255,.5) !important;font-size:14px !important;font-weight:600 !important;cursor:pointer !important;padding:8px !important;border-radius:8px !important;}
+.stickerToggleBtn:hover{color:#fff !important;}
+
+.stickerPanel{display:none;position:absolute;bottom:100%;left:0;right:0;background:#111;border-top:1px solid rgba(255,255,255,.08);max-height:300px;overflow-y:auto;padding:10px;z-index:50;}
+.stickerPanel.show{display:block;}
+.stickerGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.stickerItem{border-radius:10px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;aspect-ratio:1;transition:transform .2s;}
+.stickerItem:hover{transform:scale(1.05);}
+.stickerItem img{width:100%;height:100%;object-fit:contain;}
+
 .callBtns{display:flex;gap:4px;}
 .callBtn{background:none !important;border:none !important;font-size:18px !important;cursor:pointer !important;padding:6px 8px !important;border-radius:8px !important;color:#fff !important;}
 .callBtn:hover{background:rgba(255,255,255,.08) !important;}
@@ -85,6 +95,8 @@
 .giftAnimFloat{position:fixed;bottom:200px;left:50%;transform:translateX(-50%);font-size:60px;z-index:9999;pointer-events:none;animation:giftFloatConv 2s ease-out forwards;}
 @keyframes giftFloatConv{0%{opacity:1;transform:translateX(-50%) translateY(0) scale(1);}100%{opacity:0;transform:translateX(-50%) translateY(-200px) scale(1.5);}}
 </style>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<script src="https://cdn.jsdelivr.net/npm/twemoji@14/dist/twemoji.min.js"></script>
 </head>
 <body>
 <div class="conversationPage">
@@ -103,6 +115,7 @@
     <div class="messageBar">
         <button class="emojiToggleBtn" id="emojiToggleBtn">😊</button>
         <button class="gifToggleBtn" id="gifToggleBtn">GIF</button>
+        <button class="stickerToggleBtn" id="stickerToggleBtn">😀</button>
         <button class="convGiftBtn" id="convGiftBtn">🎁</button>
         <input id="messageInput" type="text" placeholder="Type a message...">
         <button id="sendMessageBtn">Send</button>
@@ -116,6 +129,10 @@
             <input class="gifSearch" id="gifSearch" placeholder="Search GIFs...">
             <div class="gifGrid" id="gifGrid"></div>
             <input type="file" id="gifFileInput" accept="image/gif" style="display:none;">
+        </div>
+
+        <div class="stickerPanel" id="stickerPanel">
+            <div class="stickerGrid" id="stickerGrid"></div>
         </div>
 
         <div class="convGiftPanel" id="convGiftPanel">
@@ -180,21 +197,24 @@
     let isVideoOff = false;
     let pendingCallData = null;
 
-    const emojis = ["😀","😂","😍","🥰","😎","🤩","🥳","😢","😭","😡","🥺","😏","🤔","👍","👎","❤️","🔥","💯","🎉","👏","🙌","💪","🙏","✨","🌟","💖","🎵","🎶","📸","🎬"];
+    const twemojiShortcodes = ["grinning","smiley","heart_eyes","kissing_heart","smirk","sunglasses","tongue","cry","scream","rage","persevere","disappointed","fearful","weary","sweat_smile","triumph","relaxed","yum","beer","wine","confused","expressionless","unamused","pensive","confounded","kissing","kissing_cat","stuck_out_tongue","open_mouth","hushed","no_mouth","mask","smile","laughing","satisfied","innocent","heart","love","broken_heart","two_hearts","sparkling_heart","cupid","revolving_hearts","heart_decoration","heartpulse","sparkles","star","stars","fire","droplet","dash","oops","virus","cat","dog","mouse","hamster","rabbit","wolf","frog","tiger","koala","bear","pig","penguin","bird","baby","thumbsup","thumbsdown","gift","balloon","party_popper","confetti_ball","tada","volcano","moon","sun_with_face","cloud","snow_cloud","snowman","zap","cyclone","foggy","ocean","dove","tulip","rose","hibiscus","sunflower","blossom","corn","earth_americas","earth_africa","earth_asia","globe_with_meridians","cherry_blossom","snow_capped_mountain","mountain"];
     const emojiBar = document.getElementById("emojiBar");
     const emojiRow = document.getElementById("emojiRow");
     const input = document.getElementById("messageInput");
     const gifPanel = document.getElementById("gifPanel");
     const gifGrid = document.getElementById("gifGrid");
+    const stickerPanel = document.getElementById("stickerPanel");
+    const stickerGrid = document.getElementById("stickerGrid");
 
     function renderEmojiGrid(){
         emojiRow.innerHTML="";
-        emojis.forEach(function(e){
+        twemojiShortcodes.forEach(function(code){
             var btn = document.createElement("button");
-            btn.textContent = e;
+            btn.innerHTML = twemoji.parse(":" + code + ":");
             btn.addEventListener("click", function(ev){
                 ev.stopPropagation();
-                input.value += e;
+                input.value += ":" + code + ":";
+                setTimeout(function(){ twemoji.parse(input); }, 50);
                 input.focus();
             });
             emojiRow.appendChild(btn);
@@ -204,29 +224,41 @@
 
     var emojiToggleBtn = document.getElementById("emojiToggleBtn");
     var gifToggleBtn = document.getElementById("gifToggleBtn");
+    var stickerToggleBtn = document.getElementById("stickerToggleBtn");
 
     emojiToggleBtn.addEventListener("click", function(ev){
         ev.stopPropagation();
         var isOpen = emojiBar.classList.toggle("show");
         gifPanel.classList.remove("show");
-        console.log("[Conv] Emoji bar toggled:", isOpen);
+        stickerPanel.classList.remove("show");
+        if(isOpen && twemoji) twemoji.parse(document.body);
     });
 
     gifToggleBtn.addEventListener("click", function(ev){
         ev.stopPropagation();
         var isOpen = gifPanel.classList.toggle("show");
         emojiBar.classList.remove("show");
-        console.log("[Conv] GIF panel toggled:", isOpen);
+        stickerPanel.classList.remove("show");
         if(isOpen) loadCommunityGIFs();
+    });
+
+    stickerToggleBtn.addEventListener("click", function(ev){
+        ev.stopPropagation();
+        var isOpen = stickerPanel.classList.toggle("show");
+        emojiBar.classList.remove("show");
+        gifPanel.classList.remove("show");
+        if(isOpen) renderStickerGrid();
     });
 
     emojiBar.addEventListener("click", function(ev){ ev.stopPropagation(); });
     gifPanel.addEventListener("click", function(ev){ ev.stopPropagation(); });
+    stickerPanel.addEventListener("click", function(ev){ ev.stopPropagation(); });
     document.getElementById("convGiftPanel").addEventListener("click", function(ev){ ev.stopPropagation(); });
 
     document.addEventListener("click", function(){
         emojiBar.classList.remove("show");
         gifPanel.classList.remove("show");
+        stickerPanel.classList.remove("show");
         document.getElementById("convGiftPanel").classList.remove("show");
     });
 
@@ -242,65 +274,85 @@
 
     function searchTenorGIFs(query){
         gifGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.3);padding:20px;">Loading...</div>';
-        var apiKey = "AIzaSyBBJFS7BYOhPz2G0JnZpjfHfVWnKg1mFNI";
-        fetch("https://tenor.googleapis.com/v2/search?key=" + apiKey + "&q=" + encodeURIComponent(query) + "&limit=20&media_filter=gif,tinygif&contentfilter=medium")
-        .then(function(r){ return r.json(); })
-        .then(function(data){
-            var results = data.results || [];
-            gifGrid.innerHTML = "";
-            if(results.length === 0){
-                gifGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.3);padding:20px;">No GIFs found</div>';
-                return;
-            }
-            results.forEach(function(gif){
-                var url = (gif.media_formats && gif.media_formats.gif) ? gif.media_formats.gif.url : "";
-                if(!url) return;
-                var item = document.createElement("div");
-                item.className = "gifItem";
-                var img = document.createElement("img");
-                img.src = url;
-                item.appendChild(img);
-                item.addEventListener("click", function(){
-                    input.value = url;
-                    gifPanel.classList.remove("show");
-                    input.focus();
+        try {
+            var apiKey = "AIzaSyBBJFS7BYOhPz2G0JnZpjfHfVWnKg1mFNI";
+            fetch("https://tenor.googleapis.com/v2/search?key=" + apiKey + "&q=" + encodeURIComponent(query) + "&limit=20&media_filter=gif,tinygif&contentfilter=medium")
+            .then(function(r){ return r.json(); })
+            .then(function(data){
+                var results = data.results || [];
+                gifGrid.innerHTML = "";
+                if(results.length === 0){ gifGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.3);padding:20px;">No GIFs found</div>'; return; }
+                results.forEach(function(gif){
+                    var url = (gif.media_formats && gif.media_formats.gif) ? gif.media_formats.gif.url : "";
+                    if(!url) return;
+                    var item = document.createElement("div");
+                    item.className = "gifItem";
+                    var img = document.createElement("img");
+                    img.src = url;
+                    item.appendChild(img);
+                    item.addEventListener("click", function(){ input.value = url; gifPanel.classList.remove("show"); input.focus(); });
+                    gifGrid.appendChild(item);
                 });
-                gifGrid.appendChild(item);
-            });
-        })
-        .catch(function(){
+            })
+            .catch(function(){ gifGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.3);padding:20px;">GIFs unavailable</div>'; });
+        } catch(e) {
             gifGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.3);padding:20px;">GIFs unavailable</div>';
-        });
+        }
     }
 
     function loadCommunityGIFs(){
         gifGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.3);padding:20px;">Loading...</div>';
-        if(typeof CloudTokAPI === "undefined"){
-            searchTenorGIFs("trending");
+        var grid = document.getElementById("gifGrid");
+        grid.innerHTML = "";
+        var gifFiles = [
+            "950522-pepehacker.gif","915177-alarm-dancing-cat.gif","897960-cateating.gif","828203-peperich.gif",
+            "827729-peperain.gif","637105-cat-pat.gif","457711-screamingcat.gif","436131-pepetorchfire.gif",
+            "431882-pepeclap.gif","429492-catjamming.gif","399137-mlady.gif","353772-karentyping.gif",
+            "249299-strongpepe.gif","24137-okpepe.gif","175472-pepelaugh.gif","121023-pepetyping.gif"
+        ];
+        if(gifFiles.length === 0){
+            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.3);padding:20px;">No local GIFs</div>';
             return;
         }
-        CloudTokAPI.request("/gifs").then(function(result){
-            var gifs = (result && result.gifs) ? result.gifs : [];
-            gifGrid.innerHTML = "";
-            if(gifs.length === 0){
-                searchTenorGIFs("trending");
-                return;
-            }
-            gifs.forEach(function(gif){
-                var item = document.createElement("div");
-                item.className = "gifItem";
-                var img = document.createElement("img");
-                img.src = gif.url;
-                item.appendChild(img);
-                item.addEventListener("click", function(){
-                    input.value = gif.url;
-                    gifPanel.classList.remove("show");
-                    input.focus();
-                });
-                gifGrid.appendChild(item);
+        gifFiles.forEach(function(fname){
+            var url = "GIFs/" + fname;
+            var item = document.createElement("div");
+            item.className = "gifItem";
+            var img = document.createElement("img");
+            img.src = url;
+            img.onerror = function(){ this.parentElement.innerHTML = "&#127647;"; this.style.display = "none"; };
+            item.appendChild(img);
+            item.addEventListener("click", function(){ input.value = url; gifPanel.classList.remove("show"); input.focus(); });
+            grid.appendChild(item);
+        });
+    }
+
+    function renderStickerGrid(){
+        stickerGrid.innerHTML = "";
+        var stickerFiles = [
+            "974580-pepeok.png","877975-praypepe.png","850361-tiredcat.png","830563-pepe.png",
+            "798781-nou.png","795083-pepehappy.png","774627-shhhhh.png","733150-kingpepe.png",
+            "718017-pepestaring.png","717911-cat-stare.png","702336-kingpepe.png","618704-pepeokay.png",
+            "606832-pepesadbusiness.png","415052-cat-mog.png","408164-pepecook.png","299063-nerdcat.png",
+            "273026-catcried.png","236705-pepedumb.png","226280-catnoted.png","182109-pepeperfect.png",
+            "152946-pepecashcow.png","149743-pepeheart.png","147423-baddie.png","140206-catgoodjob.png",
+            "121286-crying.png","120458-pepecross.png"
+        ];
+        stickerFiles.forEach(function(fname){
+            var url = "stickers/" + fname;
+            var item = document.createElement("div");
+            item.className = "stickerItem";
+            var img = document.createElement("img");
+            img.src = url;
+            img.onerror = function(){ this.parentElement.innerHTML = "&#128516;"; };
+            item.appendChild(img);
+            item.addEventListener("click", function(ev){
+                ev.stopPropagation();
+                input.value += "[sticker:" + fname.split(".")[0] + "]";
+                input.focus();
+                stickerPanel.classList.remove("show");
             });
-        }).catch(function(){
-            searchTenorGIFs("trending");
+            stickerGrid.appendChild(item);
         });
     }
 
@@ -312,29 +364,17 @@
     document.getElementById("gifFileInput").addEventListener("change", function(e){
         var file = e.target.files[0];
         if(!file) return;
-        if(file.size > 5 * 1024 * 1024){
-            alert("GIF must be under 5MB");
-            return;
-        }
+        if(file.size > 5 * 1024 * 1024){ alert("GIF must be under 5MB"); return; }
         var btn = document.getElementById("createGifBtn");
         btn.textContent = "Uploading...";
         btn.disabled = true;
         var form = new FormData();
         form.append("gif", file);
         CloudTokAPI.request("/gifs/upload", { method: "POST", body: form }).then(function(result){
-            if(result && result.url){
-                input.value = result.url;
-                gifPanel.classList.remove("show");
-                loadCommunityGIFs();
-            } else {
-                alert((result && result.error) || "Upload failed");
-            }
-        }).catch(function(){
-            alert("Upload failed");
-        }).finally(function(){
-            btn.textContent = "+ Create GIF";
-            btn.disabled = false;
-            e.target.value = "";
+            if(result && result.url){ input.value = result.url; gifPanel.classList.remove("show"); loadCommunityGIFs(); }
+            else { alert((result && result.error) || "Upload failed"); }
+        }).catch(function(){ alert("Upload failed"); }).finally(function(){
+            btn.textContent = "+ Create GIF"; btn.disabled = false; e.target.value = "";
         });
     });
 
@@ -354,26 +394,14 @@
         document.getElementById("mediaFallback").classList.remove("show");
     }
 
-    function showCallError(msg){
-        document.getElementById("callError").textContent = msg;
-    }
+    function showCallError(msg){ document.getElementById("callError").textContent = msg; }
 
     webrtc.onRemoteStream = function(stream) {
         var videoEl = document.getElementById("remoteVideo");
-        console.log("[Conv] onRemoteStream, tracks:", stream.getTracks().length);
-        videoEl.srcObject = stream;
-        videoEl.play().catch(function(){});
+        videoEl.srcObject = stream; videoEl.play().catch(function(){});
     };
-
-    webrtc.onCallEnd = function(){
-        hideCallOverlay();
-        webrtc.startPolling(chatUsername);
-    };
-
-    webrtc.onAnswerReceived = function(){
-        document.getElementById("callStatus").textContent = "Connected";
-    };
-
+    webrtc.onCallEnd = function(){ hideCallOverlay(); webrtc.startPolling(chatUsername); };
+    webrtc.onAnswerReceived = function(){ document.getElementById("callStatus").textContent = "Connected"; };
     webrtc.onConnectionStateChange = function(state){
         var el = document.getElementById("callStatus");
         if(state === "connected" || state === "completed") el.textContent = "Connected";
@@ -398,74 +426,35 @@
 
     async function startCall(video){
         if(!localStorage.getItem("CloudTokToken")){ alert("Please login first"); return; }
-
-        console.log("[Conv] Starting call, video=", video);
         showCallOverlay(chatUsername, "Requesting access...");
-
         var stream = await webrtc.startLocalStream(video);
-
-        if(!stream){
-            console.log("[Conv] Media unavailable, proceeding without local media");
-            proceedCallWithoutMedia(video);
-            return;
-        }
-
+        if(!stream){ proceedCallWithoutMedia(video); return; }
         document.getElementById("localVideo").srcObject = stream;
         document.getElementById("callStatus").textContent = "Calling...";
-
         var ok = await webrtc.initiateCall(chatUsername, video);
-        if(!ok){
-            showCallError("Failed to start call.");
-            document.getElementById("callStatus").textContent = "Call failed";
-            return;
-        }
+        if(!ok){ showCallError("Failed to start call."); document.getElementById("callStatus").textContent = "Call failed"; return; }
         document.getElementById("callStatus").textContent = "Ringing...";
     }
 
     async function proceedCallWithoutMedia(video){
         document.getElementById("callStatus").textContent = "Calling (no audio)...";
-
-        webrtc.isInCall = true;
-        webrtc._targetUsername = chatUsername;
-        webrtc.isInitiator = true;
-        webrtc.iceCandidateQueue = [];
-
+        webrtc.isInCall = true; webrtc._targetUsername = chatUsername; webrtc.isInitiator = true; webrtc.iceCandidateQueue = [];
         webrtc.createPeerConnection();
-
         try {
             var offer = await webrtc.pc.createOffer();
             await webrtc.pc.setLocalDescription(offer);
-            await webrtc.sendSignal("call-offer", {
-                sdp: webrtc.pc.localDescription.sdp,
-                type: webrtc.pc.localDescription.type,
-                video: false
-            });
-            document.getElementById("callStatus").textContent = "Ringing...";
-            webrtc.startPolling(chatUsername);
-        } catch(e){
-            console.error("[Conv] No-media call failed:", e);
-            showCallError("Failed to start call.");
-            document.getElementById("callStatus").textContent = "Call failed";
-        }
+            await webrtc.sendSignal("call-offer", { sdp: webrtc.pc.localDescription.sdp, type: webrtc.pc.localDescription.type, video: false });
+            document.getElementById("callStatus").textContent = "Ringing..."; webrtc.startPolling(chatUsername);
+        } catch(e){ showCallError("Failed to start call."); document.getElementById("callStatus").textContent = "Call failed"; }
     }
 
     async function answerCall(from, callData){
-        console.log("[Conv] Answering call from", from);
         showCallOverlay(from, "Connecting...");
-
         var video = callData.video !== false;
         var stream = await webrtc.startLocalStream(video);
-        if(!stream){
-            console.log("[Conv] Answer media failed, answering without");
-            document.getElementById("localVideo").srcObject = null;
-        } else {
-            document.getElementById("localVideo").srcObject = stream;
-        }
-
-        webrtc.isInCall = true;
-        webrtc._targetUsername = from;
-        webrtc.createPeerConnection();
-
+        if(!stream) document.getElementById("localVideo").srcObject = null;
+        else document.getElementById("localVideo").srcObject = stream;
+        webrtc.isInCall = true; webrtc._targetUsername = from; webrtc.createPeerConnection();
         try {
             await webrtc.pc.setRemoteDescription(new RTCSessionDescription({ sdp: callData.sdp, type: callData.type }));
             for(var i = 0; i < webrtc.iceCandidateQueue.length; i++){
@@ -476,16 +465,11 @@
             await webrtc.pc.setLocalDescription(answer);
             await webrtc.sendSignal("call-answer", { sdp: answer.sdp, type: answer.type });
             document.getElementById("callStatus").textContent = "Connected";
-        } catch(e) {
-            console.error("[Conv] Answer failed:", e);
-            showCallError("Failed to connect.");
-        }
+        } catch(e){ showCallError("Failed to connect."); }
     }
 
     webrtc.startPolling(chatUsername);
-
     webrtc.onIncomingCall = function(from, data){
-        console.log("[Conv] Incoming call from", from);
         if(webrtc.isInCall){ webrtc.sendSignal("call-end", {}); return; }
         answerCall(from, data);
     };
@@ -496,45 +480,33 @@
         if(pending){
             var callData = JSON.parse(pending);
             localStorage.removeItem("CloudTokPendingCall");
-            if(callData.from === chatUsername && callData.data){
-                setTimeout(function(){ answerCall(chatUsername, callData.data); }, 300);
-            }
+            if(callData.from === chatUsername && callData.data){ setTimeout(function(){ answerCall(chatUsername, callData.data); }, 300); }
         }
     }
 
     const CONV_GIFTS = [
-        { name: "Rose", emoji: "🌹", price: 0.99 },
-        { name: "Heart", emoji: "❤️", price: 1.99 },
-        { name: "Star", emoji: "⭐", price: 4.99 },
-        { name: "Fire", emoji: "🔥", price: 9.99 },
-        { name: "Diamond", emoji: "💎", price: 19.99 },
-        { name: "Crown", emoji: "👑", price: 49.99 },
-        { name: "Party", emoji: "🎉", price: 9.99 },
-        { name: "Clap", emoji: "👏", price: 0.99 }
+        { name: "Rose", emoji: "🌹", price: 0.99 }, { name: "Heart", emoji: "❤️", price: 1.99 },
+        { name: "Star", emoji: "⭐", price: 4.99 }, { name: "Fire", emoji: "🔥", price: 9.99 },
+        { name: "Diamond", emoji: "💎", price: 19.99 }, { name: "Crown", emoji: "👑", price: 49.99 },
+        { name: "Party", emoji: "🎉", price: 9.99 }, { name: "Clap", emoji: "👏", price: 0.99 }
     ];
     let selectedConvGift = null;
     let convGiftBalance = 0;
 
     function showConvGiftAnim(emoji){
-        var el = document.createElement("div");
-        el.className = "giftAnimFloat";
-        el.textContent = emoji;
-        document.body.appendChild(el);
-        setTimeout(function(){ el.remove(); }, 2000);
+        var el = document.createElement("div"); el.className = "giftAnimFloat"; el.textContent = emoji;
+        document.body.appendChild(el); setTimeout(function(){ el.remove(); }, 2000);
     }
 
     function renderConvGiftGrid(){
-        var grid = document.getElementById("convGiftGrid");
-        grid.innerHTML = "";
+        var grid = document.getElementById("convGiftGrid"); grid.innerHTML = "";
         CONV_GIFTS.forEach(function(gift){
-            var item = document.createElement("div");
-            item.className = "convGiftItem";
+            var item = document.createElement("div"); item.className = "convGiftItem";
             item.innerHTML = '<div class="convGiftEmoji">'+gift.emoji+'</div><div class="convGiftName">'+gift.name+'</div><div class="convGiftPrice">$'+gift.price.toFixed(2)+'</div>';
             item.addEventListener("click", function(ev){
                 ev.stopPropagation();
                 document.querySelectorAll(".convGiftItem").forEach(function(g){ g.classList.remove("selected"); });
-                item.classList.add("selected");
-                selectedConvGift = gift;
+                item.classList.add("selected"); selectedConvGift = gift;
                 document.getElementById("convGiftSendBtn").disabled = false;
                 document.getElementById("convGiftSendBtn").textContent = "Send " + gift.emoji + " " + gift.name + " ($" + gift.price.toFixed(2) + ")";
             });
@@ -553,20 +525,11 @@
 
     async function sendConvGift(){
         if(!selectedConvGift || !chatUsername) return;
-        if(convGiftBalance < selectedConvGift.price){
-            alert("Insufficient balance. Fund your wallet first.");
-            return;
-        }
+        if(convGiftBalance < selectedConvGift.price){ alert("Insufficient balance. Fund your wallet first."); return; }
         try {
             var result = await CloudTokAPI.request("/gifts/send", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    receiver_username: chatUsername,
-                    gift_name: selectedConvGift.name,
-                    gift_emoji: selectedConvGift.emoji,
-                    amount_usd: selectedConvGift.price
-                })
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ receiver_username: chatUsername, gift_name: selectedConvGift.name, gift_emoji: selectedConvGift.emoji, amount_usd: selectedConvGift.price })
             });
             if(result.success){
                 showConvGiftAnim(selectedConvGift.emoji);
@@ -578,41 +541,26 @@
                 document.getElementById("convGiftSendBtn").textContent = "Select a gift";
                 document.getElementById("convGiftPanel").classList.remove("show");
                 var msgList = document.getElementById("messageList");
-                var msgDiv = document.createElement("div");
-                msgDiv.className = "message messageMe";
+                var msgDiv = document.createElement("div"); msgDiv.className = "message messageMe";
                 msgDiv.innerHTML = '<div class="messageBubble">'+result.gift.emoji+' Sent '+result.gift.name+'</div>';
-                msgList.appendChild(msgDiv);
-                msgList.scrollTop = msgList.scrollHeight;
-            } else {
-                alert(result.error || "Failed to send gift");
-            }
-        } catch(e){
-            alert("Failed to send gift");
-        }
+                msgList.appendChild(msgDiv); msgList.scrollTop = msgList.scrollHeight;
+            } else { alert(result.error || "Failed to send gift"); }
+        } catch(e){ alert("Failed to send gift"); }
     }
 
     document.getElementById("convGiftBtn").addEventListener("click", function(ev){
         ev.stopPropagation();
         var panel = document.getElementById("convGiftPanel");
         var isOpen = panel.classList.toggle("show");
-        emojiBar.classList.remove("show");
-        gifPanel.classList.remove("show");
-        if(isOpen){
-            renderConvGiftGrid();
-            loadConvGiftBalance();
-        }
+        emojiBar.classList.remove("show"); gifPanel.classList.remove("show"); stickerPanel.classList.remove("show");
+        if(isOpen){ renderConvGiftGrid(); loadConvGiftBalance(); }
     });
 
     document.getElementById("convGiftSendBtn").onclick = sendConvGift;
 
     setInterval(function(){
-        if(webrtc.backendReady){
-            badge.textContent = "Calls active";
-            badge.className = "callStatusBadge connected";
-        } else {
-            badge.textContent = "Calls unavailable";
-            badge.className = "callStatusBadge disconnected";
-        }
+        if(webrtc.backendReady){ badge.textContent = "Calls active"; badge.className = "callStatusBadge connected"; }
+        else { badge.textContent = "Calls unavailable"; badge.className = "callStatusBadge disconnected"; }
     }, 3000);
 })();
 </script>
