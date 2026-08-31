@@ -112,7 +112,6 @@
 .gifItem{border-radius:8px;}
 </style>
 <link rel="icon" type="image/x-icon" href="favicon.ico">
-<script src="https://cdn.jsdelivr.net/npm/twemoji@14/dist/twemoji.min.js"></script>
 </head>
 <body>
 <div class="conversationPage">
@@ -213,7 +212,8 @@
     let isVideoOff = false;
     let pendingCallData = null;
 
-    const twemojiShortcodes = ["grinning","smiley","heart_eyes","kissing_heart","smirk","sunglasses","tongue","cry","scream","rage","persevere","disappointed","fearful","weary","sweat_smile","triumph","relaxed","yum","beer","wine","confused","expressionless","unamused","pensive","confounded","kissing","kissing_cat","stuck_out_tongue","open_mouth","hushed","no_mouth","mask","smile","laughing","satisfied","innocent","heart","love","broken_heart","two_hearts","sparkling_heart","cupid","revolving_hearts","heart_decoration","heartpulse","sparkles","star","stars","fire","droplet","dash","oops","virus","cat","dog","mouse","hamster","rabbit","wolf","frog","tiger","koala","bear","pig","penguin","bird","baby","thumbsup","thumbsdown","gift","balloon","party_popper","confetti_ball","tada","volcano","moon","sun_with_face","cloud","snow_cloud","snowman","zap","cyclone","foggy","ocean","dove","tulip","rose","hibiscus","sunflower","blossom","corn","earth_americas","earth_africa","earth_asia","globe_with_meridians","cherry_blossom","snow_capped_mountain","mountain"];
+    const emojiMap={grinning:"😀",smiley:"😃",heart_eyes:"😍",kissing_heart:"😘",smirk:"😏",sunglasses:"😎",tongue:"👅",cry:"😢",scream:"😱",rage:"😡",persevere:"😤",disappointed:"😞",fearful:"😨",weary:"😫",sweat_smile:"😅",triumph:"😤",relaxed:"😌",yum:"😛",beer:"🍺",wine:"🍷",confused:"😕",expressionless:"😑",unamused:"😒",pensive:"😔",confounded:"😖",kissing:"😗",kissing_cat:"😽",stuck_out_tongue:"😛",open_mouth:"😮",hushed:"😯",no_mouth:"😶",mask:"😷",smile:"😊",laughing:"😆",satisfied:"😊",innocent:"😇",heart:"❤️",love:"💕",broken_heart:"💔",two_hearts:"💞",sparkling_heart:"💗",cupid:"💘",revolving_hearts:"💝",heart_decoration:"💟",heartpulse:"💓",sparkles:"✨",star:"⭐",stars:"🌟",fire:"🔥",droplet:"💧",dash:"➖",oops:"😇",virus:"🦠",cat:"🐱",dog:"🐶",mouse:"🐭",hamster:"🐹",rabbit:"🐰",wolf:"🐺",frog:"🐸",tiger:"🐯",koala:"🐨",bear:"🐻",pig:"🐷",penguin:"🐧",bird:"🐦",baby:"👶",thumbsup:"👍",thumbsdown:"👎",gift:"🎁",balloon:"🎈",party_popper:"🎉",confetti_ball:"🎊",tada:"🎉",volcano:"🌋",moon:"🌙",sun_with_face:"☀️",cloud:"☁️",snow_cloud:"🌨️",snowman:"⛄",zap:"⚡",cyclone:"🌀",foggy:"🌫️",ocean:"🌊",dove:"🕊️",tulip:"🌷",rose:"🌹",hibiscus:"🌺",sunflower:"🌻",blossom:"🌸",corn:"🌽",earth_americas:"🌎",earth_africa:"🌍",earth_asia:"🌏",globe_with_meridians:"🌐",cherry_blossom:"🌸",snow_capped_mountain:"🏔️",mountain:"⛰️"};
+    const twemojiShortcodes=Object.keys(emojiMap);
     const emojiBar = document.getElementById("emojiBar");
     const emojiRow = document.getElementById("emojiRow");
     const input = document.getElementById("messageInput");
@@ -226,26 +226,16 @@
         emojiRow.innerHTML="";
         twemojiShortcodes.forEach(function(code){
             var btn = document.createElement("button");
-            if(typeof twemoji !== "undefined"){
-                btn.innerHTML = twemoji.parse(":" + code + ":");
-            } else {
-                btn.textContent = ":" + code + ":";
-            }
+            btn.textContent = emojiMap[code] || code;
             btn.addEventListener("click", function(ev){
                 ev.stopPropagation();
-                if(typeof twemoji !== "undefined"){
-                    input.value += ":" + code + ":";
-                    setTimeout(function(){ twemoji.parse(input); }, 50);
-                } else {
-                    input.value += code + " ";
-                }
+                input.value += emojiMap[code] || code;
                 input.focus();
             });
             emojiRow.appendChild(btn);
         });
     }
     renderEmojiGrid();
-    if(typeof twemoji !== "undefined") twemoji.parse(document.body);
 
     var emojiToggleBtn = document.getElementById("emojiToggleBtn");
     var gifToggleBtn = document.getElementById("gifToggleBtn");
@@ -256,7 +246,6 @@
         var isOpen = emojiBar.classList.toggle("show");
         gifPanel.classList.remove("show");
         stickerPanel.classList.remove("show");
-        if(isOpen && twemoji) twemoji.parse(document.body);
     });
 
     gifToggleBtn.addEventListener("click", function(ev){

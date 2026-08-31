@@ -87,7 +87,6 @@ p{color:#aaa;margin:0 0 30px;font-size:14px}
     .streamChatArea{position:absolute;bottom:110px;left:12px;right:12px;max-height:200px;display:flex;flex-direction:column;gap:6px;z-index:7;pointer-events:none;}
 </style>
 <link rel="icon" type="image/x-icon" href="favicon.ico">
-<script src="https://cdn.jsdelivr.net/npm/twemoji@14/dist/twemoji.min.js"></script>
 </head>
 <body>
 <button class="back" onclick="history.back()">
@@ -529,33 +528,24 @@ async function endStream(){
         setTimeout(function(){ el.remove(); }, 5000);
     }
 
-    const twemojiShortcodes = ["grinning","smiley","heart_eyes","kissing_heart","smirk","sunglasses","tongue","cry","scream","rage","persevere","disappointed","fearful","weary","sweat_smile","triumph","relaxed","yum","beer","wine","confused","expressionless","unamused","pensive","confounded","kissing","kissing_cat","stuck_out_tongue","open_mouth","hushed","no_mouth","mask","smile","laughing","satisfied","innocent","heart","love","broken_heart","two_hearts","sparkling_heart","cupid","revolving_hearts","heart_decoration","heartpulse","sparkles","star","stars","fire","droplet","dash","oops","virus","cat","dog","mouse","hamster","rabbit","wolf","frog","tiger","koala","bear","pig","penguin","bird","baby","thumbsup","thumbsdown","gift","balloon","party_popper","confetti_ball","tada","volcano","moon","sun_with_face","cloud","snow_cloud","snowman","zap","cyclone","foggy","ocean","dove","tulip","rose","hibiscus","sunflower","blossom","corn","earth_americas","earth_africa","earth_asia","globe_with_meridians","cherry_blossom","snow_capped_mountain","mountain"];
+    const emojiMap={grinning:"😀",smiley:"😃",heart_eyes:"😍",kissing_heart:"😘",smirk:"😏",sunglasses:"😎",tongue:"👅",cry:"😢",scream:"😱",rage:"😡",persevere:"😤",disappointed:"😞",fearful:"😨",weary:"😫",sweat_smile:"😅",triumph:"😤",relaxed:"😌",yum:"😛",beer:"🍺",wine:"🍷",confused:"😕",expressionless:"😑",unamused:"😒",pensive:"😔",confounded:"😖",kissing:"😗",kissing_cat:"😽",stuck_out_tongue:"😛",open_mouth:"😮",hushed:"😯",no_mouth:"😶",mask:"😷",smile:"😊",laughing:"😆",satisfied:"😊",innocent:"😇",heart:"❤️",love:"💕",broken_heart:"💔",two_hearts:"💞",sparkling_heart:"💗",cupid:"💘",revolving_hearts:"💝",heart_decoration:"💟",heartpulse:"💓",sparkles:"✨",star:"⭐",stars:"🌟",fire:"🔥",droplet:"💧",dash:"➖",oops:"😇",virus:"🦠",cat:"🐱",dog:"🐶",mouse:"🐭",hamster:"🐹",rabbit:"🐰",wolf:"🐺",frog:"🐸",tiger:"🐯",koala:"🐨",bear:"🐻",pig:"🐷",penguin:"🐧",bird:"🐦",baby:"👶",thumbsup:"👍",thumbsdown:"👎",gift:"🎁",balloon:"🎈",party_popper:"🎉",confetti_ball:"🎊",tada:"🎉",volcano:"🌋",moon:"🌙",sun_with_face:"☀️",cloud:"☁️",snow_cloud:"🌨️",snowman:"⛄",zap:"⚡",cyclone:"🌀",foggy:"🌫️",ocean:"🌊",dove:"🕊️",tulip:"🌷",rose:"🌹",hibiscus:"🌺",sunflower:"🌻",blossom:"🌸",corn:"🌽",earth_americas:"🌎",earth_africa:"🌍",earth_asia:"🌏",globe_with_meridians:"🌐",cherry_blossom:"🌸",snow_capped_mountain:"🏔️",mountain:"⛰️"};
+    const twemojiShortcodes=Object.keys(emojiMap);
 
     function renderLiveEmojiGrid(){
         var row = document.getElementById("liveEmojiRow");
         row.innerHTML = "";
         twemojiShortcodes.forEach(function(code){
             var btn = document.createElement("button");
-            if(typeof twemoji !== "undefined"){
-                btn.innerHTML = twemoji.parse(":" + code + ":");
-            } else {
-                btn.textContent = ":" + code + ":";
-            }
+            btn.textContent = emojiMap[code] || code;
             btn.addEventListener("click", function(ev){
                 ev.stopPropagation();
-                if(typeof twemoji !== "undefined"){
-                    document.getElementById("liveChatInput").value += ":" + code + ":";
-                    setTimeout(function(){ twemoji.parse(document.getElementById("liveChatInput")); }, 50);
-                } else {
-                    document.getElementById("liveChatInput").value += code + " ";
-                }
+                document.getElementById("liveChatInput").value += emojiMap[code] || code;
                 document.getElementById("liveChatInput").focus();
             });
             row.appendChild(btn);
         });
     }
     renderLiveEmojiGrid();
-    if(typeof twemoji !== "undefined") twemoji.parse(document.body);
 
     var liveEmojiToggle = document.getElementById("liveEmojiToggle");
     var liveGifToggle = document.getElementById("liveGifToggle");
@@ -570,7 +560,6 @@ async function endStream(){
         var isOpen = liveEmojiBar.classList.toggle("show");
         liveGifPanel.classList.remove("show");
         liveStickerPanel.classList.remove("show");
-        if(isOpen && twemoji) twemoji.parse(document.body);
     });
 
     liveGifToggle.addEventListener("click", function(ev){
