@@ -42,7 +42,7 @@ export async function createWithdrawal(request, env) {
 
         await env.DB.prepare("INSERT INTO withdrawal_requests (user_id, amount, method, account_name, accountNumber, mobile_number, bank_name, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')").bind(userId, amount, method, account_name || null, account_number || null, mobile_number || null, bank_name || null).run();
 
-        return Response.json({ success: true, message: "Withdrawal request created. Pending admin approval." });
+        return Response.json({ success: true, message: "Processing your withdrawal request — our team is working on getting your money to you shortly." });
     } catch (e) {
         return Response.json({ error: e.message || "Withdrawal failed" }, { status: 500 });
     }
