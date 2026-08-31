@@ -663,3 +663,19 @@ background:rgba(255,255,255,.03);border-radius:12px;
 align-self:center;cursor:pointer;
 }
 .lockedOverlay:hover{background:rgba(255,255,255,.06);}
+
+/* ===== Emoji/Sticker/GIF Bar (Conversation Page) ===== */
+.messageBar{padding:8px !important;gap:6px !important;}
+.messageBar input{padding:8px 12px !important;font-size:14px !important;}
+.messageBar button{padding:0 14px !important;font-size:13px !important;}
+.emojiToggleBtn{font-size:18px !important;padding:6px !important;}
+.gifToggleBtn{font-size:13px !important;padding:6px !important;}
+.stickerToggleBtn{font-size:13px !important;padding:6px !important;}
+.emojiBar{max-height:160px !important;padding:6px !important;}
+.emojiBar .emojiRow button{font-size:22px !important;padding:4px !important;}
+.gifPanel{max-height:240px !important;padding:8px !important;}
+.stickerPanel{max-height:240px !important;padding:8px !important;}
+.stickerGrid{gap:4px !important;}
+.stickerItem{border-radius:8px !important;}
+.gifGrid{gap:6px !important;}
+.gifItem{border-radius:8px !important;}
