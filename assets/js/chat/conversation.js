@@ -399,6 +399,8 @@ async loadMessages(isPoll=false){
                     const videoMatch=(msg.text||"").match(/watch\.html\?id=(\d+)/);
                     if(videoMatch){
                         bubble.innerHTML='<div class="msgVideoPreview" onclick="window.location.href=\'watch.html?id='+videoMatch[1]+'\'" style="cursor:pointer;background:rgba(255,255,255,.06);border-radius:12px;padding:10px;max-width:220px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:20px;">🎬</span><span style="font-size:12px;color:rgba(255,255,255,.5);">Video</span></div><div style="font-size:12px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+msg.text+'</div></div>';
+                    } else if((msg.text||"").match(/\.(gif|png|jpg|jpeg|webp)$/i)){
+                        bubble.innerHTML='<img src="'+msg.text+'" style="max-width:100%;max-height:300px;border-radius:12px;cursor:pointer;" onclick="window.open(\''+msg.text+'\',\'_blank\')">';
                     } else if((msg.text||"").startsWith("http")){
                         bubble.innerHTML='<a href="'+msg.text+'" target="_blank" rel="noopener" style="color:#00b7ff;text-decoration:none;word-break:break-all;">'+msg.text+'</a>';
                     } else {
@@ -445,7 +447,11 @@ async loadMessages(isPoll=false){
         :"message received";
 
         bubble.dataset.msgId=msg.time||idx;
-        bubble.textContent=msg.text;
+        if((msg.text||"").match(/\.(gif|png|jpg|jpeg|webp)$/i)){
+            bubble.innerHTML='<img src="'+msg.text+'" style="max-width:100%;max-height:300px;border-radius:12px;cursor:pointer;" onclick="window.open(\''+msg.text+'\',\'_blank\')">';
+        } else {
+            bubble.textContent=msg.text;
+        }
 
         this.messages.appendChild(bubble);
 
