@@ -510,14 +510,34 @@ window.CloudTokAPI = {
 
     },
 
-    async withdraw(amount){
+    async withdraw(amount, method, account_name, account_number, mobile_number, bank_name){
 
         return await this.request("/wallet/withdraw", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ amount: amount })
+            body: JSON.stringify({ amount: amount, method: method, account_name: account_name || null, account_number: account_number || null, mobile_number: mobile_number || null, bank_name: bank_name || null })
         });
 
+    }
+
+    async getWithdrawals(){
+        return await this.request("/wallet/withdrawals");
+    }
+
+    async approveWithdrawal(id){
+        return await this.request("/wallet/approve-withdrawal", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: id })
+        });
+    }
+
+    async rejectWithdrawal(id){
+        return await this.request("/wallet/reject-withdrawal", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: id })
+        });
     }
 
 };

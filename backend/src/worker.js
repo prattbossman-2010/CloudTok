@@ -43,6 +43,7 @@ import { sendSignal, pollSignals, createLiveStream, getLiveStreams, endLiveStrea
 
 
 import { sendGift, getGiftHistory, getWalletBalance } from "./routes/gifts.js";
+import { createWithdrawal, getWithdrawals, approveWithdrawal, rejectWithdrawal, getAllWithdrawals } from "./routes/withdrawals.js";
 import { adminGetLiveStreams, adminStopStream, adminGetTransactions, adminGetGifts, adminGetMessages, adminGetReports, adminUpdateReport, adminGetActivityLogs, adminGetStorageHealth, adminDeleteComment, adminGetComments, adminAdjustBalance, adminUpdateGiftPrice, adminGetGiftConfig, adminClearTable } from "./routes/adminExtended.js";
 
 import {
@@ -55,33 +56,6 @@ import { reportVideo, reportUser } from "./routes/reports.js";
 import { forgotPassword, verifyResetCode, resetPassword } from "./routes/passwordReset.js";
 import { authRateLimit, apiRateLimit } from "./middleware/rateLimit.js";
 import { generateOGImage } from "./routes/ogImage.js";
-
-async function withdraw(request, env) {
-    try {
-        const auth = await authenticate(request, env);
-        if (auth.error) return auth.error;
-        const userId = auth.user?.id;
-        const body = await request.json();
-        const amount = parseFloat(body.amount);
-        if (!amount || amount <= 0) {
-            return Response.json({ error: "Invalid amount" }, { status: 400 });
-        }
-        if (amount > 1000) {
-            return Response.json({ error: "Maximum withdrawal amount is $1000" }, { status: 400 });
-        }
-        const { results: user } = await env.DB.prepare("SELECT wallet_balance FROM users WHERE id = ?").bind(userId).all();
-        if (!user || user.length === 0) return Response.json({ error: "User not found" }, { status: 404 });
-        const balance = user[0].wallet_balance || 0;
-        if (balance < amount) {
-            return Response.json({ error: "Insufficient balance" }, { status: 400 });
-        }
-        await env.DB.prepare("UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?").bind(amount, userId).run();
-        const { results: updated } = await env.DB.prepare("SELECT wallet_balance FROM users WHERE id = ?").bind(userId).all();
-        return Response.json({ success: true, balance: updated[0].wallet_balance || 0 });
-    } catch (e) {
-        return Response.json({ error: e.message || "Withdrawal failed" }, { status: 500 });
-    }
-}
 
 export default {
 
@@ -580,7 +554,19 @@ testSupabaseUpload(request, env)
       return cors(getWalletBalance(request, env));
     }
     if(path === "/api/wallet/withdraw" && method === "POST"){
-      return cors(withdraw(request, env));
+      return cors(createWithdrawal(request, env));
+    }
+    if(path === "/api/wallet/withdrawals" && method === "GET"){
+      return cors(getWithdrawals(request, env));
+    }
+    if(path === "/api/wallet/approve-withdrawal" && method === "POST"){
+      return cors(approveWithdrawal(request, env));
+    }
+    if(path === "/api/wallet/reject-withdrawal" && method === "POST"){
+      return cors(rejectWithdrawal(request, env));
+    }
+    if(path === "/api/wallet/all-withdrawals" && method === "GET"){
+      return cors(getAllWithdrawals(request, env));
     }
     if(path === "/api/gift-config" && method === "GET"){
       try {
