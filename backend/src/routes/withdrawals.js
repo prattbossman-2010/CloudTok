@@ -42,28 +42,37 @@ export async function createWithdrawal(request, env) {
 
         await env.DB.prepare("INSERT INTO withdrawal_requests (user_id, amount, method, account_name, accountNumber, mobile_number, bank_name, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')").bind(userId, amount, method, account_name || null, account_number || null, mobile_number || null, bank_name || null).run();
 
-        // Notify admin via email (manual payout alert) - fire and forget
+        // Notify admin via email + SMS (manual payout alert) - fire and forget
         try {
+            const { results: u } = await env.DB.prepare("SELECT username, email FROM users WHERE id = ?").bind(userId).all();
+            const uname = u && u[0] ? u[0].username : "user#" + userId;
+            const details = method === "bank" ? `${account_name} • ${account_number} • ${bank_name}` : method === "mobile_money" ? `${mobile_number}` : method;
+            const shortMsg = `CloudTok: New withdrawal $${Number(amount).toFixed(2)} from @${uname} via ${method} (${details}). Check admin panel.`;
+            const longText = `New withdrawal request\n\nUser: @${uname} (id ${userId})\nAmount: $${Number(amount).toFixed(2)}\nMethod: ${method}\nDetails: ${details}\n\nApprove/reject at admin panel: /admin.html -> Withdrawals`;
+            // Email via MailChannels (requires ADMIN_EMAIL) - note: MailChannels free tier ended in 2024, domain must be verified. If no ADMIN_EMAIL, skip.
             const adminEmail = env.ADMIN_EMAIL || env.NOTIFY_EMAIL || "";
-            if (adminEmail) {
-                const { results: u } = await env.DB.prepare("SELECT username, email FROM users WHERE id = ?").bind(userId).all();
-                const uname = u && u[0] ? u[0].username : "user#" + userId;
-                const details = method === "bank" ? `${account_name} • ${account_number} • ${bank_name}` : method === "mobile_money" ? `${mobile_number}` : method;
-                const subject = `New withdrawal request: $${Number(amount).toFixed(2)} from @${uname}`;
-                const text = `New withdrawal request\n\nUser: @${uname} (id ${userId})\nAmount: $${Number(amount).toFixed(2)}\nMethod: ${method}\nDetails: ${details}\n\nApprove/reject at admin panel: /admin.html -> Withdrawals`;
-                // Use MailChannels (works from Workers without API key) or resend if configured
-                if (env.MAILCHANNELS_ENABLED !== "false") {
-                    await fetch("https://api.mailchannels.net/tx/v1/send", {
-                        method: "POST",
-                        headers: { "content-type": "application/json" },
-                        body: JSON.stringify({
-                            personalizations: [{ to: [{ email: adminEmail, name: "Admin" }] }],
-                            from: { email: "noreply@cloudtok.app", name: "CloudTok" },
-                            subject,
-                            content: [{ type: "text/plain", value: text }]
-                        })
-                    }).catch(()=>{});
-                }
+            if (adminEmail && env.MAILCHANNELS_ENABLED !== "false") {
+                await fetch("https://api.mailchannels.net/tx/v1/send", {
+                    method: "POST",
+                    headers: { "content-type": "application/json" },
+                    body: JSON.stringify({
+                        personalizations: [{ to: [{ email: adminEmail, name: "Admin" }] }],
+                        from: { email: "noreply@cloudtok.app", name: "CloudTok" },
+                        subject: `New withdrawal request: $${Number(amount).toFixed(2)} from @${uname}`,
+                        content: [{ type: "text/plain", value: longText }]
+                    })
+                }).catch(()=>{});
+            }
+            // SMS via BMS Ghana (uses BMS_API_KEY + ADMIN_PHONE) - works if you have credits
+            const bmsKey = env.BMS_API_KEY || env.ARKSEL_API_KEY || "";
+            const adminPhone = env.ADMIN_PHONE || env.NOTIFY_PHONE || env.BMS_ADMIN_PHONE || "";
+            if (bmsKey && adminPhone) {
+                // Arkesel/BMS endpoint - single SMS, from must be approved sender ID
+                const from = env.BMS_SENDER_ID || "CloudTok";
+                const url = `https://sms.arkesel.com/sms/api?action=send-sms&api_key=${encodeURIComponent(bmsKey)}&to=${encodeURIComponent(adminPhone)}&from=${encodeURIComponent(from)}&sms=${encodeURIComponent(shortMsg)}`;
+                await fetch(url).catch(()=>{});
+                // Fallback: try mNotify variant if first fails (BMS Africa)
+                // await fetch(`https://apps.mnotify.net/smsapi?key=${bmsKey}&to=${adminPhone}&msg=${encodeURIComponent(shortMsg)}&sender_id=${from}`).catch(()=>{});
             }
         } catch(e) {}
 
