@@ -637,7 +637,7 @@ async function endStream(){
             item.appendChild(img);
             item.addEventListener("click", function(ev){
                 ev.stopPropagation();
-                liveChatInput.value += "[sticker:" + fname.split(".")[0] + "]";
+                liveChatInput.value += url;
                 liveChatInput.focus();
                 liveStickerPanel.classList.remove("show");
             });
