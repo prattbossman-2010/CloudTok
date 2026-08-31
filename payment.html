@@ -429,7 +429,7 @@ async function processWithdraw(){
     try{
         const result = await CloudTokAPI.withdraw(amount, selectedWithdrawMethod, document.getElementById("withdrawAccountName").value.trim(), document.getElementById("withdrawAccountNumber").value.trim(), document.getElementById("withdrawMobileNumber").value.trim(), document.getElementById("withdrawBankName").value.trim());
         if(result.success){
-            resultEl.innerHTML = '<span style="color:#00c853;">$' + amount.toFixed(2) + ' withdrawal requested. Pending admin approval.</span>';
+            resultEl.innerHTML = '<span style="color:#00c853;">✅ Processing your withdrawal request — our team is working on getting your $' + amount.toFixed(2) + ' to you shortly.</span>';
             document.getElementById("withdrawAmount").value = "";
             document.getElementById("withdrawAccountName").value = "";
             document.getElementById("withdrawAccountNumber").value = "";

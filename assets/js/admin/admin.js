@@ -47,7 +47,7 @@ class CloudTokAdmin {
         document.querySelectorAll(".adminTab").forEach((t) => t.classList.remove("active"));
         btn.classList.add("active");
         document.getElementById(btn.dataset.tab + "Tab").classList.add("active");
-        const loaders = { dashboard: () => this.loadDashboard(), analytics: () => this.loadAnalytics(), users: () => this.loadUsers(), videos: () => this.loadVideos(), comments: () => this.loadComments(), messages: () => this.loadMessages(), reports: () => this.loadReports(), streams: () => this.loadStreams(), transactions: () => this.loadTransactions(), gifts: () => this.loadGifts(), giftConfig: () => this.loadGiftConfig(), logs: () => this.loadLogs(), storage: () => this.loadStorage() };
+        const loaders = { dashboard: () => this.loadDashboard(), analytics: () => this.loadAnalytics(), users: () => this.loadUsers(), videos: () => this.loadVideos(), comments: () => this.loadComments(), messages: () => this.loadMessages(), reports: () => this.loadReports(), streams: () => this.loadStreams(), transactions: () => this.loadTransactions(), withdrawals: () => this.loadWithdrawals(), gifts: () => this.loadGifts(), giftConfig: () => this.loadGiftConfig(), logs: () => this.loadLogs(), storage: () => this.loadStorage() };
         if (loaders[btn.dataset.tab]) loaders[btn.dataset.tab]();
       };
     });
@@ -288,6 +288,32 @@ class CloudTokAdmin {
       document.getElementById("streamsTable").innerHTML = html;
     } catch (e) { document.getElementById("streamsTable").innerHTML = "<p>Failed to load streams.</p>"; }
   }
+  async loadWithdrawals() {
+    try {
+      const result = await this.api("/wallet/all-withdrawals");
+      if (result.error) { document.getElementById("withdrawalsTable").innerHTML = "<p>" + result.error + "</p>"; return; }
+      const wds = result.withdrawals || [];
+      if (wds.length === 0) { document.getElementById("withdrawalsTable").innerHTML = '<div class="emptyState"><div class="icon">💸</div><p>No withdrawal requests</p></div>'; return; }
+      var html = '<table><thead><tr><th>User</th><th>Amount</th><th>Method</th><th>Details</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+      wds.forEach(function(w) {
+        var details = "";
+        if (w.method === "bank") details = (w.account_name||"") + " • " + (w.accountNumber||w.account_number||"") + " • " + (w.bank_name||"");
+        else if (w.method === "mobile_money") details = w.mobile_number || "";
+        else details = w.method;
+        var statusColor = w.status === "pending" ? "#ffaa00" : w.status === "approved" ? "#00c853" : "#ff4444";
+        html += '<tr><td>@' + (w.username || w.user_id) + '</td><td>$' + Number(w.amount).toFixed(2) + '</td><td>' + w.method + '</td><td><small>' + details + '</small></td><td><span style="color:' + statusColor + ';font-weight:600;">' + w.status + '</span></td><td>' + (w.created_at ? new Date(w.created_at).toLocaleString() : "") + '</td><td class="actionsCell">';
+        if (w.status === "pending") {
+          html += '<button class="adminBtn" style="background:rgba(0,200,83,.15);color:#00c853;" onclick="admin.approveWithdrawal(' + w.id + ')">Approve & Deduct</button> ';
+          html += '<button class="adminBtn delete" onclick="admin.rejectWithdrawal(' + w.id + ')">Reject</button>';
+        } else { html += '<span style="color:#888;">—</span>'; }
+        html += '</td></tr>';
+      });
+      html += "</tbody></table>";
+      document.getElementById("withdrawalsTable").innerHTML = html;
+    } catch (e) { document.getElementById("withdrawalsTable").innerHTML = "<p>Failed to load withdrawals.</p>"; }
+  }
+  async approveWithdrawal(id) { if (!confirm("Approve this withdrawal? This will DEDUCT the amount from user's wallet and you must then pay them manually from your bank.")) return; const r = await this.api("/wallet/approve-withdrawal","POST",{id:id}); alert(r.message||r.error||"Done"); this.loadWithdrawals(); }
+  async rejectWithdrawal(id) { if (!confirm("Reject this withdrawal?")) return; const r = await this.api("/wallet/reject-withdrawal","POST",{id:id}); alert(r.message||r.error||"Done"); this.loadWithdrawals(); }
   async loadTransactions() {
     try {
       const result = await this.api("/admin/transactions");
