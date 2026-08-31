@@ -42,6 +42,31 @@ export async function createWithdrawal(request, env) {
 
         await env.DB.prepare("INSERT INTO withdrawal_requests (user_id, amount, method, account_name, accountNumber, mobile_number, bank_name, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')").bind(userId, amount, method, account_name || null, account_number || null, mobile_number || null, bank_name || null).run();
 
+        // Notify admin via email (manual payout alert) - fire and forget
+        try {
+            const adminEmail = env.ADMIN_EMAIL || env.NOTIFY_EMAIL || "";
+            if (adminEmail) {
+                const { results: u } = await env.DB.prepare("SELECT username, email FROM users WHERE id = ?").bind(userId).all();
+                const uname = u && u[0] ? u[0].username : "user#" + userId;
+                const details = method === "bank" ? `${account_name} • ${account_number} • ${bank_name}` : method === "mobile_money" ? `${mobile_number}` : method;
+                const subject = `New withdrawal request: $${Number(amount).toFixed(2)} from @${uname}`;
+                const text = `New withdrawal request\n\nUser: @${uname} (id ${userId})\nAmount: $${Number(amount).toFixed(2)}\nMethod: ${method}\nDetails: ${details}\n\nApprove/reject at admin panel: /admin.html -> Withdrawals`;
+                // Use MailChannels (works from Workers without API key) or resend if configured
+                if (env.MAILCHANNELS_ENABLED !== "false") {
+                    await fetch("https://api.mailchannels.net/tx/v1/send", {
+                        method: "POST",
+                        headers: { "content-type": "application/json" },
+                        body: JSON.stringify({
+                            personalizations: [{ to: [{ email: adminEmail, name: "Admin" }] }],
+                            from: { email: "noreply@cloudtok.app", name: "CloudTok" },
+                            subject,
+                            content: [{ type: "text/plain", value: text }]
+                        })
+                    }).catch(()=>{});
+                }
+            }
+        } catch(e) {}
+
         return Response.json({ success: true, message: "Processing your withdrawal request — our team is working on getting your money to you shortly." });
     } catch (e) {
         return Response.json({ error: e.message || "Withdrawal failed" }, { status: 500 });
@@ -84,9 +109,11 @@ export async function approveWithdrawal(request, env) {
         if (req[0].status !== "pending") return Response.json({ error: "Already processed" }, { status: 400 });
 
         await env.DB.prepare("UPDATE withdrawal_requests SET status = 'approved', updated_at = datetime('now') WHERE id = ?").bind(id).run();
-        await env.DB.prepare("UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?").bind(req[0].amount, req[0].user_id).run();
+        await env.DB.prepare("UPDATE users SET wallet_balance = COALESCE(wallet_balance,0) - ? WHERE id = ?").bind(req[0].amount, req[0].user_id).run();
+        // optional: log transaction
+        try { await env.DB.prepare("INSERT INTO transactions (user_id, amount, type, status, reference, created_at) VALUES (?, ?, 'withdrawal', 'completed', ?, datetime('now'))").bind(req[0].user_id, req[0].amount, 'WD-' + id).run(); } catch(e) {}
 
-        return Response.json({ success: true, message: "Withdrawal approved and processed" });
+        return Response.json({ success: true, message: "Withdrawal approved and processed — balance deducted. Please now pay the user manually via " + req[0].method + "." });
     } catch (e) {
         return Response.json({ error: e.message || "Failed" }, { status: 500 });
     }
