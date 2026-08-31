@@ -598,7 +598,7 @@ async function endStream(){
             "249299-strongpepe.gif","24137-okpepe.gif","175472-pepelaugh.gif","121023-pepetyping.gif"
         ];
         gifFiles.forEach(function(fname){
-            var url = "GIFs/" + fname;
+            var url = "/GIFs/" + fname;
             var item = document.createElement("div");
             item.className = "liveGifItem";
             var img = document.createElement("img");
@@ -627,7 +627,7 @@ async function endStream(){
             "121286-crying.png","120458-pepecross.png"
         ];
         stickerFiles.forEach(function(fname){
-            var url = "stickers/" + fname;
+            var url = "/stickers/" + fname;
             var item = document.createElement("div");
             item.className = "liveStickerItem";
             var img = document.createElement("img");
