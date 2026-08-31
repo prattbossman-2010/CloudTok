@@ -363,7 +363,7 @@
             item.appendChild(img);
             item.addEventListener("click", function(ev){
                 ev.stopPropagation();
-                input.value += "[sticker:" + fname.split(".")[0] + "]";
+                input.value += url;
                 input.focus();
                 stickerPanel.classList.remove("show");
             });
