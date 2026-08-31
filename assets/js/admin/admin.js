@@ -312,7 +312,7 @@ class CloudTokAdmin {
       document.getElementById("withdrawalsTable").innerHTML = html;
     } catch (e) { document.getElementById("withdrawalsTable").innerHTML = "<p>Failed to load withdrawals.</p>"; }
   }
-  async approveWithdrawal(id) { if (!confirm("Approve this withdrawal? This will DEDUCT the amount from user's wallet and you must then pay them manually from your bank.")) return; const r = await this.api("/wallet/approve-withdrawal","POST",{id:id}); alert(r.message||r.error||"Done"); this.loadWithdrawals(); }
+  async approveWithdrawal(id) { if (!confirm("Approve this withdrawal? This will DEDUCT the amount from user's wallet and you must then pay them manually from your bank.")) return; const r = await this.api("/wallet/approve-withdrawal","POST",{id:id}); alert(r.message||r.error||"Done"); this.loadWithdrawals(); this.loadUsers(); this.loadDashboard(); }
   async rejectWithdrawal(id) { if (!confirm("Reject this withdrawal?")) return; const r = await this.api("/wallet/reject-withdrawal","POST",{id:id}); alert(r.message||r.error||"Done"); this.loadWithdrawals(); }
   async loadTransactions() {
     try {
