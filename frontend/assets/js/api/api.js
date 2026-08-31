@@ -518,11 +518,11 @@ window.CloudTokAPI = {
             body: JSON.stringify({ amount: amount, method: method, account_name: account_name || null, account_number: account_number || null, mobile_number: mobile_number || null, bank_name: bank_name || null })
         });
 
-    }
+    },
 
     async getWithdrawals(){
         return await this.request("/wallet/withdrawals");
-    }
+    },
 
     async approveWithdrawal(id){
         return await this.request("/wallet/approve-withdrawal", {
@@ -530,7 +530,7 @@ window.CloudTokAPI = {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: id })
         });
-    }
+    },
 
     async rejectWithdrawal(id){
         return await this.request("/wallet/reject-withdrawal", {
