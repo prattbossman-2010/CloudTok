@@ -416,7 +416,7 @@ export async function adminClearTable(request, env, table) {
         await ensureAllTables(env);
         const auth = await adminAuth(request, env);
         if (auth.error) return auth.error;
-        const allowed = ["video_comments", "activity_logs", "transactions", "gift_transactions", "live_streams", "messages", "conversations", "live_chat", "webrtc_signals", "notifications"];
+        const allowed = ["video_comments", "activity_logs", "transactions", "gift_transactions", "live_streams", "messages", "conversations", "live_chat", "webrtc_signals", "notifications", "content_reports", "withdrawal_requests"];
         if (!allowed.includes(table)) return jsonResp({ error: "Table not clearable" }, 400);
         await env.DB.prepare("DELETE FROM " + table).run();
         if (table === "video_comments") {

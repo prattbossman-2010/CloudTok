@@ -477,7 +477,7 @@ class CloudTokAdmin {
   async clearTable(table, label) {
     if (!confirm("Clear ALL " + label + "? This cannot be undone.")) return;
     const result = await this.api("/admin/clear/" + table, "POST");
-    if (result.success) { alert(label + " cleared."); if (label === "comments") { this.loadComments(); this.loadVideos(); } else if (label === "transactions") this.loadTransactions(); else if (label === "gifts") this.loadGifts(); else if (label === "logs") this.loadLogs(); } else alert(result.error || "Failed");
+    if (result.success) { alert(label + " cleared."); if (label === "comments") { this.loadComments(); this.loadVideos(); } else if (label === "transactions") this.loadTransactions(); else if (label === "gifts") this.loadGifts(); else if (label === "logs") this.loadLogs(); else if (label === "reports") this.loadReports(); else if (label === "withdrawals") this.loadWithdrawals(); } else alert(result.error || "Failed");
   }
 }
 

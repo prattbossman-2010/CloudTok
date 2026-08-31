@@ -288,7 +288,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
         <div id="reportsTab" class="adminTab">
             <h1>🚨 Reports</h1>
-            <div class="searchBar"><button class="refreshBtn" onclick="admin.loadReports()">Refresh</button></div>
+            <div class="searchBar"><button class="refreshBtn" onclick="admin.loadReports()">Refresh</button><button class="refreshBtn" onclick="admin.clearTable('content_reports','reports')" style="margin-left:8px;color:#ff4444;border-color:#ff4444;">Clear All</button></div>
             <div id="reportsTable" class="adminTable"></div>
         </div>
 
@@ -306,7 +306,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
         <div id="withdrawalsTab" class="adminTab">
             <h1>💸 Withdrawal Requests</h1>
-            <div class="searchBar"><button class="refreshBtn" onclick="admin.loadWithdrawals()">Refresh</button></div>
+            <div class="searchBar"><button class="refreshBtn" onclick="admin.loadWithdrawals()">Refresh</button><button class="refreshBtn" onclick="admin.clearTable('withdrawal_requests','withdrawals')" style="margin-left:8px;color:#ff4444;border-color:#ff4444;">Clear All</button></div>
             <div id="withdrawalsTable" class="adminTable"></div>
         </div>
 
