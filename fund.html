@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Add Funds - CloudTok</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/settings.css">
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<style>
+body{background:#000;}
+.walletHeader{width:100%;max-width:600px;display:flex;align-items:center;justify-content:space-between;padding:16px;}
+.walletHeader h2{color:#fff;font-size:20px;font-weight:700;}
+.backBtn{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.walletCard{width:100%;max-width:600px;margin:0 auto 20px;padding:24px;background:linear-gradient(135deg,#00b7ff,#7b2ff2);border-radius:20px;display:flex;flex-direction:column;gap:8px;}
+.walletLabel{color:rgba(255,255,255,.7);font-size:13px;}
+.walletBalance{color:#fff;font-size:36px;font-weight:800;}
+.payBtn{background:linear-gradient(135deg,#004d4d,#00a69c);color:#fff;border:none;padding:14px 28px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;width:100%;margin-top:10px;transition:all .3s;}
+.payBtn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,166,156,.3);}
+.payAmountInput{width:100%;padding:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:#fff;font-size:18px;font-weight:700;outline:none;text-align:center;margin-top:10px;}
+.payAmountInput::placeholder{color:rgba(255,255,255,.3);}
+.payAmountInput:focus{border-color:rgba(0,166,156,.5);}
+.amountPresets{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+.amountPreset{padding:8px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;font-size:13px;cursor:pointer;}
+.amountPreset:hover{background:rgba(255,255,255,.1);}
+.amountPreset.active{background:rgba(0,166,156,.2);border-color:#00a69c;color:#fff;}
+.currencyRow{display:flex;gap:8px;margin-top:12px;}
+.currencySelect{flex:1;padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:#fff;font-size:14px;outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23999' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
+.currencySelect option{background:#1a1a1a;color:#fff;}
+.conversionInfo{margin-top:8px;padding:10px 14px;background:rgba(255,255,255,.04);border-radius:10px;font-size:13px;color:rgba(255,255,255,.6);display:flex;justify-content:space-between;}
+.conversionInfo .usd{color:#00c853;font-weight:700;}
+.paymentMethods{display:flex;flex-direction:column;gap:10px;margin-top:12px;}
+.payMethod{display:flex;align-items:center;gap:14px;padding:16px;background:rgba(255,255,255,.04);border-radius:14px;cursor:pointer;transition:all .2s;border:2px solid transparent;}
+.payMethod:hover{background:rgba(255,255,255,.06);}
+.payMethod.selected{border-color:#00a69c;background:rgba(0,166,156,.08);}
+.payMethodIcon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;}
+.payMethodIcon.visa{background:linear-gradient(135deg,#1a1f71,#2557d6);}
+.payMethodIcon.bank{background:linear-gradient(135deg,#00a651,#00c853);}
+.payMethodIcon.paystack{background:linear-gradient(135deg,#004d4d,#00a69c);}
+.payMethodIcon.virtual{background:linear-gradient(135deg,#7b2ff2,#b24bff);}
+.payMethodInfo{flex:1;}
+.payMethodName{color:#fff;font-size:15px;font-weight:600;}
+.payMethodDesc{color:rgba(255,255,255,.4);font-size:12px;}
+.payMethodCheck{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:12px;}
+.payMethod.selected .payMethodCheck{background:#00a69c;border-color:#00a69c;}
+.paymentsContent{width:100%;max-width:600px;margin:0 auto;padding:0 16px 40px;display:flex;flex-direction:column;gap:24px;}
+.section{display:flex;flex-direction:column;gap:12px;}
+.section h3{color:rgba(255,255,255,.5);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;animation:toastIn .3s ease;}
+.toast.success{background:#00c853;color:#fff;}
+.toast.error{background:#ff2d55;color:#fff;}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-20px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+.bankForm,.virtualCardForm{display:none;flex-direction:column;gap:10px;padding:16px;background:rgba(255,255,255,.04);border-radius:14px;margin-top:10px;}
+.bankForm.show,.virtualCardForm.show{display:flex;}
+.bankForm input,.bankForm select,.virtualCardForm input,.virtualCardForm select{padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;font-size:14px;outline:none;}
+.bankForm input::placeholder,.virtualCardForm input::placeholder{color:rgba(255,255,255,.3);}
+.bankForm input:focus,.virtualCardForm input:focus{border-color:#00a69c;}
+.bankForm label,.virtualCardForm label{color:rgba(255,255,255,.5);font-size:12px;}
+.bankDetails{padding:14px;background:rgba(255,255,255,.06);border-radius:10px;margin-top:8px;}
+.bankDetails p{color:rgba(255,255,255,.7);font-size:13px;margin-bottom:6px;}
+</style>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+<div class="walletHeader">
+    <button class="backBtn" onclick="location.href='payment.html'">←</button>
+    <h2>Add Funds</h2>
+    <div style="width:40px;"></div>
+</div>
+<div class="walletCard">
+    <span class="walletLabel">Current Balance</span>
+    <span class="walletBalance" id="walletBalance">$0.00</span>
+</div>
+<div class="paymentsContent">
+    <div class="section">
+        <h3>Fund Wallet</h3>
+        <div class="currencyRow">
+            <select class="currencySelect" id="currencySelect" onchange="onCurrencyChange()">
+                <option value="USD">🇺🇸 USD - US Dollar</option>
+                <option value="NGN">🇳🇬 NGN - Nigerian Naira</option>
+                <option value="GHS">🇬🇭 GHS - Ghanaian Cedi</option>
+                <option value="KES">🇰🇪 KES - Kenyan Shilling</option>
+                <option value="ZAR">🇿🇦 ZAR - South African Rand</option>
+                <option value="GBP">🇬🇧 GBP - British Pound</option>
+                <option value="EUR">🇪🇺 EUR - Euro</option>
+            </select>
+        </div>
+        <input type="number" class="payAmountInput" id="payAmount" placeholder="Enter amount" min="0.5" step="0.01">
+        <div class="amountPresets" id="amountPresets">
+            <button class="amountPreset" onclick="setAmount(0.5,this)">$0.50</button>
+            <button class="amountPreset" onclick="setAmount(1,this)">$1.00</button>
+            <button class="amountPreset" onclick="setAmount(5,this)">$5.00</button>
+            <button class="amountPreset" onclick="setAmount(10,this)">$10.00</button>
+            <button class="amountPreset" onclick="setAmount(0,this)">Custom</button>
+        </div>
+        <div class="conversionInfo" id="conversionInfo" style="display:none;">
+            <span id="conversionText">You pay: ₦0</span>
+            <span class="usd" id="conversionUsd">= $0.00</span>
+        </div>
+        <h3 style="margin-top:16px;">Payment Method</h3>
+        <div class="paymentMethods">
+            <div class="payMethod selected" onclick="selectPayMethod('paystack',this)" data-method="paystack">
+                <div class="payMethodIcon paystack">💳</div>
+                <div class="payMethodInfo"><div class="payMethodName">Paystack</div><div class="payMethodDesc">Card, Bank Transfer, Mobile Money</div></div>
+                <div class="payMethodCheck">✓</div>
+            </div>
+            <div class="payMethod" onclick="selectPayMethod('bank',this)" data-method="bank">
+                <div class="payMethodIcon bank">🏦</div>
+                <div class="payMethodInfo"><div class="payMethodName">Bank Transfer</div><div class="payMethodDesc">Pay via bank transfer (Paystack generates account)</div></div>
+                <div class="payMethodCheck">✓</div>
+            </div>
+            <div class="payMethod" onclick="selectPayMethod('card',this)" data-method="card">
+                <div class="payMethodIcon visa">💳</div>
+                <div class="payMethodInfo"><div class="payMethodName">Debit / Credit Card</div><div class="payMethodDesc">Visa, Mastercard, Verve via Paystack</div></div>
+                <div class="payMethodCheck">✓</div>
+            </div>
+            <div class="payMethod" onclick="selectPayMethod('virtual',this)" data-method="virtual">
+                <div class="payMethodIcon virtual">🌐</div>
+                <div class="payMethodInfo"><div class="payMethodName">Virtual Card</div><div class="payMethodDesc">Pay with virtual card via Paystack</div></div>
+                <div class="payMethodCheck">✓</div>
+            </div>
+        </div>
+        <div class="bankForm" id="bankForm">
+            <div class="bankDetails" id="bankDetailsBox">
+                <p style="color:#fff;font-size:14px;margin-bottom:8px;">Paystack will generate a unique bank account for you to transfer to.</p>
+                <p style="color:rgba(255,255,255,.5);font-size:13px;">After clicking "Fund Wallet", you'll see the bank details. Transfer the exact amount to complete payment.</p>
+                <input type="text" id="bankAmount" class="payAmountInput" placeholder="$0.00 USD" readonly style="margin-top:12px;">
+            </div>
+        </div>
+        <div class="virtualCardForm" id="virtualCardForm">
+            <div class="bankDetails">
+                <p style="color:#fff;font-size:14px;margin-bottom:8px;">Paystack will open a secure card payment form.</p>
+                <p style="color:rgba(255,255,255,.5);font-size:13px;">Enter your card details in the Paystack popup to complete payment. We never see or store your card details.</p>
+            </div>
+        </div>
+        <button class="payBtn" id="payBtn" onclick="processPayment()">Fund Wallet</button>
+    </div>
+</div>
+<script src="assets/js/api/api.js"></script>
+<script>
+const EXCHANGE_RATES={USD:1,NGN:1550,GHS:12.5,KES:155,ZAR:18.5,GBP:0.79,EUR:0.92};
+const PAYSTACK_CURRENCY_MAP={USD:"USD",NGN:"NGN",GHS:"GHS",GBP:"GBP",EUR:"EUR",KES:"NGN",ZAR:"NGN"};
+const CURRENCY_SYMBOLS={USD:"$",NGN:"₦",GHS:"GH₵",KES:"KSh",ZAR:"R",GBP:"£",EUR:"€"};
+let selectedCurrency="USD";let selectedPayMethod="paystack";let presetAmountsUSD=[0.5,1,5,10];
+function showToast(msg,type="success"){const t=document.createElement("div");t.className="toast "+type;t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3000);}
+function setAmount(localAmount,el){const input=document.getElementById("payAmount");if(localAmount===0){input.value="";input.placeholder="Enter custom amount";input.focus();}else{input.value=localAmount;input.placeholder="Enter amount";}document.querySelectorAll(".amountPreset").forEach(function(b){b.classList.remove("active");});if(el){el.closest(".amountPreset").classList.add("active");}updateConversion();}
+function onCurrencyChange(){selectedCurrency=document.getElementById("currencySelect").value;updateAmountPresets();var currentVal=parseFloat(document.getElementById("payAmount").value);if(currentVal){updateConversion();}}
+function updateAmountPresets(){const presets=document.getElementById("amountPresets");const sym=CURRENCY_SYMBOLS[selectedCurrency];const rate=EXCHANGE_RATES[selectedCurrency];const isWhole=selectedCurrency==="NGN"||selectedCurrency==="KES";presets.innerHTML="";presetAmountsUSD.forEach(function(usd){const localVal=usd*rate;const display=isWhole?Math.round(localVal):parseFloat(localVal.toFixed(2));const btn=document.createElement("button");btn.className="amountPreset";btn.textContent=sym+display;btn.setAttribute("data-local",localVal);btn.onclick=function(ev){setAmount(display,btn);};presets.appendChild(btn);});const customBtn=document.createElement("button");customBtn.className="amountPreset";customBtn.textContent="Custom";customBtn.onclick=function(){setAmount(0,customBtn);};presets.appendChild(customBtn);}
+function updateConversion(){const input=document.getElementById("payAmount");const amount=parseFloat(input.value);const info=document.getElementById("conversionInfo");if(!amount||amount<=0){info.style.display="none";var bankAmt=document.getElementById("bankAmount");if(bankAmt)bankAmt.value="";return;}const rate=EXCHANGE_RATES[selectedCurrency];const usdAmount=amount/rate;document.getElementById("conversionText").textContent="You pay: "+CURRENCY_SYMBOLS[selectedCurrency]+amount.toLocaleString();document.getElementById("conversionUsd").textContent="= $"+usdAmount.toFixed(2);info.style.display="flex";var bankAmtEl=document.getElementById("bankAmount");if(bankAmtEl)bankAmtEl.value="$"+usdAmount.toFixed(2);}
+function selectPayMethod(method,el){selectedPayMethod=method;document.querySelectorAll(".payMethod").forEach(m=>m.classList.remove("selected"));el.classList.add("selected");const bankForm=document.getElementById("bankForm");const virtualForm=document.getElementById("virtualCardForm");bankForm.classList.remove("show");virtualForm.classList.remove("show");}
+function processPayment(){const localAmount=parseFloat(document.getElementById("payAmount").value);if(!localAmount||localAmount<=0){showToast("Please enter an amount","error");return;}const rate=EXCHANGE_RATES[selectedCurrency];const amountUSD=localAmount/rate;if(amountUSD<0.5){showToast("Minimum amount is $0.50","error");return;}if(selectedPayMethod==="bank"){initBankTransfer(amountUSD,localAmount);return;}if(selectedPayMethod==="virtual"){initVirtualCard(amountUSD,localAmount);return;}payWithPaystack(amountUSD,localAmount);}
+function payWithPaystack(amountUSD,localAmount){const email=localStorage.getItem("CloudTokCurrentUser")+"@cloudtok.app";const paystackCurrency=PAYSTACK_CURRENCY_MAP[selectedCurrency];let paystackAmount;if(selectedCurrency==="NGN"){paystackAmount=Math.round(localAmount);}else{paystackAmount=Math.round(localAmount*100);}if(typeof PaystackPop==="undefined"){showToast("Paystack loading, try again","error");return;}const handler=PaystackPop.setup({key:"pk_live_15e3b81eee8f83c75bbdac7508a18bd16228d3ed",email:email,amount:paystackAmount,currency:paystackCurrency,metadata:{custom_fields:[{display_name:"User",variable_name:"user",value:localStorage.getItem("CloudTokCurrentUser")},{display_name:"USD Amount",variable_name:"usd_amount",value:amountUSD},{display_name:"Original Currency",variable_name:"original_currency",value:selectedCurrency}]},callback:function(response){showToast("Payment successful! Verifying...");verifyAndCredit(response.reference,amountUSD);},onClose:function(){showToast("Payment cancelled","error");}});handler.openIframe();}
+function initBankTransfer(amountUSD,localAmount){const email=localStorage.getItem("CloudTokCurrentUser")+"@cloudtok.app";const paystackCurrency=PAYSTACK_CURRENCY_MAP[selectedCurrency];let paystackAmount;if(selectedCurrency==="NGN"){paystackAmount=Math.round(localAmount);}else{paystackAmount=Math.round(localAmount*100);}if(typeof PaystackPop==="undefined"){showToast("Paystack loading, try again","error");return;}showToast("Initializing bank transfer...");const handler=PaystackPop.setup({key:"pk_live_15e3b81eee8f83c75bbdac7508a18bd16228d3ed",email:email,amount:paystackAmount,currency:paystackCurrency,channels:["bank"],metadata:{custom_fields:[{display_name:"User",variable_name:"user",value:localStorage.getItem("CloudTokCurrentUser")},{display_name:"USD Amount",variable_name:"usd_amount",value:amountUSD}]},callback:function(response){showToast("Payment successful! Verifying...");verifyAndCredit(response.reference,amountUSD);},onClose:function(){showToast("Payment cancelled","error");}});handler.openIframe();}
+function initVirtualCard(amountUSD,localAmount){const email=localStorage.getItem("CloudTokCurrentUser")+"@cloudtok.app";const paystackCurrency=PAYSTACK_CURRENCY_MAP[selectedCurrency];let paystackAmount;if(selectedCurrency==="NGN"){paystackAmount=Math.round(localAmount);}else{paystackAmount=Math.round(localAmount*100);}if(typeof PaystackPop==="undefined"){showToast("Paystack loading, try again","error");return;}showToast("Opening card payment...");const handler=PaystackPop.setup({key:"pk_live_15e3b81eee8f83c75bbdac7508a18bd16228d3ed",email:email,amount:paystackAmount,currency:paystackCurrency,channels:["card"],metadata:{custom_fields:[{display_name:"User",variable_name:"user",value:localStorage.getItem("CloudTokCurrentUser")},{display_name:"USD Amount",variable_name:"usd_amount",value:amountUSD}]},callback:function(response){showToast("Payment successful! Verifying...");verifyAndCredit(response.reference,amountUSD);},onClose:function(){showToast("Payment cancelled","error");}});handler.openIframe();}
+async function verifyAndCredit(reference,amountUSD){try{const result=await CloudTokAPI.request("/payments/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({reference:reference})});if(result.success){showToast("$"+amountUSD.toFixed(2)+" added to wallet!");loadBalance();setTimeout(()=>location.href='payment.html',1200);}else{showToast("Verification pending","error");}}catch(e){showToast("Verification will complete shortly");}}
+async function loadBalance(){try{const result=await CloudTokAPI.request("/wallet/balance");const balance=result.balance||0;document.getElementById("walletBalance").textContent="$"+balance.toFixed(2);}catch(e){}}
+document.getElementById("payAmount").addEventListener("input",updateConversion);
+loadBalance();updateAmountPresets();selectPayMethod('paystack',document.querySelector('.payMethod.selected')||document.querySelector('.payMethod'));
+</script>
+</body>
+</html>

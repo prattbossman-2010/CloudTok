@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Withdraw - CloudTok</title>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/settings.css">
+<style>
+body{background:#000;}
+.walletHeader{width:100%;max-width:600px;display:flex;align-items:center;justify-content:space-between;padding:16px;}
+.walletHeader h2{color:#fff;font-size:20px;font-weight:700;}
+.backBtn{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.walletCard{width:100%;max-width:600px;margin:0 auto 20px;padding:24px;background:linear-gradient(135deg,#00b7ff,#7b2ff2);border-radius:20px;display:flex;flex-direction:column;gap:8px;}
+.walletLabel{color:rgba(255,255,255,.7);font-size:13px;}
+.walletBalance{color:#fff;font-size:36px;font-weight:800;}
+.payBtn{background:linear-gradient(135deg,#004d4d,#00a69c);color:#fff;border:none;padding:14px 28px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;width:100%;margin-top:10px;transition:all .3s;}
+.payBtn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,166,156,.3);}
+.payBtn:disabled{opacity:.6;cursor:not-allowed;}
+.payAmountInput{width:100%;padding:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:#fff;font-size:18px;font-weight:700;outline:none;text-align:center;margin-top:10px;}
+.payAmountInput::placeholder{color:rgba(255,255,255,.3);}
+.payAmountInput:focus{border-color:rgba(0,166,156,.5);}
+.amountPresets{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+.amountPreset{padding:8px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;font-size:13px;cursor:pointer;}
+.amountPreset:hover{background:rgba(255,255,255,.1);}
+.paymentMethods{display:flex;flex-direction:column;gap:10px;margin-top:12px;}
+.payMethod{display:flex;align-items:center;gap:14px;padding:16px;background:rgba(255,255,255,.04);border-radius:14px;cursor:pointer;transition:all .2s;border:2px solid transparent;}
+.payMethod:hover{background:rgba(255,255,255,.06);}
+.payMethod.selected{border-color:#00a69c;background:rgba(0,166,156,.08);}
+.payMethodIcon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;}
+.payMethodIcon.bank{background:linear-gradient(135deg,#00a651,#00c853);}
+.payMethodIcon.visa{background:linear-gradient(135deg,#1a1f71,#2557d6);}
+.payMethodInfo{flex:1;}
+.payMethodName{color:#fff;font-size:15px;font-weight:600;}
+.payMethodDesc{color:rgba(255,255,255,.4);font-size:12px;}
+.payMethodCheck{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:12px;}
+.payMethod.selected .payMethodCheck{background:#00a69c;border-color:#00a69c;}
+.paymentsContent{width:100%;max-width:600px;margin:0 auto;padding:0 16px 40px;display:flex;flex-direction:column;gap:24px;}
+.section{display:flex;flex-direction:column;gap:12px;}
+.section h3{color:rgba(255,255,255,.5);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;animation:toastIn .3s ease;}
+.toast.success{background:#00c853;color:#fff;}
+.toast.error{background:#ff2d55;color:#fff;}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-20px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+</style>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+<div class="walletHeader">
+    <button class="backBtn" onclick="location.href='payment.html'">←</button>
+    <h2>Withdraw</h2>
+    <div style="width:40px;"></div>
+</div>
+<div class="walletCard">
+    <span class="walletLabel">Available Balance</span>
+    <span class="walletBalance" id="walletBalance">$0.00</span>
+</div>
+<div class="paymentsContent">
+    <div class="section">
+        <h3>Withdraw Funds</h3>
+        <input type="number" class="payAmountInput" id="withdrawAmount" placeholder="Enter amount" min="1" step="1">
+        <div class="amountPresets">
+            <button class="amountPreset" onclick="setWithdrawAmount(10)">$10</button>
+            <button class="amountPreset" onclick="setWithdrawAmount(25)">$25</button>
+            <button class="amountPreset" onclick="setWithdrawAmount(50)">$50</button>
+            <button class="amountPreset" onclick="setWithdrawAmount(100)">$100</button>
+            <button class="amountPreset" onclick="setWithdrawAmount(0)">Custom</button>
+        </div>
+        <h3 style="margin-top:16px;">Withdrawal Method</h3>
+        <div class="paymentMethods">
+            <div class="payMethod selected" onclick="selectWithdrawMethod('bank',this)" data-method="bank">
+                <div class="payMethodIcon bank">🏦</div>
+                <div class="payMethodInfo"><div class="payMethodName">Bank Transfer</div><div class="payMethodDesc">Withdraw to your bank account</div></div>
+                <div class="payMethodCheck">✓</div>
+            </div>
+            <div class="payMethod" onclick="selectWithdrawMethod('mobile_money',this)" data-method="mobile_money">
+                <div class="payMethodIcon visa">📱</div>
+                <div class="payMethodInfo"><div class="payMethodName">Mobile Money</div><div class="payMethodDesc">Withdraw to your mobile wallet</div></div>
+                <div class="payMethodCheck">✓</div>
+            </div>
+        </div>
+        <div id="bankFields" style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
+            <input type="text" id="withdrawAccountName" placeholder="Account Name" style="padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;font-size:14px;outline:none;">
+            <input type="text" id="withdrawAccountNumber" placeholder="Account Number" style="padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;font-size:14px;outline:none;">
+            <input type="text" id="withdrawBankName" placeholder="Bank Name" style="padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;font-size:14px;outline:none;">
+        </div>
+        <div id="mobileFields" style="display:none;flex-direction:column;gap:10px;margin-top:12px;">
+            <input type="text" id="withdrawMobileNumber" placeholder="Mobile Number" style="padding:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#fff;font-size:14px;outline:none;">
+        </div>
+        <button class="payBtn" id="withdrawBtn" onclick="processWithdraw()">Request Withdrawal</button>
+        <div id="withdrawResult" style="margin-top:12px;"></div>
+    </div>
+</div>
+<script src="assets/js/api/api.js"></script>
+<script>
+function showToast(msg,type="success"){const t=document.createElement("div");t.className="toast "+type;t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3000);}
+let selectedWithdrawMethod="bank";
+function selectWithdrawMethod(method,el){selectedWithdrawMethod=method;document.querySelectorAll(".payMethod").forEach(m=>m.classList.remove("selected"));el.classList.add("selected");document.getElementById("bankFields").style.display=method==="bank"?"flex":"none";document.getElementById("mobileFields").style.display=method==="mobile_money"?"flex":"none";}
+function setWithdrawAmount(amount){const input=document.getElementById("withdrawAmount");if(amount===0){input.value="";input.placeholder="Enter custom amount";input.focus();}else{input.value=amount;}}
+async function processWithdraw(){const amount=parseFloat(document.getElementById("withdrawAmount").value);const resultEl=document.getElementById("withdrawResult");if(!amount||amount<=0){resultEl.innerHTML='<span style="color:#ff2d55;">Please enter an amount</span>';return;}if(selectedWithdrawMethod==="bank"){const accountName=document.getElementById("withdrawAccountName").value.trim();const accountNumber=document.getElementById("withdrawAccountNumber").value.trim();const bankName=document.getElementById("withdrawBankName").value.trim();if(!accountName||!accountNumber||!bankName){resultEl.innerHTML='<span style="color:#ff2d55;">Please fill in all bank details</span>';return;}}if(selectedWithdrawMethod==="mobile_money"){const mobileNumber=document.getElementById("withdrawMobileNumber").value.trim();if(!mobileNumber){resultEl.innerHTML='<span style="color:#ff2d55;">Please enter your mobile number</span>';return;}}const btn=document.getElementById("withdrawBtn");btn.disabled=true;btn.textContent="Processing...";try{const result=await CloudTokAPI.withdraw(amount,selectedWithdrawMethod,document.getElementById("withdrawAccountName").value.trim(),document.getElementById("withdrawAccountNumber").value.trim(),document.getElementById("withdrawMobileNumber").value.trim(),document.getElementById("withdrawBankName").value.trim());if(result.success){resultEl.innerHTML='<span style="color:#00c853;">✅ Processing your withdrawal request — our team is working on getting your $'+amount.toFixed(2)+' to you shortly.</span>';document.getElementById("withdrawAmount").value="";document.getElementById("withdrawAccountName").value="";document.getElementById("withdrawAccountNumber").value="";document.getElementById("withdrawBankName").value="";document.getElementById("withdrawMobileNumber").value="";loadBalance();}else{resultEl.innerHTML='<span style="color:#ff2d55;">'+(result.error||"Withdrawal failed")+'</span>';}}catch(e){resultEl.innerHTML='<span style="color:#ff2d55;">Withdrawal failed</span>';}btn.disabled=false;btn.textContent="Request Withdrawal";}
+async function loadBalance(){try{const result=await CloudTokAPI.request("/wallet/balance");const balance=result.balance||0;document.getElementById("walletBalance").textContent="$"+balance.toFixed(2);}catch(e){}}
+loadBalance();
+</script>
+</body>
+</html>
