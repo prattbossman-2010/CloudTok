@@ -42,16 +42,30 @@ export async function createWithdrawal(request, env) {
 
         await env.DB.prepare("INSERT INTO withdrawal_requests (user_id, amount, method, account_name, accountNumber, mobile_number, bank_name, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')").bind(userId, amount, method, account_name || null, account_number || null, mobile_number || null, bank_name || null).run();
 
-        // Notify admin via email + SMS (manual payout alert) - fire and forget
+        // Notify admin via email (Resend - same as forgot-password) + SMS (BMS) - fire and forget
         try {
             const { results: u } = await env.DB.prepare("SELECT username, email FROM users WHERE id = ?").bind(userId).all();
             const uname = u && u[0] ? u[0].username : "user#" + userId;
             const details = method === "bank" ? `${account_name} • ${account_number} • ${bank_name}` : method === "mobile_money" ? `${mobile_number}` : method;
             const shortMsg = `CloudTok: New withdrawal $${Number(amount).toFixed(2)} from @${uname} via ${method} (${details}). Check admin panel.`;
             const longText = `New withdrawal request\n\nUser: @${uname} (id ${userId})\nAmount: $${Number(amount).toFixed(2)}\nMethod: ${method}\nDetails: ${details}\n\nApprove/reject at admin panel: /admin.html -> Withdrawals`;
-            // Email via MailChannels (requires ADMIN_EMAIL) - note: MailChannels free tier ended in 2024, domain must be verified. If no ADMIN_EMAIL, skip.
             const adminEmail = env.ADMIN_EMAIL || env.NOTIFY_EMAIL || "";
-            if (adminEmail && env.MAILCHANNELS_ENABLED !== "false") {
+            const resendKey = env.RESEND_API_KEY || "";
+            const fromEmail = env.EMAIL_FROM || "CloudTok <onboarding@resend.dev>";
+            // Prioritize Resend (same API as forgot-password at backend/src/routes/passwordReset.js:47)
+            if (adminEmail && resendKey) {
+                await fetch("https://api.resend.com/emails", {
+                    method: "POST",
+                    headers: { "Authorization": "Bearer " + resendKey, "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        from: fromEmail,
+                        to: [adminEmail],
+                        subject: `New withdrawal: $${Number(amount).toFixed(2)} from @${uname}`,
+                        html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;"><h2 style="color:#00a69c;">New Withdrawal Request</h2><p><b>User:</b> @${uname} (id ${userId})</p><p><b>Amount:</b> $${Number(amount).toFixed(2)}</p><p><b>Method:</b> ${method}</p><p><b>Details:</b> ${details}</p><p style="margin-top:16px;"><a href="https://prattbossman-2010.github.io/CloudTok/admin.html" style="background:#00a69c;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">Open Admin → Withdrawals</a></p><p style="color:#888;font-size:12px;margin-top:16px;">You get this because ADMIN_EMAIL is set. SMS is deferred.</p></div>`
+                    })
+                }).catch(()=>{});
+            } else if (adminEmail && env.MAILCHANNELS_ENABLED !== "false") {
+                // Fallback MailChannels (deprecated, kept for compat)
                 await fetch("https://api.mailchannels.net/tx/v1/send", {
                     method: "POST",
                     headers: { "content-type": "application/json" },
@@ -63,16 +77,14 @@ export async function createWithdrawal(request, env) {
                     })
                 }).catch(()=>{});
             }
-            // SMS via BMS Ghana (uses BMS_API_KEY + ADMIN_PHONE) - works if you have credits
+            // SMS via BMS Ghana (uses BMS_API_KEY + ADMIN_PHONE) - works if you have credits - deferred per your preference
             const bmsKey = env.BMS_API_KEY || env.ARKSEL_API_KEY || "";
             const adminPhone = env.ADMIN_PHONE || env.NOTIFY_PHONE || env.BMS_ADMIN_PHONE || "";
             if (bmsKey && adminPhone) {
-                // Arkesel/BMS endpoint - single SMS, from must be approved sender ID
                 const from = env.BMS_SENDER_ID || "CloudTok";
                 const url = `https://sms.arkesel.com/sms/api?action=send-sms&api_key=${encodeURIComponent(bmsKey)}&to=${encodeURIComponent(adminPhone)}&from=${encodeURIComponent(from)}&sms=${encodeURIComponent(shortMsg)}`;
-                await fetch(url).catch(()=>{});
-                // Fallback: try mNotify variant if first fails (BMS Africa)
-                // await fetch(`https://apps.mnotify.net/smsapi?key=${bmsKey}&to=${adminPhone}&msg=${encodeURIComponent(shortMsg)}&sender_id=${from}`).catch(()=>{});
+                // Only send if explicitly enabled - email is priority per your request
+                if (env.SMS_ENABLED === "true") await fetch(url).catch(()=>{});
             }
         } catch(e) {}
 
