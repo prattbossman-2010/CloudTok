@@ -79,14 +79,31 @@ document
         }
 
 
-        const redirect =
-        localStorage.getItem(
-            "CloudTokReturnPage"
-        );
-
+        // Prefer sessionStorage (previous page before login) then localStorage fallback.
+        // Filter out login/signup loops and ensure back button goes to valid previous page.
+        let redirect = null;
+        try{
+            redirect = sessionStorage.getItem("CloudTokPrevPage") || localStorage.getItem("CloudTokReturnPage");
+        }catch(e){
+            redirect = localStorage.getItem("CloudTokReturnPage");
+        }
+        // Fallback to referrer if no stored page and referrer is not auth page
+        if(!redirect){
+            try{
+                const ref = document.referrer;
+                if(ref && !/login\.html|signup\.html/i.test(ref) && ref !== window.location.href){
+                    redirect = ref;
+                }
+            }catch(e){}
+        }
+        // Prevent loop: if redirect is login/signup itself, discard
+        if(redirect && /login\.html|signup\.html/i.test(redirect)){
+            redirect = null;
+        }
 
         if(redirect){
 
+            try{ sessionStorage.removeItem("CloudTokPrevPage"); }catch(e){}
             localStorage.removeItem(
                 "CloudTokReturnPage"
             );

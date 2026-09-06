@@ -1,3 +1,33 @@
+// --- localStorage quota + timeout helpers (surgical fix) ---
+const CLOUDTOK_MAX_STORED = 20;
+function cloudTokStripThumb(t){ return (t && typeof t==="string" && t.startsWith("http")) ? t : null; }
+function cloudTokSafeSetJSON(key, arr){
+  let toStore = Array.isArray(arr) ? arr.slice(0, CLOUDTOK_MAX_STORED) : arr;
+  for(let attempt=0; attempt<3; attempt++){
+    try{
+      const json = JSON.stringify(toStore);
+      // proactive size check ~4MB before hitting quota
+      if(json.length > 4 * 1024 * 1024 && toStore.length > 5){
+        toStore = toStore.slice(0, Math.max(5, Math.floor(toStore.length/2)));
+        continue;
+      }
+      localStorage.setItem(key, json);
+      return true;
+    }catch(e){
+      const isQuota = e && (e.name==="QuotaExceededError" || e.code===22 || /quota|exceeded/i.test(e.message||""));
+      if(isQuota && toStore.length > 1){
+        toStore = toStore.slice(0, Math.max(1, Math.floor(toStore.length/2)));
+        if(attempt===1 && Array.isArray(toStore)) toStore = toStore.map(v=> ({...v, thumbnail: cloudTokStripThumb(v.thumbnail)}));
+        continue;
+      }
+      console.warn("Could not save to localStorage:", e.message);
+      try{ localStorage.removeItem(key); localStorage.setItem(key, JSON.stringify(Array.isArray(toStore)?toStore.slice(0,5):toStore)); }catch(_){}
+      return false;
+    }
+  }
+  return false;
+}
+
 class CloudTokUploader {
 
   constructor() {
@@ -78,22 +108,28 @@ class CloudTokUploader {
               if (compressed && compressed.size < file.size * 0.95) uploadFile = compressed;
             } catch(e) { console.warn("Compress skip:", e.message); }
 
-            // === REAL UPLOAD TO BACKEND ===
+            // === REAL UPLOAD TO BACKEND (with 60s timeout to avoid stuck at 80%) ===
+progress(75);
 let uploadResult = null;
 try {
   if(!CloudTokAuthGuard.isLoggedIn()){
     throw new Error("Please log in to upload videos");
   }
-  uploadResult = await CloudTokAPI.uploadVideo(
-    uploadFile,
-    caption,
-    localThumbnail,
-    JSON.stringify(tags),
-    category
-  );
+  const UPLOAD_TIMEOUT_MS = 60000;
+  const ctrl = new AbortController();
+  const timeoutId = setTimeout(()=> { try{ ctrl.abort(); }catch(_){} }, UPLOAD_TIMEOUT_MS);
+  const timeoutPromise = new Promise((_, rej)=> setTimeout(()=> rej(new Error("Upload timed out after 60s. Please check your connection and retry.")), UPLOAD_TIMEOUT_MS));
+  try{
+    const apiPromise = CloudTokAPI.uploadVideo(uploadFile, caption, localThumbnail, JSON.stringify(tags), category, { signal: ctrl.signal });
+    uploadResult = await Promise.race([apiPromise, timeoutPromise]);
+  } finally { clearTimeout(timeoutId); }
 } catch (err) {
   console.error("Upload API error:", err);
-  uploadResult = { error: err.message || "Upload failed" };
+  URL.revokeObjectURL(tempURL);
+  const msg = (err && err.name==="AbortError") ? "Upload timed out after 60s. Please retry." : (err.message || "Upload failed");
+  if(typeof options.onProgress==="function") try{ options.onProgress(80); }catch(_){}
+  reject(new Error(msg));
+  return;
 }
 
 // Clean up the temporary object URL
@@ -149,9 +185,9 @@ const video = {
             }
             CloudTokDatabase.videos.unshift(video);
 
-            // Only store metadata + remote URLs (no huge data URLs)
-            try {
-              const safeVideos = CloudTokDatabase.videos.map(v => ({
+            // Only store metadata + remote URLs (no huge data URLs) — keep last 20, quota-aware
+            if (CloudTokDatabase.videos.length > CLOUDTOK_MAX_STORED) CloudTokDatabase.videos = CloudTokDatabase.videos.slice(0, CLOUDTOK_MAX_STORED);
+            const safeVideos = CloudTokDatabase.videos.map(v => ({
                 id: v.id,
                 username: v.username,
                 displayName: v.displayName,
@@ -159,10 +195,8 @@ const video = {
                 caption: v.caption,
                 tags: v.tags,
                 category: v.category,
-                thumbnail: (v.thumbnail && v.thumbnail.startsWith("http"))
-                  ? v.thumbnail
-                  : null,                       // drop large data URLs
-                video: v.video,                 // must be the cloud URL
+                thumbnail: cloudTokStripThumb(v.thumbnail),
+                video: v.video,
                 likes: v.likes,
                 comments: v.comments,
                 shares: v.shares,
@@ -170,11 +204,7 @@ const video = {
                 views: v.views,
                 uploaded: v.uploaded
               }));
-
-              localStorage.setItem("CloudTokVideos", JSON.stringify(safeVideos));
-            } catch (e) {
-              console.warn("Could not save to localStorage:", e.message);
-            }
+            cloudTokSafeSetJSON("CloudTokVideos", safeVideos);
 
             progress(90);
 
@@ -319,16 +349,12 @@ const video = {
       caption: video.caption,
       tags: video.tags,
       category: video.category,
-      thumbnail: video.thumbnail,
+      thumbnail: cloudTokStripThumb(video.thumbnail),
       video: video.video
     });
-
-    try {
-      localStorage.setItem(
-        "CloudTokSearchIndex",
-        JSON.stringify(CloudTokDatabase.searchIndex)
-      );
-    } catch (e) {}
+    if (CloudTokDatabase.searchIndex.length > CLOUDTOK_MAX_STORED) CloudTokDatabase.searchIndex = CloudTokDatabase.searchIndex.slice(0, CLOUDTOK_MAX_STORED);
+    // prune searchIndex: store only metadata, no data URLs, quota-aware
+    cloudTokSafeSetJSON("CloudTokSearchIndex", CloudTokDatabase.searchIndex.map(v=> ({...v, thumbnail: cloudTokStripThumb(v.thumbnail)})));
 
     progress(100);
 
@@ -364,12 +390,14 @@ const video = {
           const index = CloudTokDatabase.videos.findIndex(v => v.id === video.id);
           if (index !== -1) {
             CloudTokDatabase.videos[index] = video;
-            try {
-              localStorage.setItem(
-                "CloudTokVideos",
-                JSON.stringify(CloudTokDatabase.videos)
-              );
-            } catch (e) {}
+            // re-sanitize before save (prune + drop data URLs, quota-aware)
+            const sanitized = CloudTokDatabase.videos.slice(0, CLOUDTOK_MAX_STORED).map(v=> ({
+              id:v.id, username:v.username, displayName:v.displayName, avatar:v.avatar,
+              caption:v.caption, tags:v.tags, category:v.category,
+              thumbnail: cloudTokStripThumb(v.thumbnail), video:v.video,
+              likes:v.likes, comments:v.comments, shares:v.shares, saves:v.saves, views:v.views, uploaded:v.uploaded
+            }));
+            cloudTokSafeSetJSON("CloudTokVideos", sanitized);
           }
         })
         .catch(() => {});

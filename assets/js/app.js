@@ -89,7 +89,7 @@ window.addEventListener("auth:expired", function(e){
     document.getElementById("sessionExpiredLoginBtn")
         .addEventListener("click", function(){
             localStorage.removeItem("CloudTokToken");
-            localStorage.removeItem("CloudTokUser");
+            localStorage.removeItem("CloudTokCurrentUser");
             window.location.href = "login.html";
         });
 });

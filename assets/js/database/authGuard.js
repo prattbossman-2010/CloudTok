@@ -2,15 +2,27 @@ class CloudTokAuthGuard{
 
 static isLoggedIn(){
 const user = localStorage.getItem("CloudTokCurrentUser");
-return user !== null && user.trim() !== "";
+const token = localStorage.getItem("CloudTokToken");
+return user !== null && user.trim() !== "" && token !== null && token.trim() !== "";
 }
 
 static requireLogin(action=null, data=null){
 if(!this.isLoggedIn()){
-localStorage.setItem("CloudTokReturnPage", window.location.href);
+const current = window.location.href;
+const isAuthPage = /login\.html|signup\.html/i.test(current);
+if(!isAuthPage){
+try{ sessionStorage.setItem("CloudTokPrevPage", current); }catch(e){}
+localStorage.setItem("CloudTokReturnPage", current);
+} else {
+const ref = document.referrer;
+if(ref && !/login\.html|signup\.html/i.test(ref) && ref !== current){
+try{ sessionStorage.setItem("CloudTokPrevPage", ref); }catch(e){}
+localStorage.setItem("CloudTokReturnPage", ref);
+}
+}
 if(action) localStorage.setItem("CloudTokReturnAction", action);
 if(data) localStorage.setItem("CloudTokReturnData", JSON.stringify(data));
-window.location.href = "login.html";
+window.location.replace("login.html");
 return false;
 }
 return true;
@@ -39,6 +51,7 @@ localStorage.removeItem("CloudTokToken");
 localStorage.removeItem("CloudTokReturnPage");
 localStorage.removeItem("CloudTokReturnAction");
 localStorage.removeItem("CloudTokReturnData");
+try{ sessionStorage.removeItem("CloudTokPrevPage"); }catch(e){}
 window.location.replace("login.html");
 }
 

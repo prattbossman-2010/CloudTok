@@ -69,6 +69,39 @@ searchIndex:[]
 };
 
 
+const CLOUDTOK_MAX_STORED_DB = 20;
+function cloudTokSafeSetJSON_DB(key, arr){
+  let toStore = Array.isArray(arr) ? arr.slice(0, CLOUDTOK_MAX_STORED_DB) : arr;
+  for(let attempt=0; attempt<3; attempt++){
+    try{
+      const json = JSON.stringify(toStore);
+      if(json.length > 4*1024*1024 && Array.isArray(toStore) && toStore.length>5) { toStore = toStore.slice(0, Math.max(5, Math.floor(toStore.length/2))); continue; }
+      localStorage.setItem(key, json);
+      return true;
+    }catch(e){
+      const isQuota = e && (e.name==="QuotaExceededError" || e.code===22 || /quota|exceeded/i.test(e.message||""));
+      if(isQuota && Array.isArray(toStore) && toStore.length>1){
+        toStore = toStore.slice(0, Math.max(1, Math.floor(toStore.length/2)));
+        if(attempt===1) toStore = toStore.map(v=> ({...v, thumbnail: (v.thumbnail && typeof v.thumbnail==="string" && v.thumbnail.startsWith("http"))? v.thumbnail : null}));
+        continue;
+      }
+      console.warn("DB save failed:", e.message);
+      try{ localStorage.removeItem(key); localStorage.setItem(key, JSON.stringify(Array.isArray(toStore)?toStore.slice(0,5):toStore)); }catch(_){}
+      return false;
+    }
+  }
+  return false;
+}
+function cloudTokSanitizeVideos(list){
+  return list.slice(0, CLOUDTOK_MAX_STORED_DB).map(v=> ({
+    id:v.id, username:v.username, displayName:v.displayName, avatar:v.avatar,
+    caption:v.caption||"", tags:Array.isArray(v.tags)?v.tags.slice(0,10):[],
+    category:v.category||"", thumbnail:(v.thumbnail && typeof v.thumbnail==="string" && v.thumbnail.startsWith("http"))? v.thumbnail : null,
+    video:v.video, likes:v.likes||0, likedBy:Array.isArray(v.likedBy)?v.likedBy.slice(0,50):[],
+    comments:Array.isArray(v.comments)?v.comments.slice(0,20):[], shares:v.shares||0, saves:v.saves||0, views:v.views||0, uploaded:v.uploaded||v.created_at||Date.now()
+  }));
+}
+
 const _builtInVideos=
 JSON.parse(JSON.stringify(CloudTokDatabase.videos));
 
@@ -120,10 +153,9 @@ if(typeof CloudTokAPI!=="undefined"){
 
             });
 
-            localStorage.setItem(
-                "CloudTokVideos",
-                JSON.stringify(CloudTokDatabase.videos)
-            );
+            // prune + sanitize before caching to avoid quota overfill
+            CloudTokDatabase.videos = cloudTokSanitizeVideos(CloudTokDatabase.videos);
+            cloudTokSafeSetJSON_DB("CloudTokVideos", CloudTokDatabase.videos);
 
             return;
 
@@ -173,6 +205,8 @@ try{
             }
 
         });
+        // prune to cap storage (prevent quota overfill from unbounded unshifts)
+        if(CloudTokDatabase.videos.length > CLOUDTOK_MAX_STORED_DB) CloudTokDatabase.videos = CloudTokDatabase.videos.slice(0, CLOUDTOK_MAX_STORED_DB);
 
     }
 
@@ -334,10 +368,8 @@ async function toggleVideoLike(videoId){
 
 function saveCloudTokVideos(){
 try{
-localStorage.setItem(
-"CloudTokVideos",
-JSON.stringify(CloudTokDatabase.videos)
-);
+const sanitized = cloudTokSanitizeVideos(CloudTokDatabase.videos);
+cloudTokSafeSetJSON_DB("CloudTokVideos", sanitized);
 }
 catch(error){
 console.log("VIDEO SAVE ERROR:",error);
