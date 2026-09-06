@@ -28,31 +28,41 @@ if(document.getElementById("notificationPopupBell")) return;
 const bell=document.createElement("div");
 bell.className="notificationPopupBell";
 bell.id="notificationPopupBell";
-bell.innerHTML=`<svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>`;
-bell.style.cssText="position:relative;cursor:pointer;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;transition:background 0.2s;";
+bell.innerHTML=`<svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>`;
+bell.style.cssText="position:relative;cursor:pointer;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.08);transition:background 0.2s;";
 bell.addEventListener("click",()=>{
     this.clearBadge();
-    if(typeof CloudTokNotificationPage!=="undefined"){
-        window.location.href="notifications.html";
-    } else {
-        window.location.href="notifications.html";
-    }
+    window.location.href="notifications.html";
 });
 
 const badge=document.createElement("div");
 badge.className="notificationPopupBadge";
-badge.style.display="none";
+badge.style.cssText="position:absolute;top:-4px;right:-4px;background:#ff2d55;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:999px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid #000;";
 bell.appendChild(badge);
 
 this.bellElement=bell;
 this.badgeElement=badge;
 
-const target=document.getElementById("notifBellTopbar")
-    ||document.querySelector(".topActions")
-    ||document.querySelector(".topBarRight")
-    ||document.querySelector(".topBarButtons");
-if(target){
-    target.insertBefore(bell,target.firstChild);
+const tryAttach=()=>{
+    const target=document.getElementById("notifBellTopbar")
+        ||document.querySelector(".topActions")
+        ||document.querySelector(".topBarRight")
+        ||document.querySelector(".topBarButtons")
+        ||document.querySelector(".topBar");
+    if(target){
+        // if target is topBar, append to topActions inside it
+        const actions = target.classList && target.classList.contains("topBar") ? target.querySelector(".topActions") : target;
+        (actions||target).insertBefore(bell,(actions||target).firstChild);
+        return true;
+    }
+    return false;
+};
+if(!tryAttach()){
+    // retry after topBar is created by engine.js
+    let attempts=0;
+    const iv=setInterval(()=>{
+        if(tryAttach()||++attempts>20) clearInterval(iv);
+    },300);
 }
 
 }
@@ -66,6 +76,9 @@ try{
     const data=await CloudTokAPI.getNotifications();
     const notifications=data.notifications||data.data||[];
 
+    // Always update badge like YouTube - show unread count even on first load
+    const unread = notifications.filter(n=> !n.read && n.read !== 1 );
+    this.updateBadge(unread.length);
     if(notifications.length>0){
         const newest=notifications.reduce((a,b)=>new Date(b.created_at)>new Date(a.created_at)?b:a);
         if(!this.lastNotificationId){
@@ -80,7 +93,7 @@ try{
             const latest=newOnes.reduce((a,b)=>new Date(b.created_at)>new Date(a.created_at)?b:a);
             this.lastNotificationId=latest.id;
             this.showToast(latest);
-            this.updateBadge(newOnes.length);
+            // keep badge as unread count
         }
     }
 
