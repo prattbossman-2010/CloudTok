@@ -50,6 +50,8 @@ export async function getVideos(request, env) {
       SELECT
         videos.id,
         videos.video_url,
+        videos.hls_url,
+        videos.dash_url,
         videos.thumbnail_url,
         videos.caption,
         videos.views,
@@ -64,6 +66,8 @@ export async function getVideos(request, env) {
       FROM videos
       JOIN users ON videos.user_id = users.id
     `;
+    try{ await env.DB.prepare("ALTER TABLE videos ADD COLUMN hls_url TEXT").run(); }catch(e){}
+    try{ await env.DB.prepare("ALTER TABLE videos ADD COLUMN dash_url TEXT").run(); }catch(e){}
     const params = [];
 
     if (user) {
@@ -293,15 +297,19 @@ if (thumbnail) {
 }
 }
 
+    try{ await env.DB.prepare("ALTER TABLE videos ADD COLUMN hls_url TEXT").run(); }catch(e){}
+    try{ await env.DB.prepare("ALTER TABLE videos ADD COLUMN dash_url TEXT").run(); }catch(e){}
     // ========== Save to database ==========
     const result = await env.DB.prepare(`
       INSERT INTO videos
-        (user_id, video_url, thumbnail_url, caption, tags, category)
-      VALUES (?, ?, ?, ?, ?, ?)
+        (user_id, video_url, hls_url, dash_url, thumbnail_url, caption, tags, category)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       auth.user.id,
       uploadResult.url,
-      thumbnail_url,
+      uploadResult.hls_url || null,
+      uploadResult.dash_url || null,
+      thumbnail_url || uploadResult.thumbnail_url || null,
       caption || "New video",
       tags,
       category
@@ -325,7 +333,9 @@ if (thumbnail) {
     return success({
       videoId: result.meta.last_row_id,
       videoUrl: uploadResult.url,
-      thumbnailUrl: thumbnail_url,
+      hlsUrl: uploadResult.hls_url || null,
+      dashUrl: uploadResult.dash_url || null,
+      thumbnailUrl: thumbnail_url || uploadResult.thumbnail_url || null,
       provider: uploadResult.provider
     }, "Video uploaded successfully");
 

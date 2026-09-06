@@ -139,7 +139,8 @@ const StorageConfig = {
 
             roles: [
                 "thumbnail",
-                "avatar"
+                "avatar",
+                "video"
             ],
 
             priority: 4,

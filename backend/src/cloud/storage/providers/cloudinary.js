@@ -92,6 +92,12 @@ class CloudinaryProvider {
 
         }
 
+        // Free HLS for all videos - Cloudinary eager async (free tier 25K transfos)
+        if(metadata.role === "video"){
+            form.append("eager", "sp_hd/hls");
+            form.append("eager_async", "true");
+        }
+
 
 
 
@@ -171,6 +177,8 @@ class CloudinaryProvider {
 
 
 
+        const hls_url = result.secure_url ? result.secure_url.replace("/video/upload/", "/video/upload/sp_hd/").replace(/\.[^.]+$/, ".m3u8") : null;
+        const eagerHls = result.eager && result.eager[0] ? result.eager[0].secure_url : null;
         return {
 
 
@@ -183,6 +191,10 @@ class CloudinaryProvider {
             url:
 
             result.secure_url,
+
+            hls_url: eagerHls || hls_url,
+
+            thumbnail_url: result.secure_url ? result.secure_url.replace("/video/upload/", "/video/upload/so_2,w_360,h_640,c_fill/").replace(/\.[^.]+$/, ".jpg") : null,
 
 
             publicId:

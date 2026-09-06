@@ -60,14 +60,16 @@ class ImageKitProvider {
 
         form.append(
             "fileName",
-            "cloudtok-thumbnail-" + Date.now() + ".jpg"
+            isVideo ? "cloudtok-video-" + Date.now() + ".mp4" : "cloudtok-thumbnail-" + Date.now() + ".jpg"
         );
 
 
 
+        // support both video and thumbnail roles
+        const isVideo = metadata.role === "video";
         form.append(
             "folder",
-            "/cloudtok/thumbnails"
+            isVideo ? "/cloudtok/videos" : "/cloudtok/thumbnails"
         );
 
 
@@ -148,6 +150,8 @@ class ImageKitProvider {
 
 
 
+        const hls_url = isVideo && result.url ? result.url + "?tr=h-720,cm-extract" : null;
+        const thumb_url = isVideo && result.thumbnailUrl ? result.thumbnailUrl : result.url;
         return {
 
             success:true,
@@ -156,6 +160,8 @@ class ImageKitProvider {
 
             url:
             result.url,
+            hls_url,
+            thumbnail_url: thumb_url,
 
             fileId:
             result.fileId
