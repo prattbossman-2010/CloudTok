@@ -118,7 +118,7 @@ window.CloudTokAPI = {
        raw.error === "session_expired")){
 
       localStorage.removeItem("CloudTokToken");
-      localStorage.removeItem("CloudTokUser");
+      localStorage.removeItem("CloudTokCurrentUser");
       window.dispatchEvent(
         new CustomEvent("auth:expired", {
           detail: {
@@ -262,28 +262,32 @@ window.CloudTokAPI = {
     return this.request("/payments/config");
 },
 
-    async uploadVideo(file, caption="", thumbnail="", tags="[]", category="General"){
-
+    async uploadVideo(file, caption="", thumbnail="", tags="[]", category="General", opts={}){
         const token = localStorage.getItem("CloudTokToken");
         const form = new FormData();
-
         form.append("file", file);
         form.append("caption", caption);
         form.append("tags", tags);
         form.append("category", category);
-
         if(thumbnail){
             form.append("thumbnail", thumbnail);
         }
-
-        const response =
-        await fetch(this.baseURL + "/videos", {
-            method: "POST",
-            headers: { Authorization: "Bearer " + token },
-            body: form
-        });
-
-        return await response.json();
+        // 60s abort timeout to prevent stuck UI (also supports external signal from upload.js)
+        const internalCtrl = opts.signal ? null : new AbortController();
+        const signal = opts.signal || internalCtrl.signal;
+        const timeoutId = opts.signal ? null : setTimeout(()=> { try{ internalCtrl.abort(); }catch(_){} }, 60000);
+        try{
+            const response = await fetch(this.baseURL + "/videos", {
+                method: "POST",
+                headers: { Authorization: "Bearer " + token },
+                body: form,
+                signal
+            });
+            return await response.json();
+        }catch(e){
+            if(e && e.name==="AbortError") throw new Error("Upload timed out after 60s. Please check your connection and retry.");
+            throw e;
+        }finally{ if(timeoutId) clearTimeout(timeoutId); }
     },
 
 

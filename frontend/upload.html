@@ -30,7 +30,7 @@
     <p class="uploadHint">MP4 or WebM • Max 100MB • Up to 6 minutes</p>
     <input type="file" id="videoInput" accept="video/mp4,video/webm,video/quicktime" class="fileInput">
     <button class="selectFileBtn" onclick="document.getElementById('videoInput').click()">Select file</button>
-    <div id="draftCard" style="display:none;margin-top:16px;background:rgba(255,255,255,.06);border-radius:12px;padding:14px;width:100%;max-width:320px;">
+     <div id="draftCard" style="display:none;margin-top:16px;background:rgba(255,255,255,.06);border-radius:12px;padding:14px;width:100%;max-width:320px;cursor:pointer;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
             <span style="font-size:13px;font-weight:600;">📝 Draft</span>
             <button id="clearDraftBtn" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:16px;">×</button>
@@ -122,15 +122,43 @@ window.onload = function(){
     const categoryPills = document.querySelectorAll(".pill");
 
     let selectedFile = null;
-    let selectedCategory = "General";
+    let selectedCategory = ["General"];
     const DRAFT_KEY = "CloudTokUploadDraft";
+
+    function normalizeCategories(cat){
+        if(Array.isArray(cat)) return cat.filter(Boolean);
+        if(typeof cat === "string" && cat.trim()){
+            return cat.split(",").map(s=>s.trim()).filter(Boolean);
+        }
+        return [];
+    }
+
+    function syncCategoryPills(){
+        categoryPills.forEach(p => {
+            p.classList.toggle("active", selectedCategory.includes(p.dataset.value));
+        });
+    }
+
+    function applyDraftToForm(draft){
+        if(!draft) return;
+        if(typeof draft.caption === "string"){
+            captionInput.value = draft.caption || "";
+            charCount.textContent = (draft.caption || "").length + "/2200";
+        }
+        if(typeof draft.tags === "string") tagsInput.value = draft.tags || "";
+        if(draft.category !== undefined){
+            const cats = normalizeCategories(draft.category);
+            if(cats.length) selectedCategory = cats;
+            syncCategoryPills();
+        }
+    }
 
     function loadDraft(){
         try {
             const draft = JSON.parse(localStorage.getItem(DRAFT_KEY));
-            if(draft && draft.caption){
+            if(draft && (draft.caption || draft.tags || draft.category)){
                 const card = document.getElementById("draftCard");
-                document.getElementById("draftCaption").textContent = draft.caption || "No caption";
+                document.getElementById("draftCaption").textContent = draft.caption || draft.tags || "No caption";
                 card.style.display = "block";
                 return draft;
             }
@@ -139,7 +167,7 @@ window.onload = function(){
     }
 
     function saveDraft(){
-        if(captionInput.value.trim() || tagsInput.value.trim()){
+        if(captionInput.value.trim() || tagsInput.value.trim() || selectedCategory.length){
             localStorage.setItem(DRAFT_KEY, JSON.stringify({
                 caption: captionInput.value,
                 tags: tagsInput.value,
@@ -155,16 +183,16 @@ window.onload = function(){
 
     const savedDraft = loadDraft();
     if(savedDraft){
-        captionInput.value = savedDraft.caption || "";
-        tagsInput.value = savedDraft.tags || "";
-        charCount.textContent = (savedDraft.caption || "").length + "/2200";
-        if(savedDraft.category){
-            selectedCategory = savedDraft.category;
-            categoryPills.forEach(p => {
-                p.classList.toggle("active", p.dataset.value === selectedCategory);
-            });
-        }
+        applyDraftToForm(savedDraft);
+    } else {
+        syncCategoryPills();
     }
+
+    document.getElementById("draftCard").addEventListener("click", ()=>{
+        const draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null") || savedDraft;
+        if(draft) applyDraftToForm(draft);
+        videoInput.click();
+    });
 
     document.getElementById("clearDraftBtn").addEventListener("click", (e)=>{
         e.stopPropagation();
@@ -179,9 +207,19 @@ window.onload = function(){
 
     categoryPills.forEach(pill => {
         pill.addEventListener("click", ()=>{
-            categoryPills.forEach(p => p.classList.remove("active"));
-            pill.classList.add("active");
-            selectedCategory = pill.dataset.value;
+            const val = pill.dataset.value;
+            const idx = selectedCategory.indexOf(val);
+            if(idx > -1){
+                selectedCategory.splice(idx,1);
+                pill.classList.remove("active");
+                if(selectedCategory.length === 0){
+                    // allow empty but keep UI consistent; optionally keep no pill active
+                }
+            } else {
+                selectedCategory.push(val);
+                pill.classList.add("active");
+            }
+            saveDraft();
         });
     });
 
@@ -230,19 +268,37 @@ window.onload = function(){
         uploadProgress.style.display = "block";
 
         const uploader = new CloudTokUploader();
+        const categoryPayload = Array.isArray(selectedCategory) ? (selectedCategory.length ? selectedCategory.join(",") : "General") : selectedCategory;
+        // reset progress styling from prior attempts
+        progressText.style.color = "";
+        progressFill.style.background = "";
         uploader.uploadVideo(selectedFile, {
             caption: captionInput.value,
             tags: tagsInput.value,
-            category: selectedCategory,
+            category: categoryPayload,
             onProgress: (value)=>{
                 progressFill.style.width = value + "%";
                 progressText.textContent = "Uploading " + value + "%";
+                // clear error coloring on retry/progress
+                if(value < 100){ progressText.style.color=""; progressFill.style.background=""; }
             },
             onComplete: (video)=>{
                 clearDraft();
                 progressText.textContent = "Upload complete!";
+                progressText.style.color = "";
                 setTimeout(()=>{ window.location.href = "index.html"; }, 800);
             }
+        }).catch(err=>{
+            console.error("Upload failed:", err);
+            progressText.textContent = "Upload failed: " + (err && err.message ? err.message : "Unknown error") + " — please retry";
+            progressText.style.color = "#ff4d4f";
+            progressFill.style.background = "#ff4d4f";
+            // allow retry
+            const btnText2 = uploadBtn.querySelector(".btnText");
+            const btnLoader2 = uploadBtn.querySelector(".btnLoader");
+            if(btnText2) btnText2.style.display = "inline";
+            if(btnLoader2) btnLoader2.style.display = "none";
+            uploadBtn.disabled = false;
         });
     });
 };

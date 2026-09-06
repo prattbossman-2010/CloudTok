@@ -109,15 +109,35 @@ document
         }
 
 
-        window.location.replace(
-
-            "profile.html?user=" +
-
-            encodeURIComponent(
-                user.username
-            )
-
-        );
+        // Respect previous page (sessionStorage/localStorage/referrer) like login.js
+        // to fix back-button lag; fallback to profile if no valid previous page.
+        let redirect = null;
+        try{
+            redirect = sessionStorage.getItem("CloudTokPrevPage") || localStorage.getItem("CloudTokReturnPage");
+        }catch(e){
+            redirect = localStorage.getItem("CloudTokReturnPage");
+        }
+        if(!redirect){
+            try{
+                const ref = document.referrer;
+                if(ref && !/login\.html|signup\.html/i.test(ref) && ref !== window.location.href){
+                    redirect = ref;
+                }
+            }catch(e){}
+        }
+        if(redirect && /login\.html|signup\.html/i.test(redirect)){
+            redirect = null;
+        }
+        if(redirect){
+            try{ sessionStorage.removeItem("CloudTokPrevPage"); }catch(e){}
+            localStorage.removeItem("CloudTokReturnPage");
+            window.location.replace(redirect);
+        } else {
+            window.location.replace(
+                "profile.html?user=" +
+                encodeURIComponent(user.username)
+            );
+        }
 
 
     }

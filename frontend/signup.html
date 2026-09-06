@@ -83,25 +83,25 @@ Login
 <script src="assets/js/api/api.js"></script>
 
 <script>
-
-if(
-localStorage.getItem(
-"CloudTokCurrentUser"
-)
-){
-
+// Auto-redirect only if token is valid, not just username exists.
+(function(){
+var user = localStorage.getItem("CloudTokCurrentUser");
+var token = localStorage.getItem("CloudTokToken");
+if(user && user.trim() !== "" && token && token.trim() !== ""){
 window.location.replace(
 "profile.html?user=" +
-encodeURIComponent(
-localStorage.getItem(
-"CloudTokCurrentUser"
-)
-)
-
+encodeURIComponent(user)
 );
-
+} else {
+try{
+var ref = document.referrer;
+var already = sessionStorage.getItem("CloudTokPrevPage") || localStorage.getItem("CloudTokReturnPage");
+if(!already && ref && !/login\.html|signup\.html/i.test(ref) && ref !== window.location.href){
+sessionStorage.setItem("CloudTokPrevPage", ref);
 }
-
+}catch(e){}
+}
+})();
 </script>
 		
 <script>
