@@ -90,6 +90,6 @@ window.addEventListener("auth:expired", function(e){
         .addEventListener("click", function(){
             localStorage.removeItem("CloudTokToken");
             localStorage.removeItem("CloudTokUser");
-            window.location.href = "/login.html";
+            window.location.href = "login.html";
         });
 });
