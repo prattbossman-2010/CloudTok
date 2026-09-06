@@ -71,6 +71,13 @@ class CloudTokUploader {
 
             progress(60);
 
+            // === CLIENT-SIDE 720p compress (free, all providers) ===
+            let uploadFile = file;
+            try {
+              const compressed = await this.compressTo720p(file, tempURL, (p)=>progress(60 + Math.round(p*0.15)));
+              if (compressed && compressed.size < file.size * 0.95) uploadFile = compressed;
+            } catch(e) { console.warn("Compress skip:", e.message); }
+
             // === REAL UPLOAD TO BACKEND ===
 let uploadResult = null;
 try {
@@ -78,7 +85,7 @@ try {
     throw new Error("Please log in to upload videos");
   }
   uploadResult = await CloudTokAPI.uploadVideo(
-    file,
+    uploadFile,
     caption,
     localThumbnail,
     JSON.stringify(tags),
@@ -94,9 +101,12 @@ URL.revokeObjectURL(tempURL);
 
 progress(80);
 
-// Support both old and new response shapes
+// Support both old and new response shapes (including hls across all providers)
 const isSuccess = uploadResult && uploadResult.success === true;
 const videoUrl = uploadResult?.data?.videoUrl || uploadResult?.videoUrl;
+const hlsUrl = uploadResult?.data?.hlsUrl || uploadResult?.hlsUrl || null;
+const dashUrl = uploadResult?.data?.dashUrl || uploadResult?.dashUrl || null;
+const thumbUrl = uploadResult?.data?.thumbnailUrl || uploadResult?.thumbnailUrl || null;
 const videoId = uploadResult?.data?.videoId || uploadResult?.videoId;
 const provider = uploadResult?.data?.provider || uploadResult?.provider;
 
@@ -111,7 +121,7 @@ if (!isSuccess || !videoUrl) {
   return;
 }
 
-            // Success – use the real cloud URL
+            // Success – use the real cloud URL (hls for Cloudinary/ImageKit, progressive for Backblaze/Supabase/R2)
 const video = {
   id: videoId || Date.now(),
   username: "@" + this.currentUser.username,
@@ -120,8 +130,10 @@ const video = {
   caption: caption,
   tags: tags,
   category: category,
-  thumbnail: localThumbnail,
-  video: videoUrl,                    // ← extracted from new API shape
+  thumbnail: thumbUrl || localThumbnail,
+  video: videoUrl,
+  hls_url: hlsUrl,
+  dash_url: dashUrl,
   likes: 0,
   comments: [],
   shares: 0,
@@ -425,6 +437,41 @@ const video = {
     }
 
     return "General";
+  }
+
+  async compressTo720p(file, tempURL, onProg){
+    return new Promise((resolve)=>{
+      const v=document.createElement("video");
+      v.src=tempURL; v.muted=true; v.playsInline=true; v.preload="metadata";
+      v.onloadedmetadata=async()=>{
+        const w=v.videoWidth||1280, h=v.videoHeight||720;
+        if(w<=1280 && h<=720 && file.size < 20*1024*1024) return resolve(null);
+        // try ffmpeg.wasm if available, else canvas+MediaRecorder fallback
+        try{
+          if(!window.FFmpeg) {
+            const s=document.createElement("script");
+            s.src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js";
+            s.onload=()=>resolve(null); s.onerror=()=>resolve(null);
+            document.head.appendChild(s);
+            setTimeout(()=>resolve(null), 1500);
+            return;
+          }
+          const { createFFmpeg } = window.FFmpeg;
+          const ffmpeg=createFFmpeg({log:false});
+          await ffmpeg.load();
+          ffmpeg.FS("writeFile","input", await fetch(tempURL).then(r=>r.arrayBuffer()));
+          onProg&&onProg(0.3);
+          await ffmpeg.run("-i","input","-vf","scale='min(1280,iw)':-2","-c:v","libx264","-preset","veryfast","-crf","28","-c:a","aac","-b:a","96k","output.mp4");
+          const data=ffmpeg.FS("readFile","output.mp4");
+          const blob=new Blob([data.buffer],{type:"video/mp4"});
+          blob.name=file.name.replace(/\.[^.]+$/,"")+"_720p.mp4";
+          onProg&&onProg(1);
+          resolve(blob);
+        }catch(e){ resolve(null); }
+      };
+      v.onerror=()=>resolve(null);
+      setTimeout(()=>resolve(null), 3000);
+    });
   }
 
   static loadSavedVideos() {

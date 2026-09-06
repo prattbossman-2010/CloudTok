@@ -157,7 +157,7 @@ createCard(){
     this.video.playsInline = true;
 
 
-    this.video.preload = "auto";
+    this.video.preload = "metadata";
 
 
     this.video.setAttribute(
@@ -171,21 +171,21 @@ createCard(){
 
 
 
-    const source =
-    document.createElement("source");
-
-
-    source.src =
-    this.data.video;
-
-
-    source.type =
-    "video/mp4";
-
-
-    this.video.appendChild(
-        source
-    );
+    // HLS (Cloudinary/ImageKit) if available, else progressive mp4 (Backblaze/Supabase/R2/Cloudinary fallback) - free $0
+    this.hls = null;
+    const hlsUrl = this.data.hls_url || this.data.hlsUrl || null;
+    if(hlsUrl && window.Hls && window.Hls.isSupported()){
+        this.hls = new window.Hls({ enableWorker:true, lowLatencyMode:false });
+        this.hls.loadSource(hlsUrl);
+        this.hls.attachMedia(this.video);
+    } else if(hlsUrl && this.video.canPlayType('application/vnd.apple.mpegurl')){
+        this.video.src = hlsUrl;
+    } else {
+        const source = document.createElement("source");
+        source.src = this.data.video;
+        source.type = "video/mp4";
+        this.video.appendChild(source);
+    }
 
 
 
@@ -1907,6 +1907,8 @@ this.followPlus.textContent = isFollowing ? "✓" : "+";
 
 
 
+
+        if(this.hls){ try{ this.hls.destroy(); }catch(e){} this.hls=null; }
 
         if(
             this.video
