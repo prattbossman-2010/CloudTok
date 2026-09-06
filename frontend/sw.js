@@ -1,4 +1,4 @@
-const CACHE_NAME = "cloudtok-v1";
+const CACHE_NAME = "cloudtok-v2";
 const STATIC_ASSETS = [
   "/CloudTok/",
   "/CloudTok/index.html",
@@ -31,6 +31,8 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
+  // bypass video/streaming and range requests - fixes cloudinary network error + ensures streaming (no full download)
+  if (e.request.destination === "video" || e.request.url.includes("cloudinary.com") || e.request.url.includes("imagekit.io") || e.request.url.includes("backblazeb2.com") || e.request.url.includes("r2.dev") || e.request.url.includes(".m3u8") || e.request.url.includes(".ts") || e.request.headers.get("range")) return;
   if (e.request.url.includes("/api/")) {
     e.respondWith(
       fetch(e.request).catch(() => {

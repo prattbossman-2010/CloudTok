@@ -283,6 +283,15 @@ export async function deleteMessage(request, env, messageId){
   if(Number(msg.sender_id) !== Number(auth.user.id)) return Response.json({error:"Not authorized"},{status:403});
 
   await env.DB.prepare(`DELETE FROM messages WHERE id = ?`).bind(msgId).run();
+  // Update conversation last_message to latest remaining message (fixes chat preview showing deleted message)
+  try {
+    const latest = await env.DB.prepare(`SELECT text FROM messages WHERE conversation_id = ? ORDER BY created_at DESC LIMIT 1`).bind(msg.conversation_id).first();
+    if(latest){
+      await env.DB.prepare(`UPDATE conversations SET last_message = ?, last_message_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(latest.text, msg.conversation_id).run();
+    } else {
+      await env.DB.prepare(`UPDATE conversations SET last_message = NULL, last_message_at = NULL WHERE id = ?`).bind(msg.conversation_id).run();
+    }
+  } catch(e){}
   return Response.json({success:true});
 }
 
@@ -340,7 +349,16 @@ export async function bulkDeleteMessages(request, env){
   if(!ids || !ids.length) return Response.json({error:"No messages"},{status:400});
 
   const placeholders = ids.map(()=>"?").join(",");
+  // get affected conversations before delete
+  const { results: toUpdate } = await env.DB.prepare(`SELECT DISTINCT conversation_id FROM messages WHERE id IN (${placeholders})`).bind(...ids).all();
   await env.DB.prepare(`DELETE FROM messages WHERE id IN (${placeholders}) AND sender_id = ?`).bind(...ids, auth.user.id).run();
+  for(const r of (toUpdate||[])){
+    try{
+      const latest = await env.DB.prepare(`SELECT text FROM messages WHERE conversation_id = ? ORDER BY created_at DESC LIMIT 1`).bind(r.conversation_id).first();
+      if(latest) await env.DB.prepare(`UPDATE conversations SET last_message = ?, last_message_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(latest.text, r.conversation_id).run();
+      else await env.DB.prepare(`UPDATE conversations SET last_message = NULL, last_message_at = NULL WHERE id = ?`).bind(r.conversation_id).run();
+    }catch(e){}
+  }
   return Response.json({success:true, deleted:ids.length});
 }
 

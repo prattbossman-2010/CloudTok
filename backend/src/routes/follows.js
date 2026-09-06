@@ -17,7 +17,7 @@ export async function followUser(request, env, targetUsername){
   const target =
   await env.DB
   .prepare(
-    `SELECT id, username FROM users WHERE username = ?`
+    `SELECT id, username FROM users WHERE LOWER(username) = LOWER(?)`
   )
   .bind(targetUsername)
   .first();
