@@ -46,7 +46,7 @@ class ImageKitProvider {
 
 
 
-
+        const isVideo = metadata.role === "video";
         const form =
         new FormData();
 
@@ -58,6 +58,7 @@ class ImageKitProvider {
         );
 
 
+
         form.append(
             "fileName",
             isVideo ? "cloudtok-video-" + Date.now() + ".mp4" : "cloudtok-thumbnail-" + Date.now() + ".jpg"
@@ -66,7 +67,6 @@ class ImageKitProvider {
 
 
         // support both video and thumbnail roles
-        const isVideo = metadata.role === "video";
         form.append(
             "folder",
             isVideo ? "/cloudtok/videos" : "/cloudtok/thumbnails"

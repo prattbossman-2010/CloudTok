@@ -92,11 +92,8 @@ class CloudinaryProvider {
 
         }
 
-        // Free HLS for all videos - Cloudinary eager async (free tier 25K transfos)
-        if(metadata.role === "video"){
-            form.append("eager", "sp_hd/hls");
-            form.append("eager_async", "true");
-        }
+        // Free HLS via derived URL (no eager) - avoids Invalid transformation error, uses same free tier
+        // hls_url derived below as sp_hd transform
 
 
 
