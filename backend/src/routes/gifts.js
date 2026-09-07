@@ -3,6 +3,7 @@ async function ensureGiftTables(env) {
     try { await env.DB.prepare("CREATE TABLE IF NOT EXISTS gift_config (id INTEGER PRIMARY KEY, gift_name TEXT UNIQUE, price_usd REAL, updated_at TEXT)").run(); } catch(e) {}
     try { await env.DB.prepare("CREATE TABLE IF NOT EXISTS notifications (id INTEGER PRIMARY KEY, user_id INTEGER, from_user_id INTEGER, type TEXT, message TEXT, reference_type TEXT, reference_id INTEGER, read INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')))").run(); } catch(e) {}
     try { await env.DB.prepare("ALTER TABLE users ADD COLUMN wallet_balance REAL DEFAULT 0").run(); } catch(e) {}
+    try { await env.DB.prepare("CREATE TABLE IF NOT EXISTS platform_revenue (id INTEGER PRIMARY KEY AUTOINCREMENT, amount REAL NOT NULL, source TEXT, gift_name TEXT, created_at TEXT DEFAULT (datetime('now')))").run(); } catch(e) {}
 }
 
 export async function sendGift(request, env) {
@@ -43,9 +44,21 @@ export async function sendGift(request, env) {
         if (!receiver || receiver.length === 0) return Response.json({ error: "Receiver not found" }, { status: 404 });
 
         const receiverId = receiver[0].id;
+        const platformCut = Number((finalAmount * 0.10).toFixed(2));
+        const receiverCut = Number((finalAmount - platformCut).toFixed(2));
 
         await env.DB.prepare("UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?").bind(finalAmount, senderId).run();
-        await env.DB.prepare("UPDATE users SET wallet_balance = wallet_balance + ? WHERE id = ?").bind(finalAmount, receiverId).run();
+        await env.DB.prepare("UPDATE users SET wallet_balance = COALESCE(wallet_balance,0) + ? WHERE id = ?").bind(receiverCut, receiverId).run();
+        // 10% to admin / platform
+        try {
+            const { results: admin } = await env.DB.prepare("SELECT id FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1").all();
+            if(admin && admin[0]){
+                await env.DB.prepare("UPDATE users SET wallet_balance = COALESCE(wallet_balance,0) + ? WHERE id = ?").bind(platformCut, admin[0].id).run();
+            } else {
+                // fallback: credit to sender? just log as platform revenue
+                await env.DB.prepare("INSERT OR IGNORE INTO platform_revenue (amount, source, gift_name, created_at) VALUES (?, 'gift', ?, datetime('now'))").bind(platformCut, gift_name).run().catch(()=>{});
+            }
+        } catch(e) {}
 
         await env.DB.prepare(
             "INSERT INTO gift_transactions (sender_id, receiver_id, gift_name, gift_emoji, amount_usd, stream_id, conversation_id, message) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
