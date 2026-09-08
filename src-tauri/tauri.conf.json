@@ -1,0 +1,47 @@
+{
+  "build": {
+    "beforeDevCommand": "",
+    "beforeBuildCommand": "",
+    "devPath": "../frontend/index.html",
+    "distDir": "../frontend",
+    "withGlobalTauri": true
+  },
+  "package": {
+    "productName": "CloudTok",
+    "version": "1.0.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "shell": { "open": true },
+      "notification": { "all": true }
+    },
+    "bundle": {
+      "active": true,
+      "category": "SocialNetworking",
+      "copyright": "CloudTok",
+      "deb": { "depends": [] },
+      "externalBin": [],
+      "icon": ["../frontend/images/logo.jpg"],
+      "identifier": "com.cloudtok.app",
+      "longDescription": "CloudTok - Share Videos, Connect with the World",
+      "macOS": { "entitlements": null, "exceptionDomain": "", "frameworks": [], "providerShortName": null, "signingIdentity": null },
+      "resources": [],
+      "shortDescription": "Share Videos, Connect",
+      "targets": "all",
+      "windows": { "certificateThumbprint": null, "digestAlgorithm": "sha256", "wix": null }
+    },
+    "security": { "csp": null },
+    "updater": { "active": false },
+    "windows": [
+      {
+        "fullscreen": false,
+        "height": 800,
+        "resizable": true,
+        "title": "CloudTok",
+        "width": 1200,
+        "url": "../frontend/index.html"
+      }
+    ]
+  }
+}

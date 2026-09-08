@@ -1,0 +1,14 @@
+{
+  "appId": "com.cloudtok.app",
+  "appName": "CloudTok",
+  "webDir": "frontend",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#000000"
+    }
+  }
+}
