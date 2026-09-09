@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.cloudtok.app",
+      "sha256_cert_fingerprints": ["9B:D7:98:3C:CC:7B:E5:C3:29:77:D2:BE:4F:7E:D8:8B:C6:3E:49:E9:C6:91:38:58:9C:ED:99:31:16:59:DC:EB"]
+    }
+  }
+]

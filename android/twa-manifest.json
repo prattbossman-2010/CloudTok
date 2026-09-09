@@ -36,7 +36,7 @@
   "fullScopeUrl": "https://prattbossman-2010.github.io/CloudTok/",
   "minSdkVersion": 21,
   "orientation": "portrait",
-  "fingerprints": [],
+  "fingerprints": ["9B:D7:98:3C:CC:7B:E5:C3:29:77:D2:BE:4F:7E:D8:8B:C6:3E:49:E9:C6:91:38:58:9C:ED:99:31:16:59:DC:EB"],
   "additionalTrustedOrigins": [],
   "retainedBundles": [],
   "protocolHandlers": [],
