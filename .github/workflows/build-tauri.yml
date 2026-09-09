@@ -1,0 +1,30 @@
+name: Build Windows EXE (Tauri)
+
+on:
+  push:
+    branches: ["main"]
+    paths: ["frontend/**", "src-tauri/**", "package.json"]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install deps
+        run: npm ci || npm install
+      - name: Install Tauri CLI
+        run: npm install -D @tauri/cli@^1.5
+      - name: Build Tauri
+        run: npx tauri build
+      - name: Upload MSI/EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloudtok-windows
+          path: src-tauri/target/release/bundle/**/*.msi
+          retention-days: 14
