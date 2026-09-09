@@ -1,0 +1,78 @@
+{
+  "name": "cloudtok-desktop",
+  "productName": "CloudTok",
+  "version": "1.0.0",
+  "description": "CloudTok - Share Videos, Connect with the World. Upload, watch, and discover trending videos.",
+  "main": "main.js",
+  "author": "CloudTok",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win",
+    "pack": "electron-builder --dir",
+    "linux": "electron-builder --linux",
+    "linux-appimage": "electron-builder --linux AppImage",
+    "mac": "electron-builder --mac --publish never",
+    "mac-arm": "electron-builder --mac --arm64 --publish never"
+  },
+  "build": {
+    "appId": "com.cloudtok.app",
+    "productName": "CloudTok",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "CloudTok-Setup-${version}-x64.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "CloudTok"
+    },
+    "linux": {
+      "target": [
+        "deb",
+        "rpm",
+        "tar.gz"
+      ],
+      "category": "Office",
+      "icon": "build/icon.png",
+      "artifactName": "KudiDeals-${version}-linux-${arch}.${ext}"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.shopping",
+      "icon": "build/icon.png",
+      "artifactName": "KudiDeals-${version}-mac-${arch}.${ext}"
+    }
+  },
+  "devDependencies": {
+    "electron": "^44.2.0",
+    "electron-builder": "^26.15.3"
+  }
+}
