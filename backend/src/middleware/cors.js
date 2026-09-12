@@ -3,7 +3,15 @@ const ALLOWED_ORIGINS = [
   "https://cloudtok.pages.dev",
   "http://localhost:3000",
   "http://localhost:5000",
-  "http://127.0.0.1:3000"
+  "http://127.0.0.1:3000",
+  // Capacitor Android/iOS WebView origins (androidScheme: https)
+  "https://localhost",
+  "http://localhost:8080",
+  "capacitor://localhost",
+  "ionic://localhost",
+  "app://localhost",
+  // Packaged Electron app (loads UI from file://) sends Origin: null
+  "null"
 ];
 
 const SECURITY_HEADERS = {

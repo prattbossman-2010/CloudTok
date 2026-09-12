@@ -22,3 +22,11 @@ node_modules/
 
 # Temporary uploads
 uploads/
+
+# Local signing secrets (repo is public - never commit these)
+android/keystore.properties
+publish/keys/
+
+# Desktop build output
+desktop/node_modules/
+desktop/release/
