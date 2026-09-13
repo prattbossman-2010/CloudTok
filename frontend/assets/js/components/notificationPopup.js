@@ -70,6 +70,7 @@ if(!tryAttach()){
 async pollNow(){
 
 if(!CloudTokAuthGuard||!CloudTokAuthGuard.isLoggedIn()) return;
+if(typeof CloudTokAPI==="undefined") return;
 
 try{
 

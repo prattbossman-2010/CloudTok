@@ -68,7 +68,8 @@ class CloudTokAdmin {
       if (v) this.previewVideo(v.video_url || "", v.caption || "", "@" + (v.username || ""), v.likes || 0, v.comments_count || 0, v.views || 0);
     });
   }
-  setupToggles() { document.querySelectorAll(".toggle").forEach((t) => { t.onclick = () => { t.classList.toggle("on"); this.settings[t.dataset.setting] = t.classList.contains("on"); this.saveSettings(); }; }); }
+  setupToggles() { document.querySelectorAll(".toggle").forEach((t) => { t.onclick = () => { t.classList.toggle("on"); this.settings[t.dataset.setting] = t.classList.contains("on"); this.saveSettings(); if(t.dataset.setting === "maintenanceMode") { this.toggleMaintenanceMode(this.settings.maintenanceMode); } }; }); }
+  toggleMaintenanceMode(enabled) { try { localStorage.setItem("CloudTokMaintenance", enabled ? "1" : "0"); window.dispatchEvent(new CustomEvent("maintenanceModeChanged", { detail: { enabled } })); } catch(e) {} }
   loadSettings() { try { const s = localStorage.getItem("adminSettings"); if (s) this.settings = JSON.parse(s); document.querySelectorAll(".toggle").forEach((t) => { t.classList.toggle("on", !!this.settings[t.dataset.setting]); }); } catch (e) {} }
   saveSettings() { try { localStorage.setItem("adminSettings", JSON.stringify(this.settings)); } catch (e) {} }
   async api(path, method = "GET", body = null) {

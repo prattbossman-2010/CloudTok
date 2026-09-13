@@ -67,6 +67,12 @@ this.viewCounted = false;
 
     this.destroyed = false;
 
+    this._sourceLoaded = false;
+    this._retryCount = 0;
+    this._maxRetries = 2;
+    this._isPlaying = false;
+    this._loadError = false;
+
 
 
     this.createCard();
@@ -171,31 +177,9 @@ createCard(){
 
 
 
-    // Streaming-first: progressive MP4 on native <video> uses HTTP Range, so
-    // playback starts while the rest of the file downloads. Only use HLS when
-    // there is no direct MP4 URL (Cloudinary sp_hd `hls_url` is a single-file
-    // stream that waits for the full download before playing).
+    // Video source is lazy-loaded via loadSource() - only when card becomes active
+    // Prevents 15+ simultaneous downloads that cause ERR_CONNECTION_CLOSED
     this.hls = null;
-    const hlsUrl = this.data.hls_url || this.data.hlsUrl || null;
-    const directUrl = this.data.video || "";
-    if (directUrl) {
-        const source = document.createElement("source");
-        source.src = directUrl;
-        source.type = "video/mp4";
-        this.video.appendChild(source);
-        // Fall back to HLS only if the direct MP4 cannot be played
-        if (hlsUrl) {
-            this.video.addEventListener("error", ()=>{
-                if(this._hlsFallbackTried) return;
-                this._hlsFallbackTried = true;
-                const sourceEl = this.video.querySelector("source");
-                if(sourceEl) sourceEl.remove();
-                this.loadHls(hlsUrl);
-            });
-        }
-    } else if (hlsUrl) {
-        this.loadHls(hlsUrl);
-    }
 
 
 
@@ -974,7 +958,7 @@ localStorage.setItem(
         this.video.addEventListener(
             "playing",
             ()=>{
-
+                this._isPlaying = true;
 
                 if(this.loader){
 
@@ -999,25 +983,16 @@ localStorage.setItem(
         this.video.addEventListener(
             "error",
             ()=>{
-
-
-                console.error(
-                    "VIDEO FAILED:",
-                    this.data.video
-                );
-
-
-                if(this.loader){
-
-                    this.loader.style.display="none";
-
+                if(this._sourceLoaded && !this._loadError){
+                    const retried = this.retryLoad();
+                    if(retried) return;
                 }
-
-
+                this._isPlaying = false;
+                if(this.loader){
+                    this.loader.style.display="none";
+                }
                 if(this.thumbnail){
-
                     this.thumbnail.style.opacity="1";
-
                 }
 
 
@@ -1392,6 +1367,55 @@ showSavedMessage(text){
 
 
 
+    loadSource(){
+        if(this._sourceLoaded || this.destroyed) return;
+        if(!this.video) return;
+        this._sourceLoaded = true;
+        this._loadError = false;
+        this._retryCount = 0;
+
+        const hlsUrl = this.data.hls_url || this.data.hlsUrl || null;
+        const directUrl = this.data.video || "";
+
+        if(directUrl){
+            const source = document.createElement("source");
+            source.src = directUrl;
+            source.type = "video/mp4";
+            this.video.appendChild(source);
+        } else if(hlsUrl){
+            this.loadHls(hlsUrl);
+        }
+
+        this.video.load();
+    }
+
+    retryLoad(){
+        if(this._retryCount >= this._maxRetries){
+            this._loadError = true;
+            if(this.loader) this.loader.style.display = "none";
+            if(this.thumbnail) this.thumbnail.style.opacity = "1";
+            return false;
+        }
+        this._retryCount++;
+        this._sourceLoaded = false;
+        const srcEl = this.video.querySelector("source");
+        if(srcEl) srcEl.remove();
+        if(this.hls){ try{ this.hls.destroy(); }catch(e){} this.hls = null; }
+        this._hlsFallbackTried = false;
+        if(this.loader) this.loader.style.display = "block";
+        this.loadSource();
+        return true;
+    }
+
+    isReady(){
+        return this._sourceLoaded && !this._loadError;
+    }
+
+    isCurrentlyPlaying(){
+        return this._isPlaying;
+    }
+
+
     play(){
 
     if(!this.video){
@@ -1402,19 +1426,25 @@ showSavedMessage(text){
         return;
     }
 
+    if(!this._sourceLoaded){
+        this.loadSource();
+    }
+
+    if(this._loadError) return;
+
     if(this.video.readyState < 2){
         this.video.load();
         let timeout=setTimeout(()=>{
             this.video.oncanplay=null;
             if(!this.userPaused){
-                this.video.play().catch(()=>{});
+                this.video.play().then(()=>{ this._isPlaying = true; }).catch(()=>{});
             }
-        },3000);
+        },5000);
         this.video.oncanplay=()=>{
             clearTimeout(timeout);
             this.video.oncanplay=null;
             if(!this.userPaused){
-                this.video.play().catch(()=>{});
+                this.video.play().then(()=>{ this._isPlaying = true; }).catch(()=>{});
             }
         };
         return;
@@ -1424,14 +1454,10 @@ showSavedMessage(text){
         
     this.video.play()
     .then(()=>{
-
-        console.log("Video started");
-
+        this._isPlaying = true;
     })
     .catch(error=>{
-
-        console.log("Autoplay prevented:", error);
-
+        this._isPlaying = false;
     });
 
     if(!this.viewCounted){
@@ -1464,6 +1490,7 @@ showSavedMessage(text){
         return;
     }
 
+    this._isPlaying = false;
     clearTimeout(this.viewTimer);
 
     if(this.watchStart){

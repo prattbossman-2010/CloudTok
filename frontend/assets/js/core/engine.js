@@ -357,6 +357,18 @@ playCurrentVideo(){
 
     });
 
+    this.preloadNextVideo();
+
+}
+
+preloadNextVideo(){
+    const nextIndex = this.currentIndex + 1;
+    if(nextIndex < this.feed.cards.length){
+        const nextCard = this.feed.cards[nextIndex];
+        if(nextCard && !nextCard._sourceLoaded && !nextCard._loadError){
+            setTimeout(()=>{ if(!nextCard.destroyed) nextCard.loadSource(); }, 2000);
+        }
+    }
 }
 
 
