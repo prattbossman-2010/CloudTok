@@ -171,20 +171,30 @@ createCard(){
 
 
 
-    // HLS (Cloudinary/ImageKit) if available, else progressive mp4 (Backblaze/Supabase/R2/Cloudinary fallback) - free $0
+    // Streaming-first: progressive MP4 on native <video> uses HTTP Range, so
+    // playback starts while the rest of the file downloads. Only use HLS when
+    // there is no direct MP4 URL (Cloudinary sp_hd `hls_url` is a single-file
+    // stream that waits for the full download before playing).
     this.hls = null;
     const hlsUrl = this.data.hls_url || this.data.hlsUrl || null;
-    if(hlsUrl && window.Hls && window.Hls.isSupported()){
-        this.hls = new window.Hls({ enableWorker:true, lowLatencyMode:false });
-        this.hls.loadSource(hlsUrl);
-        this.hls.attachMedia(this.video);
-    } else if(hlsUrl && this.video.canPlayType('application/vnd.apple.mpegurl')){
-        this.video.src = hlsUrl;
-    } else {
+    const directUrl = this.data.video || "";
+    if (directUrl) {
         const source = document.createElement("source");
-        source.src = this.data.video;
+        source.src = directUrl;
         source.type = "video/mp4";
         this.video.appendChild(source);
+        // Fall back to HLS only if the direct MP4 cannot be played
+        if (hlsUrl) {
+            this.video.addEventListener("error", ()=>{
+                if(this._hlsFallbackTried) return;
+                this._hlsFallbackTried = true;
+                const sourceEl = this.video.querySelector("source");
+                if(sourceEl) sourceEl.remove();
+                this.loadHls(hlsUrl);
+            });
+        }
+    } else if (hlsUrl) {
+        this.loadHls(hlsUrl);
     }
 
 
@@ -1756,6 +1766,21 @@ updateCommentCount(){
 
 
 
+    loadHls(url){
+        if(!this.video || !url) return;
+        if(this.hls){ try{ this.hls.destroy(); }catch(e){} this.hls=null; }
+        this.video.removeAttribute("src");
+        const srcEl = this.video.querySelector("source");
+        if(srcEl) srcEl.remove();
+        if(window.Hls && window.Hls.isSupported()){
+            this.hls = new window.Hls({ enableWorker:true, lowLatencyMode:false });
+            this.hls.loadSource(url);
+            this.hls.attachMedia(this.video);
+        } else if(this.video.canPlayType('application/vnd.apple.mpegurl')){
+            this.video.src = url;
+        }
+    }
+
     updateVideo(videoData){
 
 
@@ -1773,6 +1798,8 @@ updateCommentCount(){
         }
 
 
+        if(this.hls){ try{ this.hls.destroy(); }catch(e){} this.hls=null; }
+        this._hlsFallbackTried = false;
 
 
         const source =
@@ -1789,6 +1816,13 @@ updateCommentCount(){
             source.src =
             videoData.video;
 
+
+        } else {
+
+            const newSource = document.createElement("source");
+            newSource.src = videoData.video || "";
+            newSource.type = "video/mp4";
+            this.video.appendChild(newSource);
 
         }
 

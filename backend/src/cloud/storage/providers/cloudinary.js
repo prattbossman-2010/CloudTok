@@ -174,7 +174,10 @@ class CloudinaryProvider {
 
 
 
-        const hls_url = result.secure_url ? result.secure_url.replace("/video/upload/", "/video/upload/sp_hd/").replace(/\.[^.]+$/, ".m3u8") : null;
+        // Streaming is via the progressive MP4 (secure_url) which Cloudinary
+        // serves with HTTP Range + faststart. The sp_hd "HLS" URL is a
+        // single-file manifest and makes players download the whole file before
+        // playing, so we do not advertise it here.
         const eagerHls = result.eager && result.eager[0] ? result.eager[0].secure_url : null;
         return {
 
@@ -189,7 +192,7 @@ class CloudinaryProvider {
 
             result.secure_url,
 
-            hls_url: eagerHls || hls_url,
+            hls_url: eagerHls || null,
 
             thumbnail_url: result.secure_url ? result.secure_url.replace("/video/upload/", "/video/upload/so_2,w_360,h_640,c_fill/").replace(/\.[^.]+$/, ".jpg") : null,
 
