@@ -1,3 +1,17 @@
+// Check maintenance mode before loading app
+(function checkMaintenance(){
+    try {
+        var isMaintenance = localStorage.getItem("CloudTokMaintenance") === "1";
+        var isAdmin = window.location.pathname.indexOf("admin.html") !== -1;
+        if(isMaintenance && !isAdmin) {
+            document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0a0a0a;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;text-align:center;padding:20px;"><div><div style="font-size:64px;margin-bottom:20px;">🔧</div><h1 style="font-size:28px;margin:0 0 12px;">Under Maintenance</h1><p style="color:#888;font-size:16px;margin:0;">CloudTok is currently undergoing maintenance. Please check back soon.</p></div></div>';
+            throw new Error("maintenance");
+        }
+    } catch(e) {
+        if(e.message === "maintenance") throw e;
+    }
+})();
+
 window.Engine = new CloudTokEngine();
 
 

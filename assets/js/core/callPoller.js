@@ -7,6 +7,7 @@
     let pollInterval = null;
     let activePopup = null;
     let consecutiveErrors = 0;
+    let authFailed = false;
 
     function getToken(){
         return localStorage.getItem("CloudTokToken");
@@ -22,6 +23,8 @@
             return;
         }
 
+        if(authFailed) return;
+
         try {
             const response = await fetch(
                 "https://cloudtok-api.bossmanp16.workers.dev/api/webrtc/poll?after=" + lastSignalId,
@@ -30,7 +33,8 @@
 
             if(response.status === 401) {
                 consecutiveErrors++;
-                if(consecutiveErrors >= 3) {
+                if(consecutiveErrors >= 2) {
+                    authFailed = true;
                     stopGlobalCallPolling();
                 }
                 return;
@@ -118,9 +122,11 @@
 
     function startGlobalCallPolling(){
         if(pollInterval) return;
+        if(authFailed) return;
+        if(!getToken()) return;
         consecutiveErrors = 0;
         pollForCalls();
-        pollInterval = setInterval(pollForCalls, 5000);
+        pollInterval = setInterval(pollForCalls, 10000);
     }
 
     function stopGlobalCallPolling(){
@@ -137,8 +143,10 @@
     window.addEventListener("storage", (e)=>{
         if(e.key === "CloudTokToken"){
             if(e.newValue){
+                authFailed = false;
                 startGlobalCallPolling();
             } else {
+                authFailed = false;
                 stopGlobalCallPolling();
             }
         }

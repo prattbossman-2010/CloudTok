@@ -1,20 +1,6 @@
-const CACHE_NAME = "cloudtok-v2";
-const STATIC_ASSETS = [
-  "/CloudTok/",
-  "/CloudTok/index.html",
-  "/CloudTok/assets/css/base.css",
-  "/CloudTok/assets/css/style.css",
-  "/CloudTok/assets/js/api/api.js",
-  "/CloudTok/assets/js/core/engine.js",
-  "/CloudTok/assets/js/components/toast.js"
-];
+const CACHE_NAME = "cloudtok-v4";
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS).catch(() => {});
-    })
-  );
   self.skipWaiting();
 });
 
@@ -31,9 +17,35 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
-  // bypass video/streaming and range requests - fixes cloudinary network error + ensures streaming (no full download)
-  if (e.request.destination === "video" || e.request.url.includes("cloudinary.com") || e.request.url.includes("imagekit.io") || e.request.url.includes("backblazeb2.com") || e.request.url.includes("r2.dev") || e.request.url.includes(".m3u8") || e.request.url.includes(".ts") || e.request.headers.get("range")) return;
-  if (e.request.url.includes("/api/")) {
+
+  const url = e.request.url;
+
+  // NEVER intercept video/streaming/storage - fixes cloudinary ERR_CONNECTION_CLOSED
+  if (
+    e.request.destination === "video" ||
+    e.request.destination === "audio" ||
+    url.includes("cloudinary.com") ||
+    url.includes("imagekit.io") ||
+    url.includes("backblazeb2.com") ||
+    url.includes("r2.dev") ||
+    url.includes("supabase.co/storage") ||
+    url.includes(".m3u8") ||
+    url.includes(".ts") ||
+    e.request.headers.get("range")
+  ) return;
+
+  // NEVER intercept script files - fixes CloudTokAPI not defined
+  if (
+    e.request.destination === "script" ||
+    url.includes("/assets/js/") ||
+    url.includes("hls.js")
+  ) return;
+
+  // NEVER intercept manifest.json - fixes the TypeError crash
+  if (url.includes("manifest.json")) return;
+
+  // API requests - network only, no cache
+  if (url.includes("/api/")) {
     e.respondWith(
       fetch(e.request).catch(() => {
         return new Response(JSON.stringify({ error: "Offline" }), {
@@ -44,10 +56,11 @@ self.addEventListener("fetch", (e) => {
     );
     return;
   }
-  if (e.request.url.includes("supabase.co/storage")) return;
+
+  // Static assets - stale-while-revalidate
   e.respondWith(
     caches.match(e.request).then((cached) => {
-      const fetched = fetch(e.request).then((response) => {
+      const fetchPromise = fetch(e.request).then((response) => {
         if (response && response.status === 200) {
           try {
             const clone = response.clone();
@@ -57,8 +70,19 @@ self.addEventListener("fetch", (e) => {
           } catch (_) {}
         }
         return response;
-      }).catch(() => cached);
-      return cached || fetched;
+      }).catch(() => {
+        // If network fails and we have cache, return cache
+        // If no cache, return a basic offline page for HTML
+        if (cached) return cached;
+        if (e.request.headers.get("accept")?.includes("text/html")) {
+          return new Response("<h1>Offline</h1>", {
+            headers: { "Content-Type": "text/html" },
+            status: 503
+          });
+        }
+        return new Response("", { status: 503 });
+      });
+      return cached || fetchPromise;
     })
   );
 });
